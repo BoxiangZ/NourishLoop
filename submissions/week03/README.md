@@ -33,11 +33,16 @@ background work of a case without knowing its job ids.
    `ai_confidence=0.71`); `GET /cases/{case_id}/jobs` returned that completed job; an unknown case id
    returned `404`.
 4. `SMOKE_BASE_URL=http://127.0.0.1:8000 pytest tests/smoke -q` → 1 passed.
+5. The same checks through the documented deployment path: `docker compose up --build -d` →
+   `db`, `ai`, and `api` healthy and `worker` running; `POST /cases` → `201`; the case reached
+   `status=triaged` and `GET /cases/{case_id}/jobs` returned the completed job; an unknown case id
+   returned `404`; `SMOKE_BASE_URL=http://localhost:8000 pytest tests/smoke -q` → 1 passed; PostgreSQL
+   reported the `cases`, `jobs`, and `alembic_version` tables at revision `20260713_0001`.
 
 ## Notes and limitations
 
 - The route is unauthenticated and unpaginated, like the rest of the starter; pagination is the
   obvious next step.
-- Verification used the local SQLite path and the repository's own test suites. The
-  `docker compose` / PostgreSQL path was not exercised because Docker was not running in my
-  environment.
+- Both runtime paths were checked: the local SQLite run above and the `docker compose` /
+  PostgreSQL 16 stack documented in `README.md`. The stack was then stopped with
+  `docker compose down --remove-orphans`, which keeps the database volume.
