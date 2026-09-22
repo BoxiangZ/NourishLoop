@@ -37,3 +37,60 @@ def test_create_and_read_case_and_job(client):
     job_response = client.get(f"/jobs/{job_id}")
     assert job_response.status_code == 200
     assert job_response.json()["case_id"] == case_id
+
+
+def test_list_jobs_for_case(client):
+    create_response = client.post(
+        "/cases",
+        json={
+            "title": "Cannot login to dashboard",
+            "description": "User cannot access the dashboard after a password reset.",
+        },
+    )
+    assert create_response.status_code == 201
+
+    payload = create_response.json()
+    case_id = payload["case"]["id"]
+    job_id = payload["job"]["id"]
+
+    response = client.get(f"/cases/{case_id}/jobs")
+    assert response.status_code == 200
+
+    jobs = response.json()
+    assert len(jobs) == 1
+    assert jobs[0]["id"] == job_id
+    assert jobs[0]["case_id"] == case_id
+    assert jobs[0]["job_type"] == "triage_case"
+    assert jobs[0]["status"] == "pending"
+    assert jobs[0]["attempts"] == 0
+    assert jobs[0]["error"] is None
+
+
+def test_list_jobs_returns_only_the_requested_case(client):
+    first_case_id = client.post(
+        "/cases",
+        json={
+            "title": "Cannot login to dashboard",
+            "description": "User cannot access the dashboard after a password reset.",
+        },
+    ).json()["case"]["id"]
+
+    second_case_id = client.post(
+        "/cases",
+        json={
+            "title": "Invoice charge looks incorrect",
+            "description": "Customer reports an unexpected duplicate billing charge.",
+        },
+    ).json()["case"]["id"]
+
+    jobs = client.get(f"/cases/{second_case_id}/jobs").json()
+
+    assert len(jobs) == 1
+    assert jobs[0]["case_id"] == second_case_id
+    assert all(job["case_id"] != first_case_id for job in jobs)
+
+
+def test_list_jobs_for_unknown_case_returns_404(client):
+    response = client.get("/cases/does-not-exist/jobs")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Case not found"

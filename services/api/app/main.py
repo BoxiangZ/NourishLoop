@@ -76,6 +76,15 @@ def get_job(db: Session, job_id: int) -> Job | None:
     return db.get(Job, job_id)
 
 
+def list_jobs_for_case(db: Session, case_id: str) -> list[Job]:
+    stmt = (
+        select(Job)
+        .where(Job.case_id == case_id)
+        .order_by(Job.created_at.asc(), Job.id.asc())
+    )
+    return db.execute(stmt).scalars().all()
+
+
 @app.middleware("http")
 async def observe_requests(request: Request, call_next):
     start = perf_counter()
@@ -146,6 +155,13 @@ def read_case(case_id: str, db: Session = Depends(get_db)) -> CaseRead:
     if case is None:
         raise HTTPException(status_code=404, detail="Case not found")
     return CaseRead.model_validate(case)
+
+
+@app.get("/cases/{case_id}/jobs", response_model=list[JobRead])
+def read_case_jobs(case_id: str, db: Session = Depends(get_db)) -> list[JobRead]:
+    if get_case(db, case_id) is None:
+        raise HTTPException(status_code=404, detail="Case not found")
+    return [JobRead.model_validate(job) for job in list_jobs_for_case(db, case_id)]
 
 
 @app.get("/jobs/{job_id}", response_model=JobRead)

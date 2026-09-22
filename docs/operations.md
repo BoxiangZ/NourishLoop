@@ -15,6 +15,17 @@
 - AI live: `/health/live`
 - AI ready: `/health/ready`
 
+## Case and job endpoints
+
+- create a case: `POST /cases`
+- list recent cases: `GET /cases`
+- read one case: `GET /cases/{case_id}`
+- list the jobs for one case: `GET /cases/{case_id}/jobs`
+- read one job: `GET /jobs/{job_id}`
+
+`GET /cases/{case_id}/jobs` returns the jobs for a case ordered by creation time
+(oldest first) and responds with `404` when the case id is unknown.
+
 ## Metrics
 
 - API metrics: `/metrics`
