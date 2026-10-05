@@ -1,75 +1,358 @@
-# MAIE 6000C Starter Template
+# AI Diet Planning and Meal Analysis Platform
 
-This repository is the starter template for MAIE 6000C: **Engineering AI Products: From Prototype to Production**.
+Course project for **MAIE 6000C — Engineering AI Products: From Prototype to Production**.
 
-It is intentionally small, but it already demonstrates the core engineering shape expected in the course:
+## Project Overview
 
-- a public-facing API service
-- a separate internal AI service
-- a worker process
-- a PostgreSQL database
-- Alembic migrations
-- Docker Compose deployment
-- unit, integration, and smoke testing support
-- structured logging
-- health checks
-- basic metrics
+This project develops an AI-enabled platform that helps users follow a personalized dietary plan.
 
-## Purpose of this repository
+A user first provides basic body information and a target, such as target weight or target body-fat percentage. The system uses this information to generate a personalized diet plan.
 
-This repository is **not** meant to be a feature-complete product.
+After a diet plan has been created, the user can upload photos of meals. The platform uses multimodal AI to identify the main foods in the image, compares the meal with the user's active diet plan, and returns feedback on how well the meal aligns with the plan.
 
-Its purpose is to provide a working baseline that teams will extend into their semester project while preserving the course’s engineering contract.
+The primary product loop is:
 
-## Course engineering contract
+```text
+Body Profile
+    ↓
+Diet Plan
+    ↓
+Meal Photo
+    ↓
+AI Meal Analysis
+    ↓
+Comparison with Diet Plan
+    ↓
+Feedback
+```
 
-Every passing team project built from this template must ultimately include:
+The project focuses on **general wellness and dietary guidance**. It is not intended to diagnose medical conditions or replace professional medical or dietetic advice.
 
-- a meaningful relational database layer
-- a service or API layer
-- a worker or async path outside the immediate request cycle
-- an AI-enabled function integrated into the workflow
-- reproducible local deployment
-- tests or credible verification
-- documentation
-- structured logs
-- health checks
-- basic observability
+---
 
-## Baseline workflow in the starter
+## Problem
 
-The starter demonstrates a simple end-to-end flow:
+Creating a diet plan is only the first step toward a weight-management goal.
 
-1. create a case through the API
-2. store that case in PostgreSQL
-3. create a background job
-4. let the worker claim and process the job
-5. call the internal AI service over HTTP
-6. persist the result
-7. retrieve updated state through the API
+Users may know what they should eat in general but still have difficulty evaluating whether their actual daily meals are consistent with their plan.
 
-This gives you a starting point for:
+This project aims to connect long-term dietary planning with day-to-day meal feedback.
 
-- persistence
-- inter-service communication
-- worker-based execution
-- deployment
-- testing
-- observability
+The platform therefore supports two related AI-enabled tasks:
 
-## Repository structure
+1. personalized diet-plan generation;
+2. meal-image analysis and comparison against the active diet plan.
 
-Typical structure:
+---
+
+## Primary User
+
+The primary user is an individual who wants to manage body weight or body-fat goals and needs ongoing support in following a dietary plan.
+
+---
+
+## Core MVP Workflow
+
+The first vertical slice of the project will support the following workflow:
+
+1. User submits body information and a target.
+2. API validates and persists the body profile.
+3. API creates a diet-plan generation job.
+4. Background worker claims the job.
+5. AI generates a structured diet plan.
+6. The generated plan is persisted in PostgreSQL.
+7. User uploads a meal photo.
+8. API creates a meal record and meal-analysis job.
+9. Worker claims the meal-analysis job.
+10. Multimodal AI analyzes the meal.
+11. The meal is compared with the active diet plan.
+12. Analysis and feedback are persisted.
+13. User retrieves the result.
+
+The minimum successful product workflow is therefore:
+
+```text
+Profile
+→ Diet Plan
+→ Meal Photo
+→ AI Analysis
+→ Plan Comparison
+→ Persisted Feedback
+```
+
+---
+
+## Planned Core Features
+
+### Body Profile
+
+The platform will store a body-profile snapshot containing information such as:
+
+- height;
+- current weight;
+- activity level;
+- target weight and/or target body-fat percentage.
+
+A profile snapshot can be linked to the diet plan generated from it so historical plans remain traceable.
+
+### Diet Plan Generation
+
+The system will generate a structured dietary plan containing information such as:
+
+- high-level calorie target where appropriate;
+- protein target;
+- carbohydrate target;
+- fat target;
+- general dietary guidance.
+
+Diet-plan generation will run asynchronously through the worker.
+
+### Meal Upload
+
+Users will be able to submit a meal photo.
+
+The database will store a reference to the image rather than storing the raw image binary directly in PostgreSQL.
+
+### Meal Analysis
+
+A multimodal AI component will analyze the uploaded image and attempt to identify the main foods in the meal.
+
+The analysis will then compare the meal with the active diet plan.
+
+A first-version result may classify the meal as:
+
+```text
+aligned
+partially_aligned
+not_aligned
+```
+
+along with short feedback and suggestions.
+
+### Failure Handling
+
+AI processing is treated as part of an explicit workflow rather than a single synchronous request.
+
+Typical job state:
+
+```text
+pending → claimed → completed
+                 ↘ failed
+```
+
+Failures should leave persistent evidence such as:
+
+- job status;
+- attempt count;
+- error information;
+- processing timestamps.
+
+---
+
+## System Architecture
+
+The project builds on the engineering structure provided by the MAIE 6000C starter repository.
+
+The planned architecture is:
+
+```text
+User
+  ↓
+API Service
+  ↓
+PostgreSQL
+  ↓
+Pending Job
+  ↓
+Background Worker
+  ↓
+AI Service
+  ↓
+Persisted Result
+  ↓
+API Retrieval
+  ↓
+User
+```
+
+### API Service
+
+The API is responsible for:
+
+- validating requests;
+- creating persistent records;
+- creating asynchronous jobs;
+- retrieving current system state;
+- exposing health endpoints.
+
+Long-running AI processing should not occur inside the immediate HTTP request cycle.
+
+### PostgreSQL
+
+PostgreSQL represents the durable system state.
+
+Planned persistent entities include:
+
+```text
+users
+body_profiles
+diet_plans
+meals
+meal_analyses
+jobs
+```
+
+### Background Worker
+
+The worker processes work outside the immediate request cycle.
+
+The first planned job types are:
+
+```text
+generate_diet_plan
+analyze_meal
+```
+
+### AI Service
+
+The AI layer will support:
+
+```text
+Diet Plan Generation
+Meal Image Analysis
+```
+
+The AI result is persisted before being treated as part of the application workflow.
+
+---
+
+## Proposed Data Model
+
+The initial schema contains six main entities.
+
+### `users`
+
+Provides a stable owner identifier.
+
+### `body_profiles`
+
+Stores body information and goals used for diet-plan generation.
+
+### `diet_plans`
+
+Stores generated plans and their lifecycle.
+
+Expected state:
+
+```text
+pending → active
+        ↘ failed
+
+active → superseded
+```
+
+### `meals`
+
+Stores uploaded meal metadata and image references.
+
+Expected state:
+
+```text
+uploaded → processing → analyzed
+                      ↘ failed
+```
+
+### `meal_analyses`
+
+Stores AI-generated results such as:
+
+- detected foods;
+- diet-plan alignment;
+- feedback;
+- confidence or uncertainty information;
+- AI model version;
+- processing timestamp.
+
+### `jobs`
+
+Stores asynchronous processing state.
+
+Expected state:
+
+```text
+pending → claimed → completed
+                 ↘ failed
+```
+
+For the full schema and ERD, see:
+
+```text
+docs/architecture.md
+```
+
+---
+
+## AI Traceability
+
+AI-enabled operations should preserve enough information to understand how a result was produced.
+
+Where practical, the system will record:
+
+- input record references;
+- diet-plan reference;
+- model version;
+- prompt/template version;
+- AI output;
+- confidence or uncertainty information;
+- processing timestamp;
+- associated job ID.
+
+This allows results to remain auditable even when the user's profile or active plan later changes.
+
+---
+
+## Privacy and Data Handling
+
+This project may process body measurements and user-uploaded meal images.
+
+The application should avoid unnecessarily copying sensitive information into logs.
+
+Logs should prefer stable identifiers such as:
+
+```text
+user_id
+diet_plan_id
+meal_id
+job_id
+```
+
+rather than raw personal information.
+
+Secrets, API keys, passwords, and authentication credentials must never be committed to the repository or written into application logs.
+
+Course project data should use appropriate public, synthetic, anonymized, or otherwise approved data sources.
+
+---
+
+## Repository Structure
+
+The repository follows the MAIE 6000C starter structure.
 
 ```text
 .
 ├─ .github/
 ├─ alembic/
 ├─ docs/
+│  ├─ architecture.md
+│  ├─ operations.md
+│  └─ adrs/
 ├─ observability/
 ├─ scripts/
 ├─ services/
-│  └─ api/
+│  ├─ api/
+│  ├─ ai/
+│  ├─ common/
+│  └─ worker/
 ├─ submissions/
 │  ├─ week04/
 │  ├─ week07/
@@ -82,71 +365,166 @@ Typical structure:
 └─ README.md
 ```
 
-## Core services
+---
 
-### API service
+## Current Development Status
 
-The API service is the main entry point for requests and exposes routes for core system actions.
+The repository currently uses the MAIE 6000C starter implementation as its engineering baseline.
 
-### AI service
+The starter already demonstrates:
 
-The AI service is a separate internal service used to demonstrate service-to-service communication for an AI-enabled function.
+- a FastAPI API service;
+- a separate AI service;
+- PostgreSQL persistence;
+- asynchronous worker processing;
+- Alembic migrations;
+- Docker Compose deployment;
+- integration and smoke testing;
+- structured logging;
+- health checks;
+- basic observability.
 
-### Worker
+The current project phase is focused on replacing the starter case-triage domain with the proposed diet-planning and meal-analysis domain.
 
-The worker processes jobs outside the immediate request cycle.
+### Week 4
 
-### Database
+Current design work includes:
 
-PostgreSQL is used as the relational persistence layer.
+- primary user workflow;
+- proposed database schema;
+- architecture flow;
+- state-transition responsibilities;
+- AI traceability and review strategy;
+- milestone plan;
+- risk register;
+- scope-control plan.
 
-## Quick start
+See:
 
-### 1. Copy environment file
+```text
+docs/architecture.md
+submissions/week04/README.md
+```
+
+Week 4 checkpoint tag:
+
+```text
+w04-proposal
+```
+
+The tag should be created only after final review of the Week 4 artifacts.
+
+---
+
+## Quick Start
+
+### 1. Clone the repository
+
+```bash
+git clone <repository-url>
+cd MAIE6000C-starter-wzy
+```
+
+### 2. Create the environment file
+
+On macOS/Linux:
 
 ```bash
 cp .env.example .env
 ```
 
-### 2. Start the stack
+On Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+### 3. Start the stack
 
 ```bash
 docker compose up --build
 ```
 
-### 3. Optional observability profile
+To run in the background:
 
 ```bash
-docker compose --profile observability up --build
+docker compose up --build -d
 ```
 
-### 4. Open the relevant endpoints
+### 4. Check running containers
 
-- API docs: `http://localhost:8000/docs`
-- AI service docs: `http://localhost:8100/docs`
-- Prometheus: `http://localhost:9090` if the observability profile is enabled
+```bash
+docker compose ps
+```
 
-## Typical development commands
+---
 
-### Start the stack
+## Local Endpoints
+
+When the starter stack is running:
+
+```text
+API documentation:
+http://localhost:8000/docs
+
+AI service documentation:
+http://localhost:8100/docs
+```
+
+If the observability profile is enabled:
+
+```text
+Prometheus:
+http://localhost:9090
+```
+
+---
+
+## Development Commands
+
+### Start services
 
 ```bash
 docker compose up --build
 ```
 
-### Stop the stack
+### Start services in background
+
+```bash
+docker compose up --build -d
+```
+
+### Stop services
 
 ```bash
 docker compose down --remove-orphans
 ```
 
-### Stop and remove volumes
+### Stop services and delete volumes
 
 ```bash
 docker compose down -v --remove-orphans
 ```
 
-### Run tests
+Use the volume-removal command carefully because it removes local persisted database data.
+
+---
+
+## Database Migrations
+
+Run all available migrations:
+
+```bash
+docker compose run --rm api alembic upgrade head
+```
+
+Future changes to persistent models should be accompanied by appropriate Alembic migrations rather than only changing Python model definitions.
+
+---
+
+## Testing
+
+### Run the test suite
 
 ```bash
 pytest -q
@@ -154,123 +532,231 @@ pytest -q
 
 ### Run smoke tests against a running stack
 
+macOS/Linux:
+
 ```bash
 SMOKE_BASE_URL=http://localhost:8000 pytest tests/smoke -q
 ```
 
-### Run migrations
+Windows PowerShell:
 
-```bash
-docker compose run --rm api alembic upgrade head
+```powershell
+$env:SMOKE_BASE_URL="http://localhost:8000"
+pytest tests/smoke -q
 ```
 
-### Seed demo data
+The final project should maintain credible verification of important behavior through a combination of:
+
+- unit tests;
+- integration tests;
+- smoke tests;
+- end-to-end verification.
+
+---
+
+## Observability
+
+To start the optional observability profile:
 
 ```bash
-docker compose run --rm api python scripts/seed_demo_data.py
+docker compose --profile observability up --build
 ```
 
-## What teams are expected to change
+The project should maintain operational visibility through:
 
-Teams are expected to extend or replace:
+- structured logs;
+- health checks;
+- processing status;
+- failure information;
+- basic metrics;
+- processing latency where practical.
 
-- the domain model
-- routes and workflows
-- worker job types
-- AI-enabled logic
-- tests
-- documentation
-- observability depth
+---
 
-Teams are not expected to replace the course operating model or ignore the required repository structure.
+## Development Milestones
 
-## Required living documents for team repositories
+### Week 5
 
-By the time this template becomes a semester team project repo, it should maintain:
+Finalize:
 
-- `README.md`
-- `docs/architecture.md`
-- `docs/operations.md`
-- `docs/adrs/`
-- `submissions/week04/`
-- `submissions/week07/`
-- `submissions/week13/`
+- first API contract;
+- database schema;
+- migrations;
+- first API-to-database persistence path.
 
-## Required milestone tags for team projects
+### Week 7
 
-When this repo is used as a semester project repository, the required milestone tags are:
+Deliver the first complete vertical slice:
 
-- `w04-proposal`
-- `w07-midterm`
-- `w13-final`
+```text
+Profile
+→ Diet Plan
+→ Meal Upload
+→ AI Analysis
+→ Feedback
+```
 
-## Branch conventions
+### Week 9
 
-Recommended branch prefixes:
+Provide reproducible Docker deployment and setup documentation.
 
-- `feature/...`
-- `fix/...`
-- `docs/...`
-- `submission/...`
+### Week 11
+
+Improve:
+
+- reliability;
+- structured logging;
+- failure handling;
+- retry behavior;
+- observability;
+- basic performance measurement.
+
+### Week 13
+
+Deliver:
+
+- tested final workflow;
+- final documentation;
+- reproducible deployment;
+- final demonstration.
+
+---
+
+## Scope Control
+
+The priority is a small, reliable end-to-end product rather than a large feature set.
+
+The following features are not required for the first MVP and may be deferred:
+
+- exact calorie estimation from a single image;
+- exact portion-size estimation;
+- advanced dashboards;
+- long-term weight prediction;
+- full nutritionist-review workflow;
+- notification/reminder systems;
+- social/community features;
+- shopping-list generation;
+- recipe recommendation;
+- advanced multi-model routing.
+
+The core workflow will be protected before optional features are added.
+
+---
+
+## Documentation
+
+Important project documents:
+
+```text
+README.md
+docs/architecture.md
+docs/operations.md
+docs/adrs/
+submissions/week04/README.md
+submissions/week07/
+submissions/week13/
+```
+
+### Architecture Proposal
+
+Detailed design:
+
+```text
+docs/architecture.md
+```
+
+This document contains:
+
+- problem definition;
+- primary workflow;
+- system architecture;
+- ERD and schema;
+- state transitions;
+- worker and AI processing plan;
+- AI traceability;
+- privacy/logging considerations;
+- API draft;
+- failure handling;
+- milestones;
+- risks;
+- scope cuts.
+
+### Week 4 Proposal
+
+Week 4 submission summary:
+
+```text
+submissions/week04/README.md
+```
+
+---
+
+## Milestone Tags
+
+Planned repository checkpoint tags:
+
+```text
+w04-proposal
+w07-midterm
+w13-final
+```
+
+Tags should represent reviewed milestone states of the repository.
+
+---
+
+## Branch Conventions
+
+Recommended branch naming:
+
+```text
+feature/...
+fix/...
+docs/...
+submission/...
+```
 
 Default branch:
 
-- `main`
+```text
+main
+```
 
-## Testing expectations
+---
 
-A strong project should maintain some combination of:
+## AI Use
 
-- unit tests
-- integration tests
-- smoke tests
-- credible end-to-end verification
+Generative AI tools may be used during project development for activities such as:
 
-The exact test mix may vary, but important behavior must be checkable and explainable.
+- understanding starter code;
+- brainstorming architecture options;
+- reviewing proposed schemas;
+- drafting documentation;
+- assisting with implementation and testing.
 
-## Observability expectations
+AI-generated material must be reviewed and verified by the team.
 
-At minimum, projects should support:
+The team remains responsible for understanding and explaining all submitted design and implementation decisions.
 
-- structured logs
-- health checks
-- basic metrics or equivalent observability signals
+Major submissions should include the required **AI Use Statement**.
 
-Do not wait until the end of the semester to add operational visibility.
+---
 
-## Data and privacy expectations
+## Project Principle
 
-Projects in this course must use only:
+The project prioritizes engineering reliability over feature quantity.
 
-- public data
-- synthetic data
-- anonymized data
-- instructor-approved sources
+A smaller system with:
 
-Do not commit secrets to the repository.
+```text
+clear persistence
+explicit state transitions
+reliable async processing
+traceable AI results
+failure handling
+tests
+documentation
+reproducible deployment
+```
 
-Do not log sensitive or unnecessary data carelessly.
-
-## AI use reminder
-
-If you use generative AI tools during development, you must remain able to explain your work and include the required AI Use Statement in major submissions.
-
-The AI-enabled feature in your system is separate from optional AI tool use during development.
-
-## Suggested first steps for teams
-
-When beginning your project, do the following early:
-
-- confirm the repo boots from a clean clone
-- understand the current workflow end to end
-- choose a narrow core workflow
-- identify your main persistent entities
-- identify your worker path
-- decide where the AI-enabled function belongs
-- update documentation as soon as design changes
-
-## Final reminder
-
-This course rewards engineering maturity.
-
-A smaller, reliable, well-documented system built from this template is stronger than a large but fragile system built on rushed changes.
+is preferable to a larger but fragile implementation.
