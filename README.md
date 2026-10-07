@@ -2,13 +2,15 @@
 
 Course project for **MAIE 6000C — Engineering AI Products: From Prototype to Production**.
 
+Team: **group14** — Zhang Boxiang, Yang Sibo, Wang Ziyang, Li Zimu.
+
 ## Project Overview
 
 This project develops an AI-enabled platform that helps users follow a personalized dietary plan.
 
 A user first provides basic body information and a target, such as target weight or target body-fat percentage. The system uses this information to generate a personalized diet plan.
 
-After a diet plan has been created, the user can upload photos of meals. The platform uses multimodal AI to identify the main foods in the image, compares the meal with the user's active diet plan, and returns feedback on how well the meal aligns with the plan.
+After a diet plan has been created, the user can upload photos of meals. The platform uses multimodal AI to identify the main foods in the image, compares the meal with the user's active diet plan, and returns estimated energy/macronutrients and explainable meal-budget feedback. The user can supply quantities such as grams of beef or number/size of eggs, correct the identified foods, and confirm results before they contribute to daily totals.
 
 The primary product loop is:
 
@@ -17,9 +19,11 @@ Body Profile
     ↓
 Diet Plan
     ↓
-Meal Photo
+Meal Photo + User Quantities
     ↓
-AI Meal Analysis
+AI Meal Analysis + Nutrition Lookup
+    ↓
+User Confirmation
     ↓
 Comparison with Diet Plan
     ↓
@@ -64,18 +68,20 @@ The first vertical slice of the project will support the following workflow:
 7. User uploads a meal photo.
 8. API creates a meal record and meal-analysis job.
 9. Worker claims the meal-analysis job.
-10. Multimodal AI analyzes the meal.
-11. The meal is compared with the active diet plan.
-12. Analysis and feedback are persisted.
-13. User retrieves the result.
+10. Multimodal AI identifies food/preparation and interprets user grams or count/size notes.
+11. The worker resolves versioned nutrition/portion entries and calculates a draft.
+12. The user corrects/confirms food and quantities; the API recalculates nutrition and meal-budget alignment.
+13. Original AI output, confirmed revisions and feedback are persisted.
+14. User retrieves results, history and daily totals against the referenced plan.
 
 The minimum successful product workflow is therefore:
 
 ```text
 Profile
 → Diet Plan
-→ Meal Photo
+→ Meal Photo + Quantities
 → AI Analysis
+→ User Confirmation
 → Plan Comparison
 → Persisted Feedback
 ```
@@ -99,7 +105,7 @@ A profile snapshot can be linked to the diet plan generated from it so historica
 
 The system will generate a structured dietary plan containing information such as:
 
-- high-level calorie target where appropriate;
+- positive high-level calorie target for the proposed meal-budget comparison;
 - protein target;
 - carbohydrate target;
 - fat target;
@@ -115,6 +121,10 @@ The database will store a reference to the image rather than storing the raw ima
 
 ### Meal Analysis
 
+The planned nutrition path imports reviewed open food/portion data into PostgreSQL. AI interprets the image and inputs such as `150 g cooked beef` or `2 large eggs`; application code normalizes edible grams, retrieves source densities and calculates energy/macronutrients. Missing mappings/size/grams require review. Every confirmed result keeps source/conversion snapshots and a correction reason.
+
+The baseline preserves both diet-plan generation and meal analysis. First evaluate explicit free OpenRouter multimodal candidates; local open-weight inference is a fallback after hardware testing. The bounded training/adaptation experiment comes after the baseline and requires labeled-data/license/compute gates. See [nutrition/model plan](docs/nutrition-model-plan.md) for official candidate sources, provider policy and calculation/comparison rules. No account access, nutrition import, training or accuracy result is claimed yet.
+
 A multimodal AI component will analyze the uploaded image and attempt to identify the main foods in the meal.
 
 The analysis will then compare the meal with the active diet plan.
@@ -127,7 +137,7 @@ partially_aligned
 not_aligned
 ```
 
-along with short feedback and suggestions.
+along with short feedback, assumptions, source-backed nutrient estimates and budget differences. Labels follow versioned per-meal rules; incomplete inputs have no definitive alignment label. User confirmation is required before a meal becomes `analyzed`.
 
 ### Failure Handling
 
@@ -200,6 +210,10 @@ diet_plans
 meals
 meal_analyses
 jobs
+nutrition_foods
+food_portions
+meal_items
+meal_revisions
 ```
 
 ### Background Worker
@@ -228,7 +242,7 @@ The AI result is persisted before being treated as part of the application workf
 
 ## Proposed Data Model
 
-The initial schema contains six main entities.
+The proposed schema retains six core workflow entities and adds nutrition foods, portion conversions, confirmed items and immutable revisions.
 
 ### `users`
 
@@ -258,7 +272,7 @@ Stores uploaded meal metadata and image references.
 Expected state:
 
 ```text
-uploaded → processing → analyzed
+uploaded → processing → needs_review → analyzed
                       ↘ failed
 ```
 
@@ -384,7 +398,7 @@ The starter already demonstrates:
 - health checks;
 - basic observability.
 
-The current project phase is focused on replacing the starter case-triage domain with the proposed diet-planning and meal-analysis domain.
+The current project phase is focused on replacing the starter case-triage domain with the proposed diet-planning and meal-analysis domain. The executable AI service is still keyword-based triage. Vision inference, nutrition lookup, user confirmation, safe concurrent claims, retry and claim recovery remain proposed adaptations, not current starter capabilities.
 
 ### Week 4
 
@@ -421,7 +435,7 @@ The tag should be created only after final review of the Week 4 artifacts.
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Wzyoung203/MAIE6000C-starter-wzy.git
 cd MAIE6000C-starter-wzy
 ```
 
@@ -577,7 +591,7 @@ The project should maintain operational visibility through:
 
 ### Week 5
 
-Finalize:
+Validate free-provider access/quota/data policy and local-model hardware; review source food/portion values and units. Finalize:
 
 - first API contract;
 - database schema;
@@ -591,14 +605,15 @@ Deliver the first complete vertical slice:
 ```text
 Profile
 → Diet Plan
-→ Meal Upload
-→ AI Analysis
-→ Feedback
+→ Meal Upload + Quantities
+→ AI Analysis + Nutrition Lookup
+→ User Confirmation
+→ Plan Feedback + Daily Totals
 ```
 
 ### Week 9
 
-Provide reproducible Docker deployment and setup documentation.
+Provide reproducible Docker/model/data/image-volume setup and second-member reproduction. Attempt one bounded training/adaptation experiment only if the baseline and labeled-data/license/compute gates pass.
 
 ### Week 11
 
@@ -610,6 +625,10 @@ Improve:
 - retry behavior;
 - observability;
 - basic performance measurement.
+
+### Week 12
+
+Internal feature freeze and rehearsal.
 
 ### Week 13
 
@@ -628,7 +647,7 @@ The priority is a small, reliable end-to-end product rather than a large feature
 
 The following features are not required for the first MVP and may be deferred:
 
-- exact calorie estimation from a single image;
+- exact calorie estimation from a single image (approximate source-backed calories with user quantities remain core);
 - exact portion-size estimation;
 - advanced dashboards;
 - long-term weight prediction;
@@ -637,7 +656,8 @@ The following features are not required for the first MVP and may be deferred:
 - social/community features;
 - shopping-list generation;
 - recipe recommendation;
-- advanced multi-model routing.
+- advanced multi-model routing;
+- model training if data/compute or schedule gates fail.
 
 The core workflow will be protected before optional features are added.
 
@@ -653,8 +673,8 @@ docs/architecture.md
 docs/operations.md
 docs/adrs/
 submissions/week04/README.md
-submissions/week07/
-submissions/week13/
+templates/submissions/week07/
+templates/submissions/week13/
 ```
 
 ### Architecture Proposal
@@ -683,13 +703,19 @@ This document contains:
 
 ### Week 4 Proposal
 
-Week 4 submission summary:
+Week 4 submission summary (including the AI Use Statement and Canvas record template):
 
 ```text
 submissions/week04/README.md
 ```
 
 ---
+
+Supporting design artifacts:
+
+- [Nutrition, model and training plan](docs/nutrition-model-plan.md)
+- [API examples and service contracts](docs/api-draft.md)
+- [Evaluation and acceptance plan](docs/evaluation-plan.md)
 
 ## Milestone Tags
 

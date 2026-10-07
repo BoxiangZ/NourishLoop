@@ -2,10 +2,12 @@
 
 ## Team information
 
-- Team name: [TBD]
-- Repository: `Wzyoung203/MAIE6000C-starter-wzy`
-- Checkpoint tag: `w04-proposal`
-- Team members: [Zhang Boxiang , Yang Sibo , Wang Ziyang , Li Zimu]
+- Team name: group14
+- Repository: https://github.com/Wzyoung203/MAIE6000C-starter-wzy
+- Required checkpoint tag: `w04-proposal` (create/push after final review)
+- Team members: Zhang Boxiang, Yang Sibo, Wang Ziyang, Li Zimu
+- Project title: AI Diet Planning and Meal Analysis Platform
+- Status: proposal; model/data integrations and meal features are planned
 
 ---
 
@@ -19,7 +21,7 @@ Our project proposes an AI-enabled diet planning and meal analysis platform.
 
 The system first collects user-provided body information and a target such as target weight or target body-fat percentage. Based on this information, the platform generates a personalized dietary plan.
 
-After the plan has been generated, the user can upload a photo of each meal. The system analyzes the meal image, compares the identified food with the user's current diet plan, and returns feedback on whether the meal is aligned with the plan and how it could be improved.
+After the plan has been generated, the user can upload a photo of each meal. The system analyzes the meal image, compares the identified food with the user's current diet plan, and returns estimated calories/macronutrients and explainable meal-budget feedback. Users supply grams or supported count/size inputs, correct food/preparation choices and confirm the result.
 
 The project focuses on general wellness and dietary guidance. It is not intended to diagnose medical conditions or replace professional medical or dietetic advice.
 
@@ -33,7 +35,7 @@ Generating a diet plan is only the first step. Users also need support when maki
 
 Our platform connects the initial diet-planning stage with continuous meal-level feedback:
 
-`Body Profile → Diet Plan → Meal Photo → AI Analysis → Plan Comparison → Feedback`
+`Body Profile → Diet Plan → Meal Photo + Quantities → AI Analysis → User Confirmation → Plan Comparison → Feedback`
 
 This creates a practical feedback loop between a user's long-term goal and their everyday meals.
 
@@ -41,60 +43,27 @@ This creates a practical feedback loop between a user's long-term goal and their
 
 ## 2. User workflow
 
-The primary workflow is:
-
-1. The user submits basic body information such as height, weight, activity level, and a target weight or target body-fat percentage.
-
-2. The API validates required fields and checks that the submitted values are in acceptable formats and ranges.
-
-3. The system persists the user's body profile and goal in PostgreSQL.
-
-4. The API creates a `DietPlan` request and a `generate_diet_plan` asynchronous job with an initial `pending` status.
-
-5. A background worker claims the job, loads the user's body profile, calls the AI-enabled diet-planning function, validates the returned result, and persists the generated diet plan.
-
-6. The user uploads a photo of a meal. The API validates the upload, creates a `Meal` record, stores an image reference, and creates an `analyze_meal` job.
-
-7. The worker claims the meal-analysis job, loads the uploaded meal and active diet plan, and calls a multimodal AI function to identify the main foods and compare the meal with the current plan.
-
-8. The system persists the meal-analysis result, including an alignment assessment, confidence information, and feedback. The user can then retrieve the result through the platform.
+1. User provides body information and a goal; API validates and persists a profile snapshot. Hosted course demos use synthetic profiles.
+2. API creates a pending plan/generation job in one transaction and returns IDs with `202`. Worker validates AI targets/meal-budget fractions before atomic activation; failed replacement leaves the old plan active.
+3. User uploads a photo, eating time/slot and optional notes such as `150 g cooked beef; 2 large eggs`. API stores a generated shared-volume reference, binds the active plan and creates a job transactionally.
+4. Worker calls AI for food/quantity interpretation, resolves versioned nutrition/portion entries, calculates a draft, and requests grounded explanation of complete computed values where available.
+5. User reviews foods/preparation, grams/count/size, source conversions and missing ingredients. API recalculates calories/macros/alignment, stores an immutable revision and exposes feedback/history/daily totals.
 
 ### Exception path
 
-If AI processing fails:
-
-`processing → failed → retry / request new image / visible error`
-
-The original user, diet-plan, and meal records remain persisted. The related job stores failure information so that the problem can be retried or diagnosed.
-
-If a meal image is too unclear for reliable analysis, the system can ask the user to upload a clearer image.
+Unclear images, unsupported food or unknown portions produce review questions, not invented values. Failed jobs persist and allow explicit retry or manual catalog entry. Ordinary user confirmation is MVP; nutritionist review is optional. Late results cannot overwrite confirmed corrections. No active plan produces a clear conflict. Original AI output stays separate from corrected values; all nutrition remains an estimate.
 
 ---
 
 ## 3. Success criteria
 
-### Product KPI
+- **Product:** at least 18/20 eligible held-out meals reach persisted, confirmed nutrition/plan feedback through the real-model route; report manual completion separately.
+- **AI:** at least 18/20 schema-valid drafts, food/preparation precision ≥0.85 and recall ≥0.80, quantity parsing ≥90% before correction.
+- **Nutrition:** report calorie MAE/relative error against independently checked catalog references; provisional complete-draft mean relative error ≤20%, with coverage/exclusions stated. Confirmed same-source calculation differs by at most 0.1 kcal display rounding, not a claim of laboratory accuracy.
+- **Operations:** attempts/provider calls, quota use, failures/timeouts and warm upload-to-review p95 target ≤150 seconds for up to two model calls; report cold start and failures separately.
+- **Durability:** restart preserves source snapshots, original AI output and confirmed revisions; unknown inputs never become silent zero values.
 
-The primary product KPI is:
-
-**Meal feedback completion rate** — the percentage of valid submitted meal photos for which the platform successfully returns a persisted analysis and actionable feedback.
-
-For the first vertical slice, success means that a user can complete the full workflow:
-
-`Profile → Diet Plan → Meal Photo → Meal Analysis → Feedback`
-
-without manual database intervention.
-
-### Operational KPI
-
-The primary operational KPIs are:
-
-- end-to-end job completion rate;
-- percentage of jobs ending in `failed`;
-- processing latency from job creation to completion;
-- AI-service failure or timeout rate.
-
-For the Week 7 vertical slice, the main operational goal is a reliable and reproducible end-to-end workflow rather than production-scale performance.
+Week 5 uses ten development photos; freeze a separate twenty-meal test set and five exception cases before Week 7. Second-member label/reference checks and failure injections are described in [evaluation-plan.md](../../docs/evaluation-plan.md). These are proposed team targets, not achieved results or extra course requirements.
 
 ---
 
@@ -113,7 +82,8 @@ Responsibilities:
 - collect body information and goals;
 - display generated diet plans;
 - upload meal photos;
-- display meal-analysis results and feedback.
+- display editable foods/quantities, sources and feedback;
+- confirm corrections and retrieve history/daily totals.
 
 #### API Service
 
@@ -122,7 +92,8 @@ Responsibilities:
 - validate user input;
 - create and retrieve persistent records;
 - create asynchronous jobs;
-- expose current diet-plan and meal-analysis state.
+- expose current diet-plan and meal-analysis state;
+- perform deterministic nutrition calculation and confirmation transactions.
 
 Long-running AI processing will not happen directly inside the HTTP request cycle.
 
@@ -135,7 +106,8 @@ Responsibilities:
 - store diet plans;
 - store meal metadata;
 - store meal-analysis results;
-- store job state and timestamps.
+- store job state and timestamps;
+- store source-backed nutrition/portions and immutable correction revisions.
 
 Database records represent the durable system state over time.
 
@@ -166,7 +138,8 @@ flowchart LR
     DB[(PostgreSQL)]
     W[Background Worker]
     AI[AI Service<br/>Diet Plan + Meal Analysis]
-    IMG[Meal Image Storage]
+    IMG[Shared persistent image volume]
+    MODEL[Adapter: OpenRouter free / local fallback]
 
     U -->|body profile / goal| API
     U -->|meal photo| API
@@ -178,7 +151,10 @@ flowchart LR
     DB -->|claim pending work| W
     W -->|load profile / plan / meal| DB
     W -->|AI request| AI
-    AI -->|structured result| W
+    AI -->|read validated image key| IMG
+    AI -->|image bytes / text| MODEL
+    MODEL -->|model output| AI
+    AI -->|validated structured result| W
     W -->|persist result / status| DB
 
     API -->|read state| DB
@@ -191,7 +167,7 @@ The MVP will continue using database-persisted jobs and worker polling rather th
 
 ## 5. Data model and persistence plan
 
-The MVP will use six main persistent entities.
+Retain the six original workflow entities and add four supporting entities for nutrition, count conversion and corrections. Detailed fields/constraints and ERD are in `docs/architecture.md`.
 
 ### `users`
 
@@ -237,6 +213,8 @@ Important fields:
 - `carb_target_g`
 - `fat_target_g`
 - `guidance_text`
+- `meal_budget_fractions` / `comparison_rule_version`
+- `generated_by_job_id` / `original_ai_output`
 - `model_version`
 - `prompt_template_version`
 - `processed_at`
@@ -270,7 +248,8 @@ Important fields:
 - `user_id`
 - `diet_plan_id`
 - `image_ref`
-- `eaten_at`
+- `eaten_at` / `meal_slot` / `quantity_notes`
+- `input_revision` / `confirmed_revision` / `confirmed_totals`
 - `status`
 - `created_at`
 - `updated_at`
@@ -282,7 +261,9 @@ Relationships:
 
 Expected lifecycle:
 
-`uploaded → processing → analyzed`
+`uploaded → processing → needs_review → analyzed`
+
+`analyzed` means a confirmed, recalculated revision exists; recognition alone yields `needs_review`.
 
 Failure:
 
@@ -299,8 +280,9 @@ Important fields:
 - `id`
 - `meal_id`
 - `diet_plan_id`
-- `detected_foods`
-- `alignment_status`
+- unique `job_id`, `input_revision`, `original_ai_output`
+- `detected_foods` / `draft_totals` / `provider_metadata` / `uncertainty_reasons`
+- `alignment_status` (null for incomplete drafts)
 - `feedback`
 - `confidence`
 - `model_version`
@@ -318,7 +300,7 @@ Relationships:
 - `meals.id → meal_analyses.meal_id`
 - `diet_plans.id → meal_analyses.diet_plan_id`
 
-Keeping `diet_plan_id` on the analysis makes it possible to identify exactly which plan was used for the comparison.
+Keeping `diet_plan_id` preserves the referenced plan. A meal may have multiple original-output analyses, each linked to a unique job; analysis is created only on a validated result and has no processing lifecycle of its own.
 
 ### `jobs`
 
@@ -332,7 +314,9 @@ Important fields:
 - `meal_id`
 - `status`
 - `attempts`
-- `error`
+- `error` / `error_code`
+- `next_attempt_at` / `claim_token` / `lease_expires_at`
+- `input_revision` / `input_snapshot`
 - `created_at`
 - `claimed_at`
 - `completed_at`
@@ -351,205 +335,77 @@ Failure:
 
 `claimed → failed`
 
+Transient failures may requeue within three attempts. Enforce exactly one job target compatible with its type, one active plan per owner, one active meal job, and unique result per job.
+
+### Supporting entities
+
+| Entity | Purpose |
+|---|---|
+| `nutrition_foods` | Versioned source/preparation and energy/macros per 100 g |
+| `food_portions` | Source-backed unit/size → edible grams |
+| `meal_items` | Current confirmed items, normalized quantities and source density snapshots |
+| `meal_revisions` | Immutable items/totals/plan-comparison snapshot, source analysis and reason |
+
+AI interprets images/notes; code calculates `grams × nutrient_per_100g / 100`. Count conversion requires supported size/preparation. Missing values remain unresolved. Comparison uses the plan's slot fraction and versioned calorie/macro rules. See [nutrition-model-plan.md](../../docs/nutrition-model-plan.md).
+
 ---
 
 ## 6. API / service plan
 
-The exact API contract will be finalized during Week 5.
-
-Initial endpoints may include:
-
 | Method | Endpoint | Purpose |
 |---|---|---|
-| `POST` | `/users/{user_id}/profiles` | Create a body-profile snapshot |
-| `GET` | `/users/{user_id}/profiles/latest` | Retrieve the latest profile |
-| `POST` | `/diet-plans` | Request diet-plan generation |
-| `GET` | `/diet-plans/{plan_id}` | Retrieve diet plan or processing status |
-| `POST` | `/meals` | Upload/create a meal |
-| `GET` | `/meals/{meal_id}` | Retrieve meal state |
-| `GET` | `/meals/{meal_id}/analysis` | Retrieve AI meal analysis |
-| `GET` | `/jobs/{job_id}` | Retrieve asynchronous job state |
-| `GET` | `/health/live` | Service liveness check |
-| `GET` | `/health/ready` | Service readiness check |
+| POST | `/users/{user_id}/profiles` | Persist profile snapshot |
+| GET | `/users/{user_id}/profiles/latest` | Latest profile |
+| POST / GET | `/diet-plans`, `/diet-plans/{plan_id}` | `202` plan/job creation; state retrieval |
+| GET | `/users/{user_id}/diet-plans/active` | Active plan |
+| POST / GET | `/meals`, `/meals/{meal_id}` | Multipart photo/time/slot/notes; processing/result |
+| GET | `/meals/{meal_id}/analysis` | Explicit pending/failed/draft/result envelope |
+| GET | `/nutrition-foods` | Source food/preparation/portion search |
+| PUT / GET | `/meals/{meal_id}/confirmation`, `/meals/{meal_id}/revisions` | Corrected items/recalculation; history |
+| GET / POST | `/jobs/{job_id}`, `/jobs/{job_id}/retry` | Job state; explicit new job after failure |
+| GET | `/meals`, `/users/{user_id}/daily-summary` | Local-day pagination; confirmed totals by original plan |
+| GET | `/health/live`, `/health/ready` | Liveness/readiness |
 
-Authentication and authorization are not required for the first vertical slice. A stable demo user may be used initially so that development remains focused on the core product workflow.
+Examples/internal contracts: [api-draft.md](../../docs/api-draft.md). Distinguish 202 pending, 404 unknown, 409 absent plan/active duplicate/stale revision, 413 size, 415 type and 422 invalid input. Private first slice uses server-resolved demo ownership; public/multiuser release requires auth. Proposed meal routes are not implemented in the starter.
 
 ---
 
 ## 7. Async / worker plan
 
-AI operations will happen outside the immediate HTTP request cycle.
+`generate_diet_plan`: snapshot → structured AI targets → validation → atomic activation/superseding and completion. Failure preserves the previous active plan.
 
-Two background job types are planned.
+`analyze_meal`: image/notes → recognition → source lookup/conversion/calculation → optional grounded AI explanation → persisted review draft. User confirmation saves the effective result/revision.
 
-### `generate_diet_plan`
+Short PostgreSQL locking claims assign a token/lease and commit before inference. Publish domain/result/job together. Defaults: two-second poll, maximum three attempts, five/fifteen-second backoff; schedule provider Retry-After. Bad inputs/plan or recognition output, missing configuration and known daily exhaustion fail visibly. Explanation-only failure preserves the draft with template feedback/warning.
 
-Flow:
-
-1. API creates a diet-plan request.
-2. API creates a `pending` job.
-3. Worker claims the job.
-4. Worker loads the associated body profile.
-5. Worker calls the diet-plan AI function.
-6. Worker validates the response.
-7. Worker persists the generated diet plan.
-8. Diet plan becomes `active`.
-9. Job becomes `completed`.
-
-Failure behavior:
-
-- job becomes `failed`;
-- diet plan becomes `failed`;
-- error information is persisted.
-
-### `analyze_meal`
-
-Flow:
-
-1. API receives and validates a meal upload.
-2. API creates a meal record.
-3. API creates an `analyze_meal` job.
-4. Worker claims the job.
-5. Worker loads the meal and associated diet plan.
-6. Worker calls the multimodal AI service.
-7. Worker validates the response.
-8. Worker persists a `MealAnalysis`.
-9. Meal becomes `analyzed`.
-10. Job becomes `completed`.
-
-Failure behavior:
-
-- job becomes `failed`;
-- meal becomes `failed` where appropriate;
-- diagnostic error information is persisted;
-- retry or image re-upload may be offered.
+Provider call cap: 50 seconds each; two-call meal request: 120 seconds; lease: 180 seconds. Recover expired claims within the same attempt budget, reject stale tokens/input revisions and prevent duplicate results. Manual confirmation is never overwritten by late success/failure. Explicit retry creates a new job and retains history. These are planned settings to verify, not existing starter features.
 
 ---
 
 ## 8. AI-enabled component
 
-### What is the AI-enabled function?
+Keep both AI functions: structured diet-plan generation and photo/quantity interpretation. AI explains computed nutrition/plan feedback; versioned source values and application rules control calories/alignment. User confirmation handles mistakes.
 
-The project contains two AI-enabled functions.
+First evaluate explicit free OpenRouter multimodal candidates as requested by the team; concrete candidate, official sources, quota/data-policy gates and local Ollama fallback are in [nutrition-model-plan.md](../../docs/nutrition-model-plan.md). The free trial candidate is not food-validated/account-tested; it discloses provider logging. Use synthetic profiles/non-sensitive consented food photos and no paid automatic fallback. Free access does not imply open licensing or privacy. Verify local hardware before claiming fallback availability.
 
-#### Diet-plan generation
+The team intends a bounded open food-model training/adaptation experiment after the pretrained baseline, subject to data/license/compute gates. Nutrient-table import is not model training. Compare against an untouched test set; cut training before core features if resources fail.
 
-The AI receives body-profile and goal information and produces a structured dietary plan containing high-level calorie/macronutrient targets and general dietary guidance.
-
-#### Meal analysis
-
-A multimodal AI model receives an uploaded meal image and the user's active diet plan.
-
-The AI attempts to:
-
-- identify the main foods in the image;
-- estimate relevant meal characteristics;
-- compare the meal with the current diet plan;
-- assign an alignment assessment;
-- generate concise feedback and suggestions.
-
-### Why is AI appropriate?
-
-The input and output contain information that is difficult to represent using only fixed rules.
-
-Meal analysis requires interpretation of visual information, while diet-plan and feedback generation require converting structured user goals and meal observations into useful natural-language guidance.
-
-The AI output will remain part of a controlled engineering workflow rather than being treated as unquestioned system truth.
-
-### AI traceability
-
-For each AI operation, the system should preserve enough evidence to understand how the result was created.
-
-Possible traceability information includes:
-
-- input record reference;
-- diet-plan version/reference;
-- model version;
-- prompt/template version;
-- AI output;
-- confidence/uncertainty information;
-- processing timestamp;
-- job ID.
-
-### Fallback or review path
-
-Possible fallback behavior includes:
-
-- retrying transient AI-service failures;
-- asking the user to upload a clearer meal image;
-- marking a low-confidence result as uncertain;
-- optionally routing uncertain results to human review in a later version.
-
-If a reviewer overrides an AI result in a future version, the system should preserve both the original AI result and the reason for the override.
-
-The exact confidence threshold for review will be decided during implementation and testing.
-
-### Sensitive information
-
-Raw personal body data, credentials, complete AI prompts containing personal information, and image contents should not be copied into standard application logs.
-
-Logs should prefer IDs such as:
-
-- `user_id`
-- `diet_plan_id`
-- `meal_id`
-- `job_id`
-
-together with status, processing duration, error type, and other operational metadata.
+Preserve original output, provider/model/request/prompt IDs, input revision, source/conversion/rule versions and corrected revisions. Model uncertainty is not a calibrated probability. Ordinary confirmation is MVP; nutritionist review is optional. Fixtures/manual completion do not replace genuine AI evaluation.
 
 ---
 
 ## 9. Milestone plan
 
-### Week 5 target
+| Week | Deliverable/evidence |
+|---|---|
+| 5 | Free-provider access/quota/policy and local-hardware gates; reviewed nutrition/portion seed; contract/migrations and first persistent records |
+| 7 | Real profile → plan → image/quantity → confirmed nutrition → plan feedback/history; frozen evaluation separates AI/manual results |
+| 9 | Second-member reproduction/restart persistence; at most one gated small adaptation experiment |
+| 11 | Timeout/crash/duplicate/late-write/stale-revision checks; bounded retries and latency/failure measurements |
+| 12 | Internal freeze/rehearsal |
+| 13 | Tested final loop, final docs, genuine-model demonstration and evaluation report |
 
-- finalize the first API contract;
-- finalize the first database schema;
-- create required Alembic migrations;
-- implement the first API → PostgreSQL persistence path;
-- create initial body-profile and diet-plan request records.
-
-### Week 7 target
-
-Deliver the first complete end-to-end vertical slice:
-
-`Body Profile → Diet Plan → Meal Photo → AI Analysis → Plan Comparison → Feedback`
-
-Minimum successful outcome:
-
-- user profile can be persisted;
-- diet-plan generation can complete asynchronously;
-- a meal image can be submitted;
-- meal-analysis processing can complete asynchronously;
-- result can be persisted and retrieved.
-
-### Week 9 target
-
-- reproducible Docker-based deployment;
-- documented startup procedure;
-- API, PostgreSQL, worker, and AI-related services can be started consistently;
-- another team member can clone the repository and reproduce the system.
-
-### Week 11 target
-
-Improve:
-
-- structured logging;
-- failure handling;
-- retry behavior;
-- health checks;
-- AI-service timeout handling;
-- low-confidence result behavior;
-- observability;
-- basic performance/latency measurement.
-
-### Week 13 target
-
-- complete and tested primary workflow;
-- integration and smoke tests;
-- final architecture and operations documentation;
-- reproducible live demonstration;
-- final scope review and cleanup.
+Assign owner/reviewer to profile/plan/UI; API/schema/nutrition; AI/evaluation; worker/deployment/reliability before Week 5. Individual assignments need team agreement. Acceptance definitions: [evaluation-plan.md](../../docs/evaluation-plan.md).
 
 ---
 
@@ -562,7 +418,9 @@ A single meal image may not provide enough information to accurately identify ev
 Mitigation:
 
 - treat portion and nutrition estimates as approximate;
-- focus the MVP on qualitative plan alignment;
+- use user grams or verified count/size conversions;
+- source approximate calories/macros from a versioned catalog;
+- compare against a documented meal budget and preserve assumptions;
 - expose uncertainty where possible;
 - ask for a clearer image if the input is insufficient.
 
@@ -591,7 +449,10 @@ The team will prioritize one complete vertical slice before optional features.
 
 - sensitive user/body data;
 - non-deterministic AI outputs;
-- external AI availability or rate limits;
+- free-provider access/quota/data policy and model licensing;
+- local hardware or training data/compute unavailable;
+- unsupported conversions/raw-cooked mismatches;
+- stale or duplicate results overwriting corrections;
 - image storage complexity;
 - schema changes later in the semester.
 
@@ -608,15 +469,10 @@ The first scope cuts will be:
 7. social/community features;
 8. shopping-list generation;
 9. recipe recommendations;
-10. multiple-model routing.
+10. advanced multiple-model routing;
+11. training if data/compute/schedule gates fail.
 
-If further simplification is required, meal analysis will return only:
-
-- `aligned`
-- `partially_aligned`
-- `not_aligned`
-
-plus a short textual recommendation.
+If simplification is required, narrow supported foods, simplify the browser UI and use short computed/template feedback. Keep user quantities, approximate sourced calories, correction history and real AI. Rich macro charts/training are optional; exact photo-only precision is not promised.
 
 ---
 
@@ -635,6 +491,10 @@ The following artifacts support the Week 4 proposal.
   - `meals`
   - `meal_analyses`
   - `jobs`
+  - `nutrition_foods`
+  - `food_portions`
+  - `meal_items`
+  - `meal_revisions`
 
 - Architecture diagram  
   End-to-end architecture flow showing:
@@ -654,14 +514,16 @@ The following artifacts support the Week 4 proposal.
 - Risk register and scope plan  
   Documents major technical/product risks and features that will be cut first if progress slips.
 
-- `submissions/week04/README.md`  
-  Concise Week 4 architecture proposal and project plan.
+- `docs/nutrition-model-plan.md`: source/conversion/rules, model gates and training.
+- `docs/api-draft.md`: examples, service contracts and exceptions.
+- `docs/evaluation-plan.md`: evaluation set, KPIs, failure checks and milestone evidence.
+- `submissions/week04/README.md`: this proposal and AI Use Statement.
 
 ---
 
 ## 12. AI Use Statement
 
-Generative AI tools were used to assist with the preparation of this Week 4 milestone.
+Generative AI tools assisted this milestone. **OpenAI Codex** assisted this revision by inspecting the starter/assignment, incorporating Zhang Boxiang's answers, drafting repairs and checking official provider/data documentation. Name any additional tools used in earlier drafts before submission.
 
 AI assistance was used for:
 
@@ -675,13 +537,33 @@ AI assistance was used for:
 - helping prepare initial architecture and ERD representations;
 - editing and organizing proposal documentation.
 
-The team did not treat AI-generated content as authoritative.
+The team remains responsible for understanding, explaining and verifying the AI-assisted design.
 
-The proposed design was checked against:
+The final team review will check the design against:
 
 - the Week 4 lab requirements;
 - the existing starter repository structure;
 - the starter's API → PostgreSQL → worker → AI processing pattern;
 - the project team's intended product workflow.
 
-The team will manually review the final architecture, schema, API design, and implementation decisions before creating the `w04-proposal` checkpoint tag.
+This revision preserved the original product loop, grounded estimates in user quantities/source data, separated training from import, and repaired schema/states, images, recovery, APIs and evaluation. Codex checked local document links and diff consistency; agent checks are not team approval. No account inference, training, nutrition import or meal implementation was performed.
+
+The team will review scope/source/model assumptions, schema, APIs and milestones before the tag. Record actual reviewers and any additional verified/changed/rejected decisions; earlier draft tool history and final team review remain to be completed.
+
+## Final submission checklist and Canvas record
+
+- [x] Required artifacts exist; team name is `group14`.
+- [ ] Confirm official brief/title and assign owners/reviewers.
+- [ ] Complete actual final team verification and AI tool history.
+- [ ] Commit reviewed artifacts and create/push `w04-proposal`.
+- [ ] Fill the full tagged SHA and submit Canvas.
+
+```text
+Repository: https://github.com/Wzyoung203/MAIE6000C-starter-wzy
+  Required tag: w04-proposal
+  Tagged commit SHA: [full SHA of reviewed, pushed tag]
+  Primary artifact: submissions/week04/README.md
+  Team name: group14
+  Selected brief or project title: AI Diet Planning and Meal Analysis Platform
+  Optional note: AI Use Statement is included in the primary artifact.
+```
