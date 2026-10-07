@@ -90,4 +90,4 @@ Evaluate baseline versus adapted model on the same untouched test set for food m
 
 ## 7. Decisions still requiring team verification
 
-Official brief compatibility, exact source records and portion conversions, model license/access, account quota, local hardware and training labels remain verification tasks. Published documentation confirms candidate capabilities, not this application's achieved quality or availability.
+Exact source records and portion conversions, model license/access, account quota, local hardware and training labels remain technical verification tasks. The project title, membership and planning allocation are recorded in [team-plan.md](team-plan.md); no unsupported official brief identifier is claimed. Published documentation confirms candidate capabilities, not this application's achieved quality or availability.

@@ -757,7 +757,7 @@ Private demo requests must refer to the server-selected demo owner. At upload bi
 | Week 12 | Internal feature freeze and rehearsal; no new optional features |
 | Week 13 | Tested final workflow, final architecture/operations docs, reproducible real-model demonstration and honest evaluation report |
 
-Use four workstreams: profile/plan/UI; API/schema/nutrition/calculation; AI/provider/evaluation; worker/deployment/reliability. Each needs a named owner and reviewer before Week 5; individual assignments await team agreement. Freeze shared contracts, then integrate persistence → real AI → user review before optional training or dashboards. Do not postpone provider feasibility until Week 7.
+Named primary owners and reviewers for the four workstreams are recorded in [team-plan.md](team-plan.md): Yang Sibo leads UI/workflow, Zhang Boxiang leads API/schema/calculation, Li Zimu leads AI/data/evaluation, and Wang Ziyang leads worker/deployment/reliability. These are planning allocations, not claims of completed work or independent review. Freeze shared contracts, then integrate persistence → real AI → user review before optional training or dashboards. Do not postpone provider feasibility until Week 7.
 
 Acceptance cases and measurement definitions are in [evaluation-plan.md](evaluation-plan.md). Proposed targets are team acceptance criteria, not extra instructor requirements or results already achieved.
 
@@ -837,7 +837,7 @@ Exact photo-only estimates remain outside scope; approximate sourced calories ar
 
 - Freeze an available, permitted free OpenRouter model and provider configuration after the Week 5 benchmark; evaluate the local fallback on actual team hardware.
 - Select exact source food/portion records and catalog coverage; nutrition units, licenses, release and checksums must be recorded.
-- Confirm the official project brief/title and workstream ownership. The brief's full text was not provided for this documentation revision.
+- Use the project title **AI Diet Planning and Meal Analysis Platform** and the completed [team record](team-plan.md) for submission. No unsupported official brief identifier or instructor approval is claimed.
 - Finalize profile inputs/target-generation validation using the selected method, and obtain team agreement on the demo comparison rules.
 - Confirm training labels, license, compute budget and independent test split before attempting adaptation.
 

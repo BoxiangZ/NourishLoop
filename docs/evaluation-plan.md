@@ -65,4 +65,4 @@ No duplicate published analysis, overwritten confirmed revision, infinite automa
 | Week 12 | Internal freeze/rehearsal |
 | Week 13 | Final tests, real-model demo, final operations guide and honest limitations |
 
-Assign an owner and reviewer for profile/plan/UI, API/schema/nutrition, AI/evaluation and worker/deployment before Week 5. The teammate names in the proposal are membership, not an automatic assignment. Store evaluation evidence without keys or personal data and publish only permitted photos.
+Named owners/reviewers and planned deliverables are recorded in [team-plan.md](team-plan.md). The allocation is a proposal plan, not evidence of work already completed. Store evaluation evidence without keys or personal data and publish only permitted photos.

@@ -4,9 +4,12 @@
 
 - Team name: group14
 - Repository: https://github.com/Wzyoung203/MAIE6000C-starter-wzy
-- Required checkpoint tag: `w04-proposal` (create/push after final review)
+- Required checkpoint tag: `w04-proposal`
 - Team members: Zhang Boxiang, Yang Sibo, Wang Ziyang, Li Zimu
 - Project title: AI Diet Planning and Meal Analysis Platform
+- Proposal branch: `boxiang/w04-calorie-proposal`
+- Proposal contact/editor: Zhang Boxiang
+- Preparation date: 2026-10-07 (Asia/Hong_Kong)
 - Status: proposal; model/data integrations and meal features are planned
 
 ---
@@ -405,7 +408,7 @@ Preserve original output, provider/model/request/prompt IDs, input revision, sou
 | 12 | Internal freeze/rehearsal |
 | 13 | Tested final loop, final docs, genuine-model demonstration and evaluation report |
 
-Assign owner/reviewer to profile/plan/UI; API/schema/nutrition; AI/evaluation; worker/deployment/reliability before Week 5. Individual assignments need team agreement. Acceptance definitions: [evaluation-plan.md](../../docs/evaluation-plan.md).
+The planned owner/reviewer allocation is complete in [team-plan.md](../../docs/team-plan.md): Yang Sibo leads UI/workflow, Zhang Boxiang leads API/schema/calculation, Li Zimu leads AI/data/evaluation, and Wang Ziyang leads worker/deployment/reliability. It is a planning allocation, not a claim of completed member work. Acceptance definitions: [evaluation-plan.md](../../docs/evaluation-plan.md).
 
 ---
 
@@ -517,53 +520,26 @@ The following artifacts support the Week 4 proposal.
 - `docs/nutrition-model-plan.md`: source/conversion/rules, model gates and training.
 - `docs/api-draft.md`: examples, service contracts and exceptions.
 - `docs/evaluation-plan.md`: evaluation set, KPIs, failure checks and milestone evidence.
-- `submissions/week04/README.md`: this proposal and AI Use Statement.
+- `docs/team-plan.md`: completed project/team record, named planning owners/reviewers and integration sequence.
+- `submissions/week04/ai-use-statement.md`: tools, team-supplied decisions, rejected rewrite, agent checks and limitations.
+- `submissions/week04/README.md`: primary proposal.
 
 ---
 
 ## 12. AI Use Statement
 
-Generative AI tools assisted this milestone. **OpenAI Codex** assisted this revision by inspecting the starter/assignment, incorporating Zhang Boxiang's answers, drafting repairs and checking official provider/data documentation. Name any additional tools used in earlier drafts before submission.
+**OpenAI Codex** assisted this revision. Zhang Boxiang supplied the nutrition/quantity and provider decisions, rejected an earlier rewrite that removed diet-plan generation, and requested the repaired proposal on his branch. Codex preserved the teammate's original product loop, repaired technical gaps, checked source documentation and verified document consistency.
 
-AI assistance was used for:
+The complete [AI Use Statement](ai-use-statement.md) distinguishes supplied team decisions and agent checks from future implementation/evaluation. No independent whole-team review, model inference, data import or training result is claimed.
 
-- reviewing and explaining the starter repository architecture;
-- identifying relevant starter API, worker, model, migration, and test evidence;
-- brainstorming and refining the proposed primary workflow;
-- drafting candidate database entities and relationships;
-- drafting the state-transition responsibility table;
-- organizing AI traceability and failure-handling considerations;
-- drafting milestone, risk, and scope-control sections;
-- helping prepare initial architecture and ERD representations;
-- editing and organizing proposal documentation.
+## Submission record
 
-The team remains responsible for understanding, explaining and verifying the AI-assisted design.
+- Team: **group14**.
+- Repository: https://github.com/Wzyoung203/MAIE6000C-starter-wzy.
+- Project title: **AI Diet Planning and Meal Analysis Platform**.
+- Required repository checkpoint: **w04-proposal**.
+- Primary artifact: **submissions/week04/README.md**.
+- Proposal branch: **boxiang/w04-calorie-proposal**.
+- Membership and planning owners/reviewers: [team-plan.md](../../docs/team-plan.md).
 
-The final team review will check the design against:
-
-- the Week 4 lab requirements;
-- the existing starter repository structure;
-- the starter's API → PostgreSQL → worker → AI processing pattern;
-- the project team's intended product workflow.
-
-This revision preserved the original product loop, grounded estimates in user quantities/source data, separated training from import, and repaired schema/states, images, recovery, APIs and evaluation. Codex checked local document links and diff consistency; agent checks are not team approval. No account inference, training, nutrition import or meal implementation was performed.
-
-The team will review scope/source/model assumptions, schema, APIs and milestones before the tag. Record actual reviewers and any additional verified/changed/rejected decisions; earlier draft tool history and final team review remain to be completed.
-
-## Final submission checklist and Canvas record
-
-- [x] Required artifacts exist; team name is `group14`.
-- [ ] Confirm official brief/title and assign owners/reviewers.
-- [ ] Complete actual final team verification and AI tool history.
-- [ ] Commit reviewed artifacts and create/push `w04-proposal`.
-- [ ] Fill the full tagged SHA and submit Canvas.
-
-```text
-Repository: https://github.com/Wzyoung203/MAIE6000C-starter-wzy
-  Required tag: w04-proposal
-  Tagged commit SHA: [full SHA of reviewed, pushed tag]
-  Primary artifact: submissions/week04/README.md
-  Team name: group14
-  Selected brief or project title: AI Diet Planning and Meal Analysis Platform
-  Optional note: AI Use Statement is included in the primary artifact.
-```
+The Canvas record must use the full commit SHA resolved from the required tag, rather than assuming the branch tip is the tagged commit. Publication records may follow the tagged proposal commit. Canvas submission itself is a separate action; this repository does not claim it has been submitted.

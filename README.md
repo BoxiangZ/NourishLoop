@@ -4,6 +4,8 @@ Course project for **MAIE 6000C — Engineering AI Products: From Prototype to P
 
 Team: **group14** — Zhang Boxiang, Yang Sibo, Wang Ziyang, Li Zimu.
 
+Project record, owner/reviewer allocation and integration sequence: [docs/team-plan.md](docs/team-plan.md).
+
 ## Project Overview
 
 This project develops an AI-enabled platform that helps users follow a personalized dietary plan.
@@ -716,6 +718,8 @@ Supporting design artifacts:
 - [Nutrition, model and training plan](docs/nutrition-model-plan.md)
 - [API examples and service contracts](docs/api-draft.md)
 - [Evaluation and acceptance plan](docs/evaluation-plan.md)
+- [Team and project record](docs/team-plan.md)
+- [Week 4 AI Use Statement](submissions/week04/ai-use-statement.md)
 
 ## Milestone Tags
 
