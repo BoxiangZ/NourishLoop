@@ -1,0 +1,7 @@
+Repository: https://github.com/Wzyoung203/MAIE6000C-starter-wzy
+  Required tag: w04-proposal
+  Tagged commit SHA: [full SHA after the reviewed tag is created and pushed]
+  Primary artifact: submissions/week04/README.md
+  Team name: group14
+  Selected brief or project title: Photo-assisted Calorie Tracking App
+  Optional note: Architecture proposal and project plan; AI Use Statement included in submissions/week04/ai-use-statement.md.
