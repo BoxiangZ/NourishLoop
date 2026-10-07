@@ -555,7 +555,7 @@ Repository: https://github.com/Wzyoung203/MAIE6000C-starter-wzy
   Primary artifact: submissions/week04/README.md
   Team name: group14
   Selected brief or project title: AI Diet Planning and Meal Analysis Platform
-  Optional note: Proposal branch boxiang/w04-calorie-proposal; AI Use Statement: submissions/week04/ai-use-statement.md.
+  Optional note: Week 4 team architecture proposal and project plan; AI Use Statement: submissions/week04/ai-use-statement.md.
 ```
 
 Copyable record: [canvas-submission.txt](canvas-submission.txt). The record is prepared; submission to Canvas is not claimed.
