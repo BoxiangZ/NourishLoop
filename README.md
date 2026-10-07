@@ -720,6 +720,7 @@ Supporting design artifacts:
 - [Evaluation and acceptance plan](docs/evaluation-plan.md)
 - [Team and project record](docs/team-plan.md)
 - [Week 4 AI Use Statement](submissions/week04/ai-use-statement.md)
+- [Completed Canvas submission record](submissions/week04/canvas-submission.txt)
 
 ## Milestone Tags
 

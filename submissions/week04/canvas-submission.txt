@@ -1,0 +1,7 @@
+Repository: https://github.com/Wzyoung203/MAIE6000C-starter-wzy
+  Required tag: w04-proposal
+  Tagged commit SHA: 95e35a76e5d56071293801dfb9cd4124f69c7ab7
+  Primary artifact: submissions/week04/README.md
+  Team name: group14
+  Selected brief or project title: AI Diet Planning and Meal Analysis Platform
+  Optional note: Proposal branch boxiang/w04-calorie-proposal; AI Use Statement: submissions/week04/ai-use-statement.md.

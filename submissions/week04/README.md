@@ -543,3 +543,19 @@ The complete [AI Use Statement](ai-use-statement.md) distinguishes supplied team
 - Membership and planning owners/reviewers: [team-plan.md](../../docs/team-plan.md).
 
 The Canvas record must use the full commit SHA resolved from the required tag, rather than assuming the branch tip is the tagged commit. Publication records may follow the tagged proposal commit. Canvas submission itself is a separate action; this repository does not claim it has been submitted.
+
+### Completed Canvas record
+
+The checkpoint resolves to the proposal commit below. This record was added after tagging so its full SHA can be recorded without a self-referencing commit hash. The branch tip may therefore be newer than the checkpoint; the tag remains the authoritative proposal snapshot.
+
+```text
+Repository: https://github.com/Wzyoung203/MAIE6000C-starter-wzy
+  Required tag: w04-proposal
+  Tagged commit SHA: 95e35a76e5d56071293801dfb9cd4124f69c7ab7
+  Primary artifact: submissions/week04/README.md
+  Team name: group14
+  Selected brief or project title: AI Diet Planning and Meal Analysis Platform
+  Optional note: Proposal branch boxiang/w04-calorie-proposal; AI Use Statement: submissions/week04/ai-use-statement.md.
+```
+
+Copyable record: [canvas-submission.txt](canvas-submission.txt). The record is prepared; submission to Canvas is not claimed.
