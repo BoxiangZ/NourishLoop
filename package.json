@@ -1,0 +1,12 @@
+{
+  "name": "nourishloop",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "dev": "pnpm --filter @nourishloop/web dev",
+    "build": "pnpm --filter @nourishloop/web build",
+    "lint": "pnpm --filter @nourishloop/web lint",
+    "typecheck": "pnpm --filter @nourishloop/web typecheck",
+    "test:web": "pnpm --filter @nourishloop/web test"
+  }
+}

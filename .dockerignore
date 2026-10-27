@@ -5,3 +5,6 @@ __pycache__
 .pytest_cache
 *.pyc
 .env
+node_modules
+.next
+*.tsbuildinfo

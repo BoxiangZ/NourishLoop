@@ -1,0 +1,5 @@
+# Replace role placeholders with actual GitHub handles after team agreement.
+# /apps/web/ @frontend-owner
+# /apps/api/modules/recommendations/ @recommendation-owner
+# /apps/api/ @backend-owner
+# /alembic/ @data-owner

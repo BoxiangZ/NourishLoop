@@ -15,69 +15,71 @@ services:
       timeout: 5s
       retries: 10
 
-  ai:
-    build: .
-    command: uvicorn services.ai.app.main:app --host 0.0.0.0 --port 8100
-    env_file:
-      - .env
-    environment:
-      AI_SERVICE_URL: http://ai:8100
-    ports:
-      - "${AI_HOST_PORT:-8100}:8100"
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/health/live')"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
   api:
     build: .
-    command: /bin/sh -c "alembic upgrade head && uvicorn services.api.app.main:app --host 0.0.0.0 --port 8000"
-    env_file:
-      - .env
+    command: /bin/sh -c "alembic upgrade head && python -m scripts.seed_nourishloop && uvicorn apps.api.main:app --host 0.0.0.0 --port 8000"
     environment:
+      APP_ENV: development
+      DEMO_AUTH_ENABLED: "true"
       DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/maie6000c
-      AI_SERVICE_URL: http://ai:8100
+      CORS_ORIGIN: http://localhost:3000
+      EXPLANATION_PROVIDER: ${EXPLANATION_PROVIDER:-deterministic}
     ports:
       - "${API_HOST_PORT:-8000}:8000"
     depends_on:
       db:
         condition: service_healthy
-      ai:
-        condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/live')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
       interval: 10s
       timeout: 5s
       retries: 10
 
   worker:
     build: .
-    command: python -m services.worker.app.main
-    env_file:
-      - .env
+    command: python -m apps.api.worker
     environment:
+      APP_ENV: development
       DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/maie6000c
-      AI_SERVICE_URL: http://ai:8100
+      EXPLANATION_PROVIDER: ${EXPLANATION_PROVIDER:-deterministic}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-nvidia/nemotron-3.5-super-vl:free}
+      OPENROUTER_TIMEOUT_SECONDS: ${OPENROUTER_TIMEOUT_SECONDS:-20}
     depends_on:
-      db:
-        condition: service_healthy
-      ai:
-        condition: service_healthy
       api:
         condition: service_healthy
 
-  prometheus:
-    image: prom/prometheus:v2.54.1
-    profiles: ["observability"]
-    volumes:
-      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  ai:
+    profiles: ["week4-ai"]
+    build: .
+    command: uvicorn services.ai.app.main:app --host 0.0.0.0 --port 8100
+    environment:
+      HKG_API_KEY: ${HKG_API_KEY:-}
+      HKG_API_BASE_URL: ${HKG_API_BASE_URL:-https://api1.hkgai.net}
+      HKG_MODEL: ${HKG_MODEL:-t2_hkgai-v3_fp8_1m_e7}
+      HKG_REQUEST_TIMEOUT_SECONDS: ${HKG_REQUEST_TIMEOUT_SECONDS:-45}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_API_BASE_URL: ${GEMINI_API_BASE_URL:-https://generativelanguage.googleapis.com}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash-lite}
+      GEMINI_REQUEST_TIMEOUT_SECONDS: ${GEMINI_REQUEST_TIMEOUT_SECONDS:-90}
     ports:
-      - "9090:9090"
+      - "127.0.0.1:${AI_HOST_PORT:-8100}:8100"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/health/live')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "${WEB_HOST_PORT:-3000}:3000"
     depends_on:
       api:
-        condition: service_healthy
-      ai:
         condition: service_healthy
 
 volumes:

@@ -35,7 +35,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install dependencies
         run: |
@@ -48,5 +48,35 @@ jobs:
       - name: Alembic migration
         run: alembic upgrade head
 
+      - name: Seed demo data
+        run: APP_ENV=development DEMO_AUTH_ENABLED=true python -m scripts.seed_nourishloop
+
+      - name: Generated API schema is current
+        run: |
+          python -m scripts.generate_api_types
+          git diff --exit-code -- packages/api-client/src/openapi.json packages/api-client/src/schema.ts
+
       - name: Unit and integration tests
         run: pytest -q tests/unit tests/integration
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install pnpm
+        run: npm install --global pnpm@9.15.9
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Lint
+        run: pnpm lint
+      - name: Frontend test
+        run: pnpm test:web
+      - name: Build
+        run: pnpm build

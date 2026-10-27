@@ -3,11 +3,11 @@ requires = ["setuptools>=80.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "maie6000c-starter-template"
+name = "nourishloop-foundation"
 version = "0.1.0"
-description = "Starter template for MAIE 6000C"
+description = "NourishLoop MVP foundation built on the MAIE 6000C starter"
 readme = "README.md"
-requires-python = ">=3.11,<3.12"
+requires-python = ">=3.12,<3.13"
 dependencies = [
   "alembic==1.16.4",
   "fastapi==0.116.1",
@@ -29,7 +29,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["services", "services.*"]
+include = ["apps", "apps.*", "services", "services.*"]
 
 [tool.pytest.ini_options]
 markers = [
@@ -39,7 +39,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F"]

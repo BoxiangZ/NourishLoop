@@ -1,4 +1,4 @@
-.PHONY: install-dev up down reset test smoke migrate seed lint
+.PHONY: install-dev up down reset test smoke migrate seed lint types
 
 install-dev:
 	pip install -e .[dev]
@@ -16,13 +16,16 @@ test:
 	pytest -q tests/unit tests/integration
 
 smoke:
-	SMOKE_BASE_URL=http://localhost:8000 pytest tests/smoke -q
+	SMOKE_BASE_URL=http://localhost:8000 pytest -q tests/smoke/test_smoke_nourishloop.py
 
 migrate:
 	docker compose run --rm api alembic upgrade head
 
 seed:
-	docker compose run --rm api python scripts/seed_demo_data.py
+	docker compose run --rm api python -m scripts.seed_nourishloop
 
 lint:
 	ruff check .
+
+types:
+	python -m scripts.generate_api_types

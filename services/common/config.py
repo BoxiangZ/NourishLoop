@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from functools import lru_cache
 
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pythonjsonlogger import jsonlogger
 
@@ -14,6 +15,14 @@ class Settings(BaseSettings):
     ai_service_url: str = "http://ai:8100"
     worker_poll_seconds: float = 2.0
     worker_request_timeout_seconds: float = 20.0
+    hkg_api_key: SecretStr | None = None
+    hkg_api_base_url: str = "https://api1.hkgai.net"
+    hkg_model: str = "t2_hkgai-v3_fp8_1m_e7"
+    hkg_request_timeout_seconds: float = Field(default=45.0, gt=0, le=120)
+    gemini_api_key: SecretStr | None = None
+    gemini_api_base_url: str = "https://generativelanguage.googleapis.com"
+    gemini_model: str = "gemini-3.5-flash-lite"
+    gemini_request_timeout_seconds: float = Field(default=90.0, gt=0, le=180)
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

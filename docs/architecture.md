@@ -1,5 +1,7 @@
 # Architecture Proposal
 
+> Historical Week 4 proposal. The implemented Week 7 NourishLoop architecture is documented in [architecture/overview.md](architecture/overview.md).
+
 Team: **group14**. Status: Week 4 proposal; meal-domain features and provider/data integrations below are planned, not implemented.
 
 ## 1. Project Overview

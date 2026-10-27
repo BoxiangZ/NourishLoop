@@ -1,0 +1,6 @@
+Repository: https://github.com/Wzyoung203/MAIE6000C-starter-wzy
+  Required tag: w07-midterm
+  Tagged commit SHA: <fill after tag is pushed>
+  Primary artifact: submissions/week07/README.md
+  Team name: group14
+  Demo readiness note: NourishLoop recommendation → worker result → plan → confirmed meal log → explicit Community share is implemented and tested. Docker Compose rehearsal pending on a machine with a running Docker daemon.

@@ -1,0 +1,9 @@
+# Recommendation baseline and worker
+
+`RuleBasedRecommendationEngine` filters catalog allergens against a user's allergies and enforces vegan/vegetarian restrictions. Eligible candidates receive `rules-v1` scores: 55% approximate meal calorie budget, 25% protein fit, and 20% preferred tags. Ties use stable item IDs. The run stores scoring configuration and selected explanation provider. Scores are ranking signals, not probabilities. Every result has low evidence confidence because catalog nutrition is fictional and illustrative.
+
+`POST /api/v1/recommendations/jobs` persists a pending job and returns 202. The worker claims a pending or expired claimed job, writes the run and items, and marks it completed. `GET /api/v1/recommendations/jobs/{id}` reports state, attempts, error type, and the persisted run. A job can be reclaimed after a lease timeout, at most three claims. Processing exceptions mark it failed. The older synchronous `/recommendations/meals` endpoint remains for compatibility but the Week 7 browser uses jobs.
+
+By default, explanations are deterministic. With `EXPLANATION_PROVIDER=openrouter`, the worker asks the configured model to rewrite only the first recommendation explanation. The request includes the candidate name and baseline wording; it does not include the user's profile, goal, allergies, or identity. The model cannot add catalog items or affect score. The adapter has a timeout and output validation; failures fall back to the deterministic explanation. A key is required for that optional path.
+
+No real-user relevance study or calibrated confidence validation has been completed. Next evaluation should measure restriction compliance, ranking judgments, latency, selection and confirmation rates, and provider fallback frequency against a frozen dataset.

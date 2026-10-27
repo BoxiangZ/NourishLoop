@@ -3,10 +3,23 @@ from __future__ import annotations
 import logging
 from time import perf_counter
 
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, HTTPException, Response
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
-from services.common.config import configure_logging
+from services.ai.app.drafts import (
+    DietPlanDraftRequest,
+    DietPlanDraftResponse,
+    MealNotesRequest,
+    MealNotesResponse,
+    MealRecognitionRequest,
+    MealRecognitionResponse,
+    draft_plan,
+    interpret_meal_notes,
+    recognize_meal,
+)
+from services.ai.app.gemini import GeminiClient
+from services.ai.app.hkgai import HKGaiClient, ProviderError
+from services.common.config import configure_logging, get_settings
 from services.common.schemas import HealthResponse, TriageRequest, TriageResponse
 
 configure_logging()
@@ -85,3 +98,30 @@ def triage(payload: TriageRequest) -> TriageResponse:
         },
     )
     return result
+
+
+@app.post("/diet-plans/draft", response_model=DietPlanDraftResponse)
+def create_diet_plan_draft(payload: DietPlanDraftRequest) -> DietPlanDraftResponse:
+    try:
+        return draft_plan(HKGaiClient(get_settings()), payload)
+    except ProviderError as exc:
+        logger.warning("diet_plan_provider_failed", extra={"reason": str(exc)})
+        raise HTTPException(status_code=502, detail=str(exc)) from None
+
+
+@app.post("/meals/interpret-notes", response_model=MealNotesResponse)
+def create_meal_notes_draft(payload: MealNotesRequest) -> MealNotesResponse:
+    try:
+        return interpret_meal_notes(HKGaiClient(get_settings()), payload)
+    except ProviderError as exc:
+        logger.warning("meal_notes_provider_failed", extra={"reason": str(exc)})
+        raise HTTPException(status_code=502, detail=str(exc)) from None
+
+
+@app.post("/meals/recognize", response_model=MealRecognitionResponse)
+def create_meal_recognition(payload: MealRecognitionRequest) -> MealRecognitionResponse:
+    try:
+        return recognize_meal(GeminiClient(get_settings()), payload)
+    except ProviderError as exc:
+        logger.warning("meal_image_provider_failed", extra={"reason": str(exc)})
+        raise HTTPException(status_code=502, detail=str(exc)) from None
