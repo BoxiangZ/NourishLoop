@@ -11,6 +11,7 @@ from apps.api.modules.catalog.schemas import menu_item_read
 from apps.api.modules.catalog.service import get_menu_item
 from apps.api.modules.identity.models import User
 from apps.api.modules.recommendations.models import RecommendationItem, RecommendationRun
+from apps.api.modules.rewards.service import award_event
 from apps.api.modules.tracking.models import Decision, MealLog
 from apps.api.modules.tracking.schemas import (
     DailySummary,
@@ -102,6 +103,8 @@ def create_meal_log(db: Session, user: User, payload: MealLogCreate) -> MealLogR
     )
     decision.status = "confirmed"
     db.add(log)
+    db.flush()
+    award_event(db, user.id, "confirm_meal", "meal_log", log.id, log.consumed_at)
     db.commit()
     db.refresh(log)
     return meal_log_read(db, log)

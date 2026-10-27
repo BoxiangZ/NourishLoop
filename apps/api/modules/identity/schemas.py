@@ -41,5 +41,6 @@ class GoalRead(GoalUpdate):
 
 class MeRead(BaseModel):
     id: str
+    is_moderator: bool
     profile: ProfileRead
     goal: GoalRead

@@ -23,4 +23,18 @@ Current limitations: preference/allergy strings are free-text normalized to lowe
 
 ## Week 7 additions
 
-Alembic revision `20261027_0003` adds `recommendation_jobs` (user, meal slot, requested limit, provider, lifecycle status, claim count/lease, result run, error type and timestamps) and `community_posts` (author, unique confirmed meal-log reference, caption and creation time). The worker stores a run and job completion in one transaction. A post references a meal log rather than duplicating nutrition; deleting a post does not delete the log. Only a confirmed log can be shared through the API service. The schema does not yet include a moderation workflow or audience controls.
+Alembic revision `20261027_0003` adds `recommendation_jobs` (user, meal slot, requested limit, provider, lifecycle status, claim count/lease, result run, error type and timestamps) and `community_posts` (author, unique confirmed meal-log reference, caption and creation time). The worker stores a run and job completion in one transaction. A post references a meal log rather than duplicating nutrition. Only a confirmed log can be shared through the API service.
+
+## Community and rewards extension
+
+Revision `20261028_0004` adds Community comments, unique per-user post reactions, reports with resolution state, post visibility, and a demo moderator role. Author removal and moderator removal hide a post while retaining its row and reports for audit. It also adds:
+
+| Table | Constraint and purpose |
+|---|---|
+| `habit_definitions` | Seeded daily habits with points and weekly targets |
+| `habit_events` | One event per user/habit/Hong Kong local day; source type and ID for audit |
+| `credit_transactions` | Signed append-only ledger; a row refers to a habit event, redemption, or reversed credit |
+| `reward_items` | Seeded noncommercial digital badges |
+| `reward_redemptions` | One redemption per user/badge, with cost snapshot |
+
+Habit events and credit grants commit with their confirmed meal log or voluntary Community post. Removing a credited post appends a negative reversal and marks its habit event reversed; it does not change the meal log. A revoked credit can leave a negative balance after a prior redemption, which future earned credits offset. No cash-value rewards, merchant funding, or payment integration exist.

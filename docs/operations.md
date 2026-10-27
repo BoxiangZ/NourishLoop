@@ -1,4 +1,4 @@
-# NourishLoop operations (Week 7)
+# NourishLoop operations
 
 ## Start the live stack
 
@@ -19,7 +19,9 @@ The API container runs migrations and seeds fictional catalog data before becomi
 3. Select **Plan this meal**. `POST /api/v1/decisions` persists a `planned` decision. The daily total still excludes it.
 4. Select **I ate this meal**. `POST /api/v1/meal-logs` persists a nutrition snapshot, confirms the decision, and changes the daily summary.
 5. In **Community**, select that confirmed meal, write a caption, and select **Share meal**. `POST /api/v1/community/posts` persists the voluntary post, which then appears in the feed. The author can remove it.
-6. Show the job state in the browser or API, API health, and worker logs as operational evidence:
+6. In **Habits & rewards**, the confirmed meal adds 5 demo credits, and the first shared meal of the day adds 3. Redeem the starter badge for 5; the ledger records the deduction. A removed shared post appends a 3-credit reversal. Community likes/comments do not award credits.
+7. For Community review, use the **Demo account** selector to switch from **Demo Student** to **Community Peer**. The peer can report the student's post. Switch back to **Demo Student** to dismiss the report or hide the post in the moderator queue. Both accounts are fictional and available only when development demo authentication is enabled.
+8. Show the job state in the browser or API, API health, and worker logs as operational evidence:
 
 ```bash
 docker compose logs --tail=40 worker
@@ -45,3 +47,5 @@ The optional historical Week 4 AI service runs only with `docker compose --profi
 ## Security and data limits
 
 Demo identity is enabled only with `APP_ENV=development` and `DEMO_AUTH_ENABLED=true`; this stack must remain local. Seeded venues and nutrition are fictional illustrative data. Community shares a confirmed meal and its nutrition snapshot publicly within the demo feed, so do not enter private health details or real users' data. API keys stay in `.env`, which is ignored by Git; only the worker receives the OpenRouter key in Compose.
+
+The seed grants moderator role to the local demo user only and also creates a non-moderator peer. The `X-Demo-User-Id` switch header accepts only these two seeded IDs in development; it is a demo impersonation mechanism, not real authentication. Reports are not automatically hidden; the moderator must review them. There is no real identity, rate limiting, audit-grade production moderation, or monetary reward. Keep the stack private. After updating an existing database, run `docker compose up --build` so revision `20261028_0004` and the new habit/badge seed are applied.

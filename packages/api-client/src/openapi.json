@@ -12,6 +12,24 @@
         ],
         "summary": "Me",
         "operationId": "me_api_v1_me_get",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -24,44 +42,44 @@
             }
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Not Found"
           },
           "409": {
-            "description": "Conflict",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Conflict"
           },
           "422": {
-            "description": "Unprocessable Entity",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Entity"
           },
           "503": {
-            "description": "Service Unavailable",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Service Unavailable"
           }
         }
       }
@@ -73,15 +91,33 @@
         ],
         "summary": "Patch Profile",
         "operationId": "patch_profile_api_v1_me_profile_patch",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ProfileUpdate"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -95,44 +131,44 @@
             }
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Not Found"
           },
           "409": {
-            "description": "Conflict",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Conflict"
           },
           "422": {
-            "description": "Unprocessable Entity",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Entity"
           },
           "503": {
-            "description": "Service Unavailable",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Service Unavailable"
           }
         }
       }
@@ -144,6 +180,24 @@
         ],
         "summary": "Read Goals",
         "operationId": "read_goals_api_v1_me_goals_get",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -156,44 +210,44 @@
             }
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Not Found"
           },
           "409": {
-            "description": "Conflict",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Conflict"
           },
           "422": {
-            "description": "Unprocessable Entity",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Entity"
           },
           "503": {
-            "description": "Service Unavailable",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Service Unavailable"
           }
         }
       },
@@ -203,15 +257,33 @@
         ],
         "summary": "Put Goals",
         "operationId": "put_goals_api_v1_me_goals_put",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/GoalUpdate"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -225,44 +297,44 @@
             }
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Not Found"
           },
           "409": {
-            "description": "Conflict",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Conflict"
           },
           "422": {
-            "description": "Unprocessable Entity",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Entity"
           },
           "503": {
-            "description": "Service Unavailable",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Service Unavailable"
           }
         }
       }
@@ -592,15 +664,33 @@
         ],
         "summary": "Recommend",
         "operationId": "recommend_api_v1_recommendations_meals_post",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RecommendationRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -614,44 +704,44 @@
             }
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Not Found"
           },
           "409": {
-            "description": "Conflict",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Conflict"
           },
           "422": {
-            "description": "Unprocessable Entity",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Entity"
           },
           "503": {
-            "description": "Service Unavailable",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Service Unavailable"
           }
         }
       }
@@ -663,15 +753,33 @@
         ],
         "summary": "Create Job",
         "operationId": "create_job_api_v1_recommendations_jobs_post",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RecommendationRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "202": {
@@ -685,44 +793,44 @@
             }
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Not Found"
           },
           "409": {
-            "description": "Conflict",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Conflict"
           },
           "422": {
-            "description": "Unprocessable Entity",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Entity"
           },
           "503": {
-            "description": "Service Unavailable",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Service Unavailable"
           }
         }
       }
@@ -742,6 +850,22 @@
             "schema": {
               "type": "string",
               "title": "Job Id"
+            }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
             }
           }
         ],
@@ -815,6 +939,22 @@
               "type": "string",
               "title": "Recommendation Id"
             }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
           }
         ],
         "requestBody": {
@@ -881,15 +1021,33 @@
         ],
         "summary": "Decide",
         "operationId": "decide_api_v1_decisions_post",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/DecisionCreate"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -903,44 +1061,44 @@
             }
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Not Found"
           },
           "409": {
-            "description": "Conflict",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Conflict"
           },
           "422": {
-            "description": "Unprocessable Entity",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Entity"
           },
           "503": {
-            "description": "Service Unavailable",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Service Unavailable"
           }
         }
       }
@@ -963,6 +1121,22 @@
               "minimum": 1,
               "default": 20,
               "title": "Limit"
+            }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
             }
           }
         ],
@@ -1031,15 +1205,33 @@
         ],
         "summary": "Log Meal",
         "operationId": "log_meal_api_v1_meal_logs_post",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/MealLogCreate"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -1053,44 +1245,44 @@
             }
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Not Found"
           },
           "409": {
-            "description": "Conflict",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Conflict"
           },
           "422": {
-            "description": "Unprocessable Entity",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Entity"
           },
           "503": {
-            "description": "Service Unavailable",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Service Unavailable"
           }
         }
       }
@@ -1113,6 +1305,22 @@
               "minimum": 1,
               "default": 20,
               "title": "Limit"
+            }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
             }
           }
         ],
@@ -1198,6 +1406,22 @@
               ],
               "title": "Date"
             }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
           }
         ],
         "responses": {
@@ -1261,6 +1485,24 @@
         ],
         "summary": "Publish",
         "operationId": "publish_api_v1_community_posts_post",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1342,6 +1584,33 @@
               "default": 20,
               "title": "Limit"
             }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
           }
         ],
         "responses": {
@@ -1355,6 +1624,89 @@
                     "$ref": "#/components/schemas/CommunityPostRead"
                   },
                   "title": "Response Feed Api V1 Community Posts Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/community/me/shared-meal-log-ids": {
+      "get": {
+        "tags": [
+          "community"
+        ],
+        "summary": "My Shared Meals",
+        "operationId": "my_shared_meals_api_v1_community_me_shared_meal_log_ids_get",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response My Shared Meals Api V1 Community Me Shared Meal Log Ids Get"
                 }
               }
             }
@@ -1418,11 +1770,826 @@
               "type": "string",
               "title": "Post Id"
             }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
           }
         ],
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/community/posts/{post_id}/comments": {
+      "post": {
+        "tags": [
+          "community"
+        ],
+        "summary": "Comment",
+        "operationId": "comment_api_v1_community_posts__post_id__comments_post",
+        "parameters": [
+          {
+            "name": "post_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Post Id"
+            }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommunityCommentCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunityCommentRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/community/comments/{comment_id}": {
+      "delete": {
+        "tags": [
+          "community"
+        ],
+        "summary": "Remove Comment",
+        "operationId": "remove_comment_api_v1_community_comments__comment_id__delete",
+        "parameters": [
+          {
+            "name": "comment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comment Id"
+            }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/community/posts/{post_id}/like": {
+      "put": {
+        "tags": [
+          "community"
+        ],
+        "summary": "Like",
+        "operationId": "like_api_v1_community_posts__post_id__like_put",
+        "parameters": [
+          {
+            "name": "post_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Post Id"
+            }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunityPostRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "community"
+        ],
+        "summary": "Unlike",
+        "operationId": "unlike_api_v1_community_posts__post_id__like_delete",
+        "parameters": [
+          {
+            "name": "post_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Post Id"
+            }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunityPostRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/community/posts/{post_id}/reports": {
+      "post": {
+        "tags": [
+          "community"
+        ],
+        "summary": "Report",
+        "operationId": "report_api_v1_community_posts__post_id__reports_post",
+        "parameters": [
+          {
+            "name": "post_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Post Id"
+            }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommunityReportCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunityReportRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/community/reports/pending": {
+      "get": {
+        "tags": [
+          "community"
+        ],
+        "summary": "Reports",
+        "operationId": "reports_api_v1_community_reports_pending_get",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommunityReportRead"
+                  },
+                  "title": "Response Reports Api V1 Community Reports Pending Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/community/reports/{report_id}/resolve": {
+      "post": {
+        "tags": [
+          "community"
+        ],
+        "summary": "Moderate",
+        "operationId": "moderate_api_v1_community_reports__report_id__resolve_post",
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommunityReportResolve"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunityReportRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/rewards/overview": {
+      "get": {
+        "tags": [
+          "rewards"
+        ],
+        "summary": "Read Overview",
+        "operationId": "read_overview_api_v1_rewards_overview_get",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardOverviewRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/rewards/{reward_id}/redeem": {
+      "post": {
+        "tags": [
+          "rewards"
+        ],
+        "summary": "Redeem Reward",
+        "operationId": "redeem_reward_api_v1_rewards__reward_id__redeem_post",
+        "parameters": [
+          {
+            "name": "reward_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Reward Id"
+            }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RedemptionRead"
+                }
+              }
+            }
           },
           "404": {
             "content": {
@@ -1582,6 +2749,60 @@
   },
   "components": {
     "schemas": {
+      "CommunityCommentCreate": {
+        "properties": {
+          "body": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Body"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "CommunityCommentCreate"
+      },
+      "CommunityCommentRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "post_id": {
+            "type": "string",
+            "title": "Post Id"
+          },
+          "author_display_name": {
+            "type": "string",
+            "title": "Author Display Name"
+          },
+          "is_mine": {
+            "type": "boolean",
+            "title": "Is Mine"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "post_id",
+          "author_display_name",
+          "is_mine",
+          "body",
+          "created_at"
+        ],
+        "title": "CommunityCommentRead"
+      },
       "CommunityPostCreate": {
         "properties": {
           "meal_log_id": {
@@ -1627,6 +2848,25 @@
           },
           "meal": {
             "$ref": "#/components/schemas/MealLogRead"
+          },
+          "like_count": {
+            "type": "integer",
+            "title": "Like Count"
+          },
+          "liked_by_me": {
+            "type": "boolean",
+            "title": "Liked By Me"
+          },
+          "is_mine": {
+            "type": "boolean",
+            "title": "Is Mine"
+          },
+          "comments": {
+            "items": {
+              "$ref": "#/components/schemas/CommunityCommentRead"
+            },
+            "type": "array",
+            "title": "Comments"
           }
         },
         "type": "object",
@@ -1636,9 +2876,151 @@
           "meal_log_id",
           "caption",
           "created_at",
-          "meal"
+          "meal",
+          "like_count",
+          "liked_by_me",
+          "is_mine",
+          "comments"
         ],
         "title": "CommunityPostRead"
+      },
+      "CommunityReportCreate": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "enum": [
+              "spam",
+              "harassment",
+              "misinformation",
+              "other"
+            ],
+            "title": "Reason"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "CommunityReportCreate"
+      },
+      "CommunityReportRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "post_id": {
+            "type": "string",
+            "title": "Post Id"
+          },
+          "post_caption": {
+            "type": "string",
+            "title": "Post Caption"
+          },
+          "post_author": {
+            "type": "string",
+            "title": "Post Author"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "dismissed",
+              "removed"
+            ],
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "post_id",
+          "post_caption",
+          "post_author",
+          "reason",
+          "detail",
+          "status",
+          "created_at"
+        ],
+        "title": "CommunityReportRead"
+      },
+      "CommunityReportResolve": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "dismiss",
+              "remove"
+            ],
+            "title": "Action"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "CommunityReportResolve"
+      },
+      "CreditTransactionRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "amount": {
+            "type": "integer",
+            "title": "Amount"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "amount",
+          "reason",
+          "created_at"
+        ],
+        "title": "CreditTransactionRead"
       },
       "DailySummary": {
         "properties": {
@@ -1846,11 +3228,63 @@
         ],
         "title": "GoalUpdate"
       },
+      "HabitProgressRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "points": {
+            "type": "integer",
+            "title": "Points"
+          },
+          "completed_today": {
+            "type": "boolean",
+            "title": "Completed Today"
+          },
+          "streak_days": {
+            "type": "integer",
+            "title": "Streak Days"
+          },
+          "completed_this_week": {
+            "type": "integer",
+            "title": "Completed This Week"
+          },
+          "weekly_target": {
+            "type": "integer",
+            "title": "Weekly Target"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "description",
+          "points",
+          "completed_today",
+          "streak_days",
+          "completed_this_week",
+          "weekly_target"
+        ],
+        "title": "HabitProgressRead"
+      },
       "MeRead": {
         "properties": {
           "id": {
             "type": "string",
             "title": "Id"
+          },
+          "is_moderator": {
+            "type": "boolean",
+            "title": "Is Moderator"
           },
           "profile": {
             "$ref": "#/components/schemas/ProfileRead"
@@ -1862,6 +3296,7 @@
         "type": "object",
         "required": [
           "id",
+          "is_moderator",
           "profile",
           "goal"
         ],
@@ -2352,6 +3787,109 @@
           "recommendations"
         ],
         "title": "RecommendationRunRead"
+      },
+      "RedemptionRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "reward_id": {
+            "type": "string",
+            "title": "Reward Id"
+          },
+          "cost": {
+            "type": "integer",
+            "title": "Cost"
+          },
+          "balance": {
+            "type": "integer",
+            "title": "Balance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "reward_id",
+          "cost",
+          "balance"
+        ],
+        "title": "RedemptionRead"
+      },
+      "RewardOverviewRead": {
+        "properties": {
+          "balance": {
+            "type": "integer",
+            "title": "Balance"
+          },
+          "suggested_next_step": {
+            "type": "string",
+            "title": "Suggested Next Step"
+          },
+          "habits": {
+            "items": {
+              "$ref": "#/components/schemas/HabitProgressRead"
+            },
+            "type": "array",
+            "title": "Habits"
+          },
+          "rewards": {
+            "items": {
+              "$ref": "#/components/schemas/RewardRead"
+            },
+            "type": "array",
+            "title": "Rewards"
+          },
+          "transactions": {
+            "items": {
+              "$ref": "#/components/schemas/CreditTransactionRead"
+            },
+            "type": "array",
+            "title": "Transactions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "balance",
+          "suggested_next_step",
+          "habits",
+          "rewards",
+          "transactions"
+        ],
+        "title": "RewardOverviewRead"
+      },
+      "RewardRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "cost": {
+            "type": "integer",
+            "title": "Cost"
+          },
+          "redeemed": {
+            "type": "boolean",
+            "title": "Redeemed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "description",
+          "cost",
+          "redeemed"
+        ],
+        "title": "RewardRead"
       },
       "VenueRead": {
         "properties": {

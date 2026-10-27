@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { api } from "@nourishloop/api-client";
 import type {
-  CommunityPostRead, DailySummary, DecisionRead, MeRead, MealLogRead, MenuItemRead,
-  RecommendationRunRead, VenueRead,
+  CommunityPostRead, CommunityReportRead, DailySummary, DecisionRead, MeRead,
+  MealLogRead, MenuItemRead, RecommendationRunRead, RewardOverviewRead, VenueRead,
 } from "@nourishloop/api-client/schema";
+import CommunitySection from "./CommunitySection";
+import RewardsSection from "./RewardsSection";
 
 export default function Dashboard() {
   const [me, setMe] = useState<MeRead | null>(null);
@@ -14,30 +16,46 @@ export default function Dashboard() {
   const [run, setRun] = useState<RecommendationRunRead | null>(null);
   const [decisions, setDecisions] = useState<DecisionRead[]>([]);
   const [mealLogs, setMealLogs] = useState<MealLogRead[]>([]);
+  const [sharedMealLogIds, setSharedMealLogIds] = useState<string[]>([]);
   const [posts, setPosts] = useState<CommunityPostRead[]>([]);
-  const [caption, setCaption] = useState("");
-  const [shareMealId, setShareMealId] = useState("");
+  const [reports, setReports] = useState<CommunityReportRead[]>([]);
+  const [rewards, setRewards] = useState<RewardOverviewRead | null>(null);
+  const [feedLimit, setFeedLimit] = useState(20);
   const [jobStatus, setJobStatus] = useState("");
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function refresh() {
-    const [person, places, items, plans, totals, logs, feed] = await Promise.all([
+  const refresh = useCallback(async () => {
+    const [person, places, items, plans, totals, logs, feed, progress, sharedIds] = await Promise.all([
       api.me(), api.venues(), api.menuItems(), api.decisions(), api.summary(),
-      api.mealLogs(), api.communityPosts(),
+      api.mealLogs(), api.communityPosts(feedLimit), api.rewardOverview(), api.sharedMealLogIds(),
     ]);
     setMe(person); setVenues(places); setMenu(items); setDecisions(plans); setSummary(totals);
-    setMealLogs(logs); setPosts(feed);
+    setMealLogs(logs); setPosts(feed); setRewards(progress); setSharedMealLogIds(sharedIds);
+    setReports(person.is_moderator ? await api.pendingReports() : []);
+  }, [feedLimit]);
+
+  useEffect(() => { refresh().catch((e: Error) => setError(e.message)); }, [refresh]);
+
+  async function act(action: () => Promise<unknown>): Promise<boolean> {
+    setBusy(true); setError(null);
+    try { await action(); await refresh(); return true; }
+    catch (e) { setError(e instanceof Error ? e.message : "Something went wrong"); return false; }
+    finally { setBusy(false); }
   }
 
-  useEffect(() => { refresh().catch((e: Error) => setError(e.message)); }, []);
+  function loadMorePosts() {
+    setFeedLimit(current => current + 20);
+  }
 
-  async function act(action: () => Promise<unknown>) {
-    setBusy(true); setError(null);
-    try { await action(); await refresh(); }
-    catch (e) { setError(e instanceof Error ? e.message : "Something went wrong"); }
-    finally { setBusy(false); }
+  async function switchDemoUser(id: string) {
+    if (busy || id === me?.id) return;
+    await act(async () => {
+      api.setDemoUserId(id);
+      setRun(null);
+      setJobStatus("");
+    });
   }
 
   async function findLunch() {
@@ -66,8 +84,19 @@ export default function Dashboard() {
   return <main className="mx-auto max-w-6xl px-5 py-8 sm:px-8">
     <header className="mb-10 flex flex-wrap items-center justify-between gap-4">
       <div><div className="text-2xl font-black tracking-tight text-emerald-800">NourishLoop</div>
-        <p className="text-sm text-slate-500">Discover · Decide · Act · Track</p></div>
-      <span className="rounded-full bg-amber-100 px-4 py-2 text-xs font-semibold text-amber-900">Fictional demo menu · estimated nutrition</span>
+        <p className="text-sm text-slate-500">Discover · Decide · Act · Track · Reward · Improve</p></div>
+      <div className="flex flex-wrap items-center gap-3">
+        {me && ["demo-student", "demo-peer"].includes(me.id) &&
+          <label className="text-xs font-semibold text-slate-700">Demo account{" "}
+            <select aria-label="Demo account" value={me.id} disabled={busy}
+              onChange={event => void switchDemoUser(event.target.value)}
+              className="ml-1 rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs">
+              <option value="demo-student">Demo Student · moderator</option>
+              <option value="demo-peer">Community Peer</option>
+            </select>
+          </label>}
+        <span className="rounded-full bg-amber-100 px-4 py-2 text-xs font-semibold text-amber-900">Fictional demo menu · estimated nutrition</span>
+      </div>
     </header>
 
     <section className="rounded-3xl bg-emerald-900 p-7 text-white shadow-lg sm:p-10">
@@ -80,32 +109,9 @@ export default function Dashboard() {
       </button>
       {jobStatus && <p role="status" className="mt-3 text-sm text-emerald-100">{jobStatus}</p>}
     </section>
-    <section className="mt-10 rounded-2xl bg-white p-6 shadow-sm">
-      <h2 className="text-2xl font-bold">Community</h2>
-      <p className="mt-2 text-sm text-slate-600">Share a confirmed meal with the community. Posting is always your choice.</p>
-      {mealLogs.filter(log => !posts.some(post => post.meal_log_id === log.id)).length > 0 &&
-        <form className="mt-5 flex flex-wrap gap-3" onSubmit={event => {
-          event.preventDefault();
-          if (!shareMealId || !caption.trim()) return;
-          void act(async () => { await api.shareMeal({ meal_log_id: shareMealId, caption: caption.trim() }); setCaption(""); setShareMealId(""); });
-        }}>
-          <select aria-label="Confirmed meal to share" required value={shareMealId} onChange={event => setShareMealId(event.target.value)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm">
-            <option value="">Choose a confirmed meal</option>
-            {mealLogs.filter(log => !posts.some(post => post.meal_log_id === log.id)).map(log =>
-              <option key={log.id} value={log.id}>{log.menu_item.name}</option>)}
-          </select>
-          <input aria-label="Community caption" required maxLength={500} value={caption} onChange={event => setCaption(event.target.value)} placeholder="What would you say about it?" className="min-w-56 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-          <button disabled={busy} className="rounded-full bg-emerald-700 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50">Share meal</button>
-        </form>}
-      {posts.length === 0 ? <p className="mt-5 text-sm text-slate-500">No meals shared yet.</p> :
-        <ul className="mt-5 grid gap-4 sm:grid-cols-2">{posts.map(post => <li key={post.id} className="rounded-xl border border-slate-200 p-4">
-          <p className="text-xs font-semibold text-emerald-700">{post.author_display_name} · {new Date(post.created_at).toLocaleString()}</p>
-          <h3 className="mt-2 font-bold">{post.meal.menu_item.name}</h3>
-          <p className="mt-2 text-sm text-slate-700">{post.caption}</p>
-          <p className="mt-2 text-xs text-slate-500">≈ {post.meal.nutrition.calories_kcal} kcal · illustrative estimate</p>
-          {mealLogs.some(log => log.id === post.meal_log_id) && <button disabled={busy} onClick={() => act(() => api.deletePost(post.id))} className="mt-3 text-xs font-semibold text-red-700">Remove my post</button>}
-        </li>)}</ul>}
-    </section>
+    <CommunitySection key={me?.id} posts={posts} mealLogs={mealLogs} sharedMealLogIds={sharedMealLogIds} reports={reports}
+      isModerator={me?.is_moderator ?? false} busy={busy} onAction={act} onLoadMore={loadMorePosts} />
+    <RewardsSection overview={rewards} busy={busy} onAction={act} />
 
     {error && <div role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</div>}
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, ForeignKey, JSON, String
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from apps.api.core.database import Base
@@ -11,6 +11,8 @@ from apps.api.core.models import IdMixin, TimestampMixin
 
 class User(Base, IdMixin, TimestampMixin):
     __tablename__ = "users"
+
+    is_moderator: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
 class UserProfile(Base, TimestampMixin):

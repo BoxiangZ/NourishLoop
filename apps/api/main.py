@@ -15,6 +15,7 @@ from apps.api.modules.catalog.router import router as catalog_router
 from apps.api.modules.community.router import router as community_router
 from apps.api.modules.identity.router import router as identity_router
 from apps.api.modules.recommendations.router import router as recommendations_router
+from apps.api.modules.rewards.router import router as rewards_router
 from apps.api.modules.tracking.router import router as tracking_router
 
 
@@ -28,13 +29,14 @@ app.add_middleware(
     allow_origins=[get_settings().cors_origin],
     allow_credentials=False,
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
-    allow_headers=["Content-Type"],
+    allow_headers=["Content-Type", "X-Demo-User-Id"],
 )
 app.include_router(identity_router)
 app.include_router(catalog_router)
 app.include_router(recommendations_router)
 app.include_router(tracking_router)
 app.include_router(community_router)
+app.include_router(rewards_router)
 
 
 @app.exception_handler(HTTPException)

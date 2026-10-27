@@ -22,6 +22,7 @@ router = APIRouter(prefix="/api/v1", tags=["identity"])
 def me(user: User = Depends(current_user), db: Session = Depends(get_db)):
     return MeRead(
         id=user.id,
+        is_moderator=user.is_moderator,
         profile=ProfileRead.model_validate(get_profile(db, user)),
         goal=GoalRead.model_validate(get_goal(db, user)),
     )

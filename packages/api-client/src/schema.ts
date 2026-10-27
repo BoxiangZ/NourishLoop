@@ -1,7 +1,13 @@
 // Generated from FastAPI OpenAPI. Run: python -m scripts.generate_api_types
 
+export type CommunityCommentCreate = { "body": string; };
+export type CommunityCommentRead = { "id": string; "post_id": string; "author_display_name": string; "is_mine": boolean; "body": string; "created_at": string; };
 export type CommunityPostCreate = { "meal_log_id": string; "caption": string; };
-export type CommunityPostRead = { "id": string; "author_display_name": string; "meal_log_id": string; "caption": string; "created_at": string; "meal": MealLogRead; };
+export type CommunityPostRead = { "id": string; "author_display_name": string; "meal_log_id": string; "caption": string; "created_at": string; "meal": MealLogRead; "like_count": number; "liked_by_me": boolean; "is_mine": boolean; "comments": Array<CommunityCommentRead>; };
+export type CommunityReportCreate = { "reason": "spam" | "harassment" | "misinformation" | "other"; "detail"?: string | null; };
+export type CommunityReportRead = { "id": string; "post_id": string; "post_caption": string; "post_author": string; "reason": string; "detail": string | null; "status": "pending" | "dismissed" | "removed"; "created_at": string; };
+export type CommunityReportResolve = { "action": "dismiss" | "remove"; };
+export type CreditTransactionRead = { "id": string; "amount": number; "reason": string; "created_at": string; };
 export type DailySummary = { "date": string; "timezone"?: string; "meal_count": number; "totals": NutritionTotals; };
 export type DecisionCreate = { "menu_item_id": string; "recommendation_id"?: string | null; };
 export type DecisionRead = { "id": string; "status": "planned" | "confirmed"; "created_at": string; "menu_item": MenuItemRead; };
@@ -10,7 +16,8 @@ export type ErrorResponse = { "error": ErrorBody; };
 export type FeedbackCreate = { "helpful": boolean; "comment"?: string | null; };
 export type GoalRead = { "goal": "eat_healthier" | "reduce_body_fat" | "build_muscle"; "daily_calorie_target"?: number | null; "user_id": string; };
 export type GoalUpdate = { "goal": "eat_healthier" | "reduce_body_fat" | "build_muscle"; "daily_calorie_target"?: number | null; };
-export type MeRead = { "id": string; "profile": ProfileRead; "goal": GoalRead; };
+export type HabitProgressRead = { "id": string; "title": string; "description": string; "points": number; "completed_today": boolean; "streak_days": number; "completed_this_week": number; "weekly_target": number; };
+export type MeRead = { "id": string; "is_moderator": boolean; "profile": ProfileRead; "goal": GoalRead; };
 export type MealLogCreate = { "decision_id": string; "servings"?: number; };
 export type MealLogRead = { "id": string; "decision_id": string; "servings": number; "consumed_at": string; "nutrition": NutritionTotals; "menu_item": MenuItemRead; };
 export type MenuItemRead = { "id": string; "venue_id": string; "name": string; "description": string; "category": string; "tags": Array<string>; "allergen_tags": Array<string>; "price_hkd": number | null; "available": boolean; "source_label": string; "observed_at": string | null; "nutrition": NutritionRead; };
@@ -22,4 +29,7 @@ export type RecommendationJobRead = { "id": string; "status": "pending" | "claim
 export type RecommendationRead = { "id": string; "rank": number; "score": number; "explanation": string; "confidence": "low" | "medium" | "high"; "confidence_reason": string; "menu_item": MenuItemRead; };
 export type RecommendationRequest = { "meal_slot"?: "breakfast" | "lunch" | "dinner"; "limit"?: number; };
 export type RecommendationRunRead = { "id": string; "scoring_version": string; "meal_slot": string; "recommendations": Array<RecommendationRead>; };
+export type RedemptionRead = { "id": string; "reward_id": string; "cost": number; "balance": number; };
+export type RewardOverviewRead = { "balance": number; "suggested_next_step": string; "habits": Array<HabitProgressRead>; "rewards": Array<RewardRead>; "transactions": Array<CreditTransactionRead>; };
+export type RewardRead = { "id": string; "title": string; "description": string; "cost": number; "redeemed": boolean; };
 export type VenueRead = { "id": string; "name": string; "campus_area": string; "is_demo": boolean; };

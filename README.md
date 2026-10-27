@@ -1,6 +1,6 @@
 # NourishLoop engineering foundation
 
-NourishLoop is a demo of a healthier meal decision loop for students: discover a meal, request a persisted asynchronous recommendation, plan one option, confirm eating it, see confirmed nutrition in the daily summary, and optionally share that confirmed meal in Community. Every seeded venue and meal is fictional, and all nutrition values are illustrative estimates.
+NourishLoop is a demo of a healthier meal decision loop for students: discover a meal, request an asynchronous recommendation, plan and confirm it, track intake, and optionally share it in Community. Confirmed actions also build habit progress and earn demo credits for digital badges. Every seeded venue and meal is fictional, and all nutrition values are illustrative estimates.
 
 This repository adapts the MAIE 6000C starter. The active app is the modular FastAPI monolith under `apps/api` and the Next.js frontend under `apps/web`. The former case/worker/AI code remains under `services/`; its AI service now has optional HKGAI text and Gemini image-draft adapters for the Week 4 diet-planning proposal. These adapters are separate from the active NourishLoop flow. The Week 4 persisted plan/meal workflow remains unimplemented. The old starter README is archived at [docs/legacy/starter-README.md](docs/legacy/starter-README.md).
 
@@ -8,10 +8,10 @@ This repository adapts the MAIE 6000C starter. The active app is the modular Fas
 
 | Directory | Purpose |
 |---|---|
-| `apps/api` | Versioned FastAPI API, domain modules, database models, deterministic recommendations, worker, and Community |
+| `apps/api` | Versioned FastAPI API, domain modules, worker, Community, habits and demo rewards |
 | `apps/web` | Mobile-friendly Next.js App Router demo interface |
 | `packages/api-client` | OpenAPI snapshot, generated TypeScript schema types, fetch client |
-| `alembic` | Historical starter migration plus NourishLoop MVP and Week 7 migrations |
+| `alembic` | Historical starter migration plus NourishLoop product migrations |
 | `scripts` | API type generation and idempotent fictional demo seed |
 | `tests` | Backend unit and integration tests |
 | `services` | Preserved starter example plus optional Week 4 HKGAI text adapter |
@@ -82,4 +82,4 @@ Run type generation after changing a Pydantic request or response schema and com
 
 ## Current scope
 
-The current UI and API implement asynchronous meal recommendations, plan/confirmation tracking, and explicit Community sharing of confirmed meals. OpenRouter can optionally rewrite the first recommendation explanation; ranking remains deterministic. Production authentication, real restaurant ingestion, verified nutrition, image analysis in the active flow, moderation, habit rewards, and commercial features remain future work. Recommendations use deterministic scores and never use merchant payments. See the [Week 7 milestone](submissions/week07/README.md), [operations](docs/operations.md), [roadmap](docs/product/roadmap.md) and [ADR](docs/decisions/0002-modular-monolith.md).
+The current UI and API implement asynchronous meal recommendations, plan/confirmation tracking, Community posts/comments/likes/report review, daily and weekly habits, an auditable demo credit ledger, and badge redemption. OpenRouter can optionally rewrite the first recommendation explanation; ranking remains deterministic. Production authentication, real restaurant ingestion, verified nutrition, image analysis in the active flow, production moderation, and commercial features remain future work. Recommendations never use merchant payments. See the [Week 7 checkpoint](submissions/week07/README.md), [current architecture](docs/architecture/overview.md), [operations](docs/operations.md), and [roadmap](docs/product/roadmap.md).
