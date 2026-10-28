@@ -74,7 +74,9 @@ def reverse_share_award(db: Session, user_id: str, post_id: str) -> None:
     ))
 
 
-def overview(db: Session, user: User) -> RewardOverviewRead:
+def overview(
+    db: Session, user: User, transaction_limit: int = 20, transaction_offset: int = 0
+) -> RewardOverviewRead:
     today = datetime.now(HK_ZONE).date()
     week_start = today - timedelta(days=today.weekday())
     definitions = db.scalars(select(HabitDefinition).order_by(HabitDefinition.id)).all()
@@ -112,7 +114,8 @@ def overview(db: Session, user: User) -> RewardOverviewRead:
         "created_at": row.created_at,
     }) for row in db.scalars(select(CreditTransaction).where(
         CreditTransaction.user_id == user.id
-    ).order_by(CreditTransaction.created_at.desc()).limit(20)).all()]
+    ).order_by(CreditTransaction.created_at.desc(), CreditTransaction.id.desc())
+        .offset(transaction_offset).limit(transaction_limit)).all()]
     completed = {habit.id for habit in habits if habit.completed_today}
     if "confirm_meal" not in completed:
         suggestion = "Confirm a meal you actually ate to make progress today."

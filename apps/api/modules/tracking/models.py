@@ -33,3 +33,19 @@ class MealLog(Base, IdMixin, TimestampMixin):
         DateTime(timezone=True), nullable=False, index=True
     )
     nutrition_snapshot: Mapped[dict] = mapped_column(JSON, nullable=False)
+
+
+class PhotoMealRecord(Base, IdMixin, TimestampMixin):
+    """User-confirmed food names from a photo; the image itself is never stored."""
+
+    __tablename__ = "photo_meal_records"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    foods: Mapped[list] = mapped_column(JSON, nullable=False)
+    notes: Mapped[str] = mapped_column(String(500), nullable=False, default="")
+    model: Mapped[str] = mapped_column(String(120), nullable=False)
+    consumed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    nutrition_snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    nutrition_items: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    nutrition_status: Mapped[str] = mapped_column(String(20), nullable=False, default="none")
+    unresolved_foods: Mapped[list] = mapped_column(JSON, nullable=False, default=list)

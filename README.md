@@ -1,6 +1,6 @@
 # NourishLoop engineering foundation
 
-NourishLoop is a demo of a healthier meal decision loop for students: discover a meal, request an asynchronous recommendation, plan and confirm it, track intake, and optionally share it in Community. Confirmed actions also build habit progress and earn demo credits for digital badges. Every seeded venue and meal is fictional, and all nutrition values are illustrative estimates.
+NourishLoop helps students discover food and workouts, make a stage-aware choice, keep a record, and share confirmed meals in Community. Confirmed meals, voluntary shares and completed workouts build habit progress and earn demo credits for digital badges. The 35 HKUST and THE LOHAS venue records come from official directories; the six recordable demo meals remain fictional and their nutrition is illustrative.
 
 This repository adapts the MAIE 6000C starter. The active app is the modular FastAPI monolith under `apps/api` and the Next.js frontend under `apps/web`. The former case/worker/AI code remains under `services/`; its AI service now has optional HKGAI text and Gemini image-draft adapters for the Week 4 diet-planning proposal. These adapters are separate from the active NourishLoop flow. The Week 4 persisted plan/meal workflow remains unimplemented. The old starter README is archived at [docs/legacy/starter-README.md](docs/legacy/starter-README.md).
 
@@ -8,15 +8,15 @@ This repository adapts the MAIE 6000C starter. The active app is the modular Fas
 
 | Directory | Purpose |
 |---|---|
-| `apps/api` | Versioned FastAPI API, domain modules, worker, Community, habits and demo rewards |
-| `apps/web` | Mobile-friendly Next.js App Router demo interface |
+| `apps/api` | Versioned FastAPI API, sourced place directory, workouts, worker, Community, habits and demo rewards |
+| `apps/web` | Mobile-first Next.js interface with Discover, Workouts, For you, History, Community, Rewards and Profile screens |
 | `packages/api-client` | OpenAPI snapshot, generated TypeScript schema types, fetch client |
 | `alembic` | Historical starter migration plus NourishLoop product migrations |
 | `scripts` | API type generation and idempotent fictional demo seed |
 | `tests` | Backend unit and integration tests |
 | `services` | Preserved starter example plus optional Week 4 HKGAI text adapter |
 
-See [architecture overview](docs/architecture/overview.md), [module boundaries](docs/architecture/modules.md), [database schema](docs/database/schema.md), [API contracts](docs/api/contracts.md), [onboarding](docs/development/onboarding.md), and [verification](docs/development/verification.md).
+See [architecture overview](docs/architecture/overview.md), [data sources](docs/data-sources.md), [module boundaries](docs/architecture/modules.md), [database schema](docs/database/schema.md), [API contracts](docs/api/contracts.md), [onboarding](docs/development/onboarding.md), and [verification](docs/development/verification.md).
 
 ## Quick start with Docker
 
@@ -82,4 +82,4 @@ Run type generation after changing a Pydantic request or response schema and com
 
 ## Current scope
 
-The current UI and API implement asynchronous meal recommendations, plan/confirmation tracking, Community posts/comments/likes/report review, daily and weekly habits, an auditable demo credit ledger, and badge redemption. OpenRouter can optionally rewrite the first recommendation explanation; ranking remains deterministic. Production authentication, real restaurant ingestion, verified nutrition, image analysis in the active flow, production moderation, and commercial features remain future work. Recommendations never use merchant payments. See the [Week 7 checkpoint](submissions/week07/README.md), [current architecture](docs/architecture/overview.md), [operations](docs/operations.md), and [roadmap](docs/product/roadmap.md).
+The current UI and API implement paginated food and real-place discovery, one-click photo recognition with an immediate OpenRouter and USDA nutrition estimate, asynchronous meal recommendations, plan/confirmation tracking, stage-aware workout plans and session logs, paginated History and Community, posts/comments/likes/report review, daily and weekly habits, an auditable demo credit ledger, badge redemption, and editable demo profile/goals. Public Reddit discussions appear only as attributed paraphrases with source links. OpenRouter can optionally reword grounded meal explanations and workout coaching notes; exercise selection, sets and meal ranking remain rule based. Photo records store no image; complete estimates use matched USDA nutrient densities and visually estimated or user supplied edible grams, with an optional correction panel and a source/quantity snapshot. A bundled USDA SR Legacy index supports nutrition lookup when the public API is rate limited. If some sources or portions are unresolved, the app shows only a clearly labelled partial total for matched foods and excludes that partial total from History's daily nutrition. Photo records remain separate from menu meals and Community posts. Production authentication, verified restaurant menus/nutrition, production moderation, and commercial features remain future work. Recommendations never use merchant payments. See the [Week 7 checkpoint](submissions/week07/README.md), [current architecture](docs/architecture/overview.md), [operations](docs/operations.md), and [roadmap](docs/product/roadmap.md).

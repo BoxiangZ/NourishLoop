@@ -2,5 +2,211 @@
 @tailwind components;
 @tailwind utilities;
 
-body { background: #f6f8f2; color: #1c2b24; }
-button { cursor: pointer; }
+:root{--ink:#17392f;--deep:#174837;--green:#286d51;--sage:#eaf2e9;--cream:#f7f8f3;--line:#e2e8df;--muted:#61756a;--orange:#c76c36}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.55}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #9acda9;outline-offset:2px}
+.nl-app{min-height:100vh;display:flex}
+.nl-sidebar{width:246px;flex:0 0 246px;min-height:100vh;padding:34px 18px 24px;background:#fbfcf9;border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.nl-brand,.nl-mobile-brand{border:0;background:none;color:var(--ink);font-size:25px;font-weight:850;letter-spacing:-1.4px;text-align:left}
+.nl-brand{padding:4px 14px 34px;position:relative}
+.nl-brand span,.nl-mobile-brand span{color:#4a9975}
+.nl-brand i{position:absolute;width:5px;height:5px;background:var(--orange);border-radius:50%;left:169px;top:10px}
+.nl-side-label{font-size:10px;letter-spacing:2px;font-weight:800;color:#98a99e;padding:14px;margin:0 0 10px}
+.nl-side-nav{display:grid;gap:6px}
+.nl-nav-item{width:100%;display:flex;align-items:center;gap:14px;border:0;background:transparent;color:#73887b;border-radius:14px;padding:13px 15px;font-size:14px;font-weight:700;text-align:left}
+.nl-nav-item:hover,.nl-nav-item[data-active=true]{background:#e8f2e9;color:var(--deep)}
+.nl-nav-item[data-active=true]{box-shadow:inset 3px 0 0 #2c815a}
+.nl-side-note{margin-top:auto;background:#f3e7d8;padding:19px;border-radius:16px;color:#614a32}
+.nl-side-note-icon{display:block;color:#c7773b;font-size:25px;margin-bottom:12px}
+.nl-side-note strong{font-size:14px}
+.nl-side-note p{font-size:12px;line-height:1.5;margin:7px 0 0}
+.nl-side-foot{font-size:10px;color:#9aa99e;margin:18px 10px 0}
+.nl-workspace{min-width:0;flex:1}
+.nl-topbar{height:78px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 clamp(22px,4vw,62px);background:#fbfcf9}
+.nl-mobile-brand{display:none}
+.nl-topbar-spacer{flex:1}
+.nl-demo-switch{display:flex;align-items:center;gap:11px;color:#789081;font-size:11px;font-weight:700}
+.nl-demo-switch select{border:1px solid #d8e3d8;border-radius:10px;padding:8px 11px;background:white;color:var(--ink);font-size:12px;font-weight:700}
+.nl-avatar{height:38px;width:38px;margin-left:18px;border:0;border-radius:50%;background:#d7ebdd;color:var(--green);font-weight:850}
+.nl-main{max-width:1020px;margin:0 auto;padding:40px clamp(20px,4vw,56px) 80px}
+.nl-page-intro{margin:0 0 28px;max-width:760px}
+.nl-eyebrow{display:block;color:var(--orange);font-size:11px;font-weight:850;letter-spacing:1.8px}
+.nl-page-intro h1{font-size:clamp(34px,4vw,52px);line-height:1.08;letter-spacing:-2.2px;margin:13px 0 13px;font-weight:850;max-width:710px}
+.nl-orange-dot{color:var(--orange)}
+.nl-page-intro p{font-size:16px;line-height:1.55;color:var(--muted);margin:0}
+.nl-search{height:58px;display:flex;align-items:center;gap:12px;border:1px solid #dfe7df;border-radius:16px;background:white;padding:6px 7px 6px 19px;box-shadow:0 5px 17px #254e3110}
+.nl-search span{font-size:27px;line-height:1;color:var(--green)}
+.nl-search input{flex:1;min-width:0;border:0;outline:0;font-size:14px;color:var(--ink)}
+.nl-search input::placeholder{color:#9aaba0}
+.nl-search button{border:0;background:var(--deep);color:white;border-radius:11px;padding:11px 18px;font-size:12px;font-weight:800}
+.nl-filter-row{display:flex;gap:8px;overflow-x:auto;padding:19px 0 13px}
+.nl-chip{white-space:nowrap;border:1px solid #d9e5dc;border-radius:999px;background:white;padding:8px 14px;color:#688274;font-size:12px;font-weight:750}
+.nl-chip[data-active=true]{background:#e4f1e7;color:var(--green);border-color:#bcdcc5}
+.nl-section-heading{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:28px 0 16px}
+.nl-section-heading h2{margin:5px 0 0;font-size:23px;line-height:1.2;letter-spacing:-.8px;font-weight:850}
+.nl-text-link{border:0;background:none;color:var(--green);font-size:12px;font-weight:800;white-space:nowrap;padding:3px 0}
+.nl-text-link:hover{text-decoration:underline}
+.nl-section-caption{font-size:12px;color:#8aa092}
+.nl-food-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.nl-food-card{min-width:0;background:white;border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 7px 20px #1e51350a}
+.nl-food-card-featured{grid-column:span 2;display:grid;grid-template-columns:45% 55%}
+.nl-meal-art{min-height:154px;position:relative;overflow:hidden;background:radial-gradient(circle at 72% 36%,#dce7d2 0 24%,transparent 25%),linear-gradient(130deg,#eef3e7,#d5e4d1);display:flex;align-items:center;justify-content:center}
+.nl-food-card-featured .nl-meal-art{min-height:246px}
+.nl-meal-plate{width:128px;height:128px;border-radius:50%;background:radial-gradient(circle at 53% 55%,#d8dea5 0 35%,#f3c38f 36% 49%,#b4ca91 50% 63%,#f0e8d1 64% 70%,transparent 71%);position:relative;box-shadow:0 15px 25px #5b80633b;transform:rotate(-17deg)}
+.nl-food-card-featured .nl-meal-plate{width:194px;height:194px}
+.nl-meal-plate i,.nl-meal-plate b,.nl-meal-plate em{position:absolute;border-radius:50%;display:block}
+.nl-meal-plate i{width:37%;height:27%;background:#739d69;left:26%;top:22%}
+.nl-meal-plate b{width:31%;height:20%;background:#e9aa67;right:17%;bottom:24%}
+.nl-meal-plate em{width:23%;height:33%;background:#c3d491;left:21%;bottom:18%}
+.nl-art-noodles{background:linear-gradient(135deg,#f1eee0,#dedab7)}
+.nl-art-salad{background:linear-gradient(135deg,#eaf4e8,#c6dec9)}
+.nl-art-toast{background:linear-gradient(135deg,#f5ead6,#e6d5bb)}
+.nl-art-plate{background:linear-gradient(135deg,#dcebe5,#c4d9d8)}
+.nl-art-label{position:absolute;bottom:13px;left:13px;background:#1c4937;color:white;border-radius:7px;padding:6px 9px;font-size:10px;font-weight:850;letter-spacing:.4px;max-width:75%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nl-food-body{padding:18px 19px 19px;display:flex;flex-direction:column}
+.nl-card-kicker{color:var(--orange)!important;font-size:10px!important;font-weight:850!important;letter-spacing:1px}
+.nl-food-body h3{font-size:18px;letter-spacing:-.4px;margin:0 0 5px}
+.nl-food-venue{font-size:12px;color:#809385;margin:0}
+.nl-food-description{font-size:13px;color:#617568;margin:11px 0 0;line-height:1.45}
+.nl-food-meta{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 14px}
+.nl-food-meta span{font-size:10px;font-weight:700;color:#4c775b;background:#edf4ec;border-radius:6px;padding:5px 7px}
+.nl-button{border:0;border-radius:11px;padding:11px 17px;font-size:12px;font-weight:850;display:inline-flex;justify-content:center;align-items:center;gap:9px}
+.nl-button-primary{background:var(--green);color:white}
+.nl-button-primary:hover:not(:disabled){background:#19563b}
+.nl-button-soft{background:#e5f1e7;color:var(--green)}
+.nl-food-action{margin-top:auto;width:100%}
+.nl-reason{border-top:1px solid var(--line);padding:13px 0;margin-bottom:15px}
+.nl-reason strong{font-size:12px}
+.nl-reason p{font-size:12px;line-height:1.5;color:var(--muted);margin:5px 0}
+.nl-reason small{font-size:10px;color:#92a397}
+.nl-pager{display:flex;justify-content:center;align-items:center;gap:16px;margin:22px 0 32px}
+.nl-pager button{background:white;border:1px solid #d8e5da;color:var(--green);border-radius:9px;padding:8px 12px;font-size:12px;font-weight:750}
+.nl-pager span{color:#829488;font-size:12px;font-weight:700}
+.nl-discover-community{border-top:1px solid var(--line);padding-top:18px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.nl-discover-community h2{font-size:23px;margin:5px 0}
+.nl-discover-community p{font-size:13px;color:var(--muted);margin:0}
+.nl-preview-post{margin-top:14px;width:100%;border:1px solid var(--line);border-radius:15px;background:white;padding:14px;display:flex;align-items:center;gap:12px;text-align:left;color:var(--ink)}
+.nl-preview-post span:nth-child(2){flex:1;display:grid;gap:3px}.nl-preview-post small{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nl-preview-post b{color:var(--green)}
+.nl-mini-avatar{width:32px;height:32px;flex:0 0 32px;border-radius:50%;display:grid;place-items:center;background:#f4e5d5;color:#a9653e;font-size:12px;font-weight:850}
+.nl-context{position:relative;background:#e8f2e9;border-radius:18px;padding:20px 24px;margin:28px 0}
+.nl-context>span,.nl-reward-hero span{display:block;color:#709480;letter-spacing:1.6px;font-size:10px;font-weight:850}
+.nl-context strong{display:block;font-size:18px;text-transform:capitalize;margin:5px 0}
+.nl-context p{font-size:13px;color:#587464;margin:0}
+.nl-context button{margin-top:12px}
+.nl-recommend-action{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:30px 0 18px}
+.nl-recommend-action h2{font-size:23px;margin:0 0 4px}
+.nl-recommend-action p{font-size:13px;color:var(--muted);margin:0}
+.nl-status{background:#f1f6ed;border-radius:12px;padding:13px;color:var(--green);font-size:13px;margin:10px 0}
+.nl-placeholder-card{min-height:230px;border:1px dashed #bfd3c3;border-radius:20px;background:linear-gradient(145deg,#f6faf4,#eaf3e9);padding:30px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center}
+.nl-placeholder-spark{color:#c87b44;font-size:37px}.nl-placeholder-card h3{font-size:20px;margin:6px 0}.nl-placeholder-card p{max-width:400px;color:var(--muted);line-height:1.5;font-size:14px}
+.nl-assurance{display:flex;align-items:start;gap:15px;background:#f6ecdf;border-radius:16px;padding:18px;margin-top:22px;color:#795834}
+.nl-assurance>span{width:30px;height:30px;border-radius:8px;background:#d9ae7e;color:white;display:grid;place-items:center;flex:0 0 30px}
+.nl-assurance strong{font-size:13px}.nl-assurance p{font-size:12px;line-height:1.5;margin:4px 0 0}
+.nl-summary-card,.nl-profile-card{background:white;border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 6px 20px #1e513509}
+.nl-summary-top{display:flex;justify-content:space-between;align-items:start}.nl-summary-top h2{font-size:19px;margin:6px 0 0}
+.nl-week{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin:22px 0}
+.nl-week button{border:0;background:transparent;border-radius:12px;padding:8px 2px;color:#98a99e;display:grid;justify-items:center;gap:7px}
+.nl-week button[data-active=true]{background:#e7f2e9;color:var(--green)}
+.nl-week small{font-size:10px;font-weight:750}.nl-week strong{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#edf2ed;font-size:12px}
+.nl-week button[data-active=true] strong{background:var(--green);color:white}
+.nl-summary-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-top:1px solid var(--line);padding-top:18px}
+.nl-summary-stats div{display:grid;gap:3px}.nl-summary-stats strong{font-size:24px}.nl-summary-stats span{font-size:11px;color:#819486}
+.nl-summary-foot{font-size:10px;color:#86988a;line-height:1.5;margin:13px 0 0}
+.nl-segmented{display:flex;background:#eaf0e9;border-radius:11px;padding:4px;margin-bottom:12px}
+.nl-segmented button{border:0;flex:1;background:transparent;color:#798b7e;border-radius:8px;padding:10px;font-size:12px;font-weight:800}
+.nl-segmented button[aria-selected=true]{background:white;color:var(--green);box-shadow:0 2px 6px #17392f12}
+.nl-history-list{display:grid;gap:10px}
+.nl-history-row{background:white;border:1px solid var(--line);border-radius:15px;padding:14px;display:flex;align-items:center;gap:13px;flex-wrap:wrap}
+.nl-history-icon{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:#f1ece5;color:#bd8559;font-size:20px}
+.nl-history-row>div{flex:1;min-width:160px;display:grid;gap:4px}.nl-history-row strong{font-size:13px}.nl-history-row small{font-size:11px;color:#8c9d90}
+.nl-photo-history-nutrition{display:grid;gap:3px;margin-top:4px}.nl-photo-history-nutrition a{font-size:10px;color:var(--green);text-decoration:none;font-weight:700}
+.nl-history-row .nl-button{padding:8px 11px}.nl-status-pill{font-size:10px;font-weight:800;text-transform:capitalize;color:#9a7856;background:#f8efe4;border-radius:999px;padding:6px 9px}
+.nl-status-pill.confirmed{background:#e9f5e8;color:#36724e}.nl-history-kcal{font-size:12px;color:#64806d;font-weight:750}
+.nl-composer{background:#e8f1e8;border-radius:18px;padding:20px;display:flex;gap:16px;align-items:start}
+.nl-composer-icon{width:36px;height:36px;flex:0 0 36px;display:grid;place-items:center;background:#d5a573;border-radius:10px;color:white;font-size:22px}
+.nl-composer-content{flex:1;min-width:0}.nl-composer-content strong{font-size:15px}.nl-composer-content p{font-size:12px;color:#5e7765;margin:5px 0 13px;line-height:1.45}
+.nl-composer-fields{display:flex;flex-wrap:wrap;gap:8px}.nl-composer-fields select,.nl-composer-fields input{border:1px solid #cad9ca;border-radius:10px;background:white;padding:10px 12px;font-size:12px;color:var(--ink)}
+.nl-composer-fields input{flex:1;min-width:170px}.nl-composer-hint{margin:0!important;font-weight:750}
+.nl-moderator{margin-top:28px;border-top:1px solid var(--line)}.nl-count-pill{font-size:11px;background:#f9ead8;color:#a76d3a;border-radius:999px;padding:6px 10px;font-weight:800}
+.nl-muted{color:#93a497;font-size:13px}.nl-report-list{display:grid;gap:10px}.nl-report-card{background:#fff7eb;border:1px solid #f1dfc8;border-radius:13px;padding:15px}
+.nl-report-card strong{font-size:13px}.nl-report-card p{color:#8b755d;font-size:12px}.nl-report-card div{display:flex;gap:12px}.nl-report-card button{border:0;background:none;color:var(--green);font-weight:800;font-size:11px;padding:0}.nl-report-card button:last-child{color:#ad654a}
+.nl-post-list{display:grid;gap:14px}.nl-post-card{background:white;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 5px 17px #1e513508}
+.nl-post-card header{display:flex;align-items:center;gap:10px}.nl-post-card header div{display:grid;gap:2px;flex:1}.nl-post-card header strong{font-size:12px}.nl-post-card header small{font-size:10px;color:#9bac9e}
+.nl-your-post{font-size:10px;background:#edf5e9;color:var(--green);border-radius:999px;padding:6px 9px;font-weight:750}
+.nl-post-card h3{font-size:17px;margin:17px 0 6px}.nl-post-caption{font-size:14px;color:#425c4c;line-height:1.5;margin:0 0 9px}.nl-post-nutrition{font-size:11px;color:#879c8b;margin:0}
+.nl-post-actions{display:flex;gap:18px;padding:13px 0;border-top:1px solid var(--line);margin-top:15px}.nl-post-actions button,.nl-report-action button{border:0;background:none;color:var(--green);font-size:11px;font-weight:800;padding:0}.nl-post-actions button:last-child:not(:first-child),.nl-report-action button{color:#a6785b}
+.nl-comment-list{list-style:none;padding:0;margin:0 0 12px;display:grid;gap:9px}.nl-comment-list li{display:flex;align-items:start;gap:9px;background:#f7f9f5;border-radius:10px;padding:9px}.nl-comment-list li div{flex:1}.nl-comment-list strong{font-size:11px}.nl-comment-list p{font-size:12px;margin:3px 0 0}.nl-comment-list button{border:0;background:none;font-size:10px;color:#a6785b}
+.nl-comment-form{display:flex;gap:8px}.nl-comment-form input{flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:12px}.nl-comment-form button{border:0;background:#e4f1e7;color:var(--green);border-radius:9px;padding:8px 12px;font-size:11px;font-weight:850}
+.nl-report-action{display:flex;gap:12px;align-items:center;margin-top:12px}.nl-report-action select{border:0;background:transparent;color:#9a765d;font-size:10px}
+.nl-reward-hero{min-height:190px;background:#20543d;border-radius:22px;padding:28px 32px;color:white;display:flex;justify-content:space-between;overflow:hidden}
+.nl-reward-hero span{color:#a9d7b6}.nl-reward-hero strong{display:block;font-size:67px;line-height:1;margin:13px 0 2px;letter-spacing:-4px}.nl-reward-hero p{margin:0;color:#d4ead6;font-size:14px}
+.nl-reward-orbit{width:160px;height:160px;border:2px solid #6a9c77;border-radius:50%;position:relative;margin:2px 2vw -70px 0;transform:rotate(-12deg)}.nl-reward-orbit:before,.nl-reward-orbit b{content:"";position:absolute;border-radius:50%;border:2px solid #a8ca8b}.nl-reward-orbit:before{inset:19px}.nl-reward-orbit b{inset:43px;background:#b8d781}.nl-reward-orbit i{position:absolute;top:-20px;right:10px;color:#eed2a1;font-size:30px;font-style:normal}
+.nl-next-step{display:flex;gap:14px;background:#edf6e7;border-radius:14px;padding:16px;margin-top:15px}.nl-next-step>span{color:#c98044;font-size:22px}.nl-next-step strong{font-size:12px}.nl-next-step p{font-size:12px;color:#5d7661;margin:3px 0 0}
+.nl-habit-grid,.nl-badge-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.nl-habit-card,.nl-badge-card{border:1px solid var(--line);border-radius:17px;background:white;padding:19px}
+.nl-habit-icon{font-size:23px;color:#c37c45;background:#f6eadc;border-radius:9px;width:35px;height:35px;display:grid;place-items:center}.nl-habit-title{display:flex;justify-content:space-between;align-items:center;gap:5px;margin-top:12px}.nl-habit-title h3,.nl-badge-card h3{font-size:15px;margin:0}.nl-habit-title span{font-size:10px;color:var(--green);font-weight:800}.nl-habit-card p,.nl-badge-card p{font-size:12px;color:var(--muted);line-height:1.4;margin:7px 0 15px}
+.nl-habit-facts{display:flex;justify-content:space-between;font-size:10px;font-weight:750;color:var(--green)}.nl-progress{height:7px;background:#eaf0e8;border-radius:999px;margin:13px 0 7px;overflow:hidden}.nl-progress i{display:block;background:#5ca476;height:100%;border-radius:999px}.nl-habit-card small{font-size:10px;color:#8b9e8e}
+.nl-reward-links{display:flex;gap:10px;margin:15px 0 31px}.nl-reward-links button{border:0;background:#e9f3e8;color:var(--green);border-radius:10px;padding:10px 12px;font-size:11px;font-weight:800}
+.nl-badge-card{display:flex;flex-direction:column}.nl-badge-art{display:grid;place-items:center;width:58px;height:58px;border-radius:16px;background:#f5e7d7;color:#c0783f;font-size:35px;margin-bottom:14px}.nl-badge-card div{flex:1}.nl-badge-card button{align-self:flex-start}
+.nl-ledger{background:white;border:1px solid var(--line);border-radius:16px;overflow:hidden}.nl-ledger>div{display:flex;justify-content:space-between;padding:13px 17px;border-top:1px solid var(--line)}.nl-ledger>div:first-child{border-top:0}.nl-ledger span{font-size:12px;font-weight:750}.nl-ledger small{display:block;color:#9aab9c;font-size:10px;font-weight:400;margin-top:3px}.nl-ledger strong{color:#a9775b;font-size:13px}.nl-ledger strong[data-positive=true]{color:#2f8656}.nl-reward-note{font-size:11px;color:#9eab9c;margin-top:16px}
+.nl-profile-head{display:flex;align-items:center;gap:15px;margin-bottom:20px}.nl-profile-avatar{width:66px;height:66px;border-radius:50%;display:grid;place-items:center;background:#dceee0;color:var(--green);font-size:27px;font-weight:850}.nl-profile-head h2{font-size:20px;margin:0 0 3px}.nl-profile-head p{font-size:12px;color:var(--muted);margin:0}
+.nl-profile-card{margin:16px 0}.nl-profile-card h2{font-size:21px;margin:7px 0 18px}.nl-profile-card h3{font-size:13px;margin:20px 0 9px}
+.nl-field-label{display:grid;gap:7px;font-size:11px;font-weight:800;color:#6a806f;margin:16px 0}.nl-field-label input,.nl-field-label select{border:1px solid #d6e1d6;border-radius:10px;padding:11px 12px;font-size:13px;color:var(--ink);background:white}
+.nl-option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.nl-check-option{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:11px;font-weight:700}.nl-check-option input{accent-color:#337e58}.nl-field-help{font-size:11px;color:#94a598}.nl-profile-card>.nl-button{margin-top:17px}
+.nl-empty{border:1px dashed #cbdccc;border-radius:15px;background:#f9fbf7;padding:25px;color:#7d9380;font-size:13px;line-height:1.5}.nl-alert{background:#fff0e7;color:#9c4a36;border:1px solid #f2d7c7;border-radius:11px;padding:12px 15px;margin:0 0 18px;font-size:12px}
+.nl-footer{border-top:1px solid var(--line);padding:24px 0 4px;margin-top:45px;color:#a1aea1;font-size:10px}
+.nl-discover-tabs{display:flex;gap:5px;background:#eaf0e9;border-radius:12px;padding:5px;margin:0 0 22px;max-width:550px}
+.nl-discover-tabs button{flex:1;border:0;background:transparent;color:#718c79;border-radius:9px;padding:11px 6px;font-size:12px;font-weight:800}
+.nl-discover-tabs button[aria-selected=true]{background:white;color:var(--green);box-shadow:0 3px 8px #17392f13}
+.nl-directory-note{font-size:12px;color:#718775;line-height:1.55;margin:0 0 18px;max-width:700px}
+.nl-place-grid,.nl-source-grid,.nl-exercise-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.nl-place-card,.nl-source-card,.nl-exercise-card{background:#fff;border:1px solid var(--line);border-radius:17px;overflow:hidden;box-shadow:0 5px 17px #1e513508}
+.nl-place-art{height:105px;background:linear-gradient(120deg,#d9e9d8,#b8d3b6 60%,#f1ddbd);display:flex;align-items:start;justify-content:space-between;padding:17px;color:#285b41}
+.nl-place-art span{font-size:10px;letter-spacing:1px;font-weight:900}.nl-place-art b{font-size:36px;line-height:1;font-weight:400;opacity:.6}
+.nl-place-body,.nl-source-card,.nl-exercise-card{padding:18px}.nl-place-body h3,.nl-source-card h3,.nl-exercise-card h3{font-size:17px;margin:7px 0 5px}
+.nl-place-body p,.nl-source-card p,.nl-exercise-card p{font-size:12px;color:#688071;line-height:1.5;margin:0 0 14px}
+.nl-place-links{display:flex;flex-wrap:wrap;gap:13px}.nl-place-links a,.nl-source-card a,.nl-exercise-card a,.nl-plan-exercises a{font-size:11px;color:var(--green);font-weight:850;text-decoration:none}
+.nl-source-card,.nl-exercise-card{min-height:155px}.nl-source-card a,.nl-exercise-card a{display:inline-block;margin-top:4px}
+.nl-public-discussions{margin-top:34px;padding-top:6px;border-top:1px solid var(--line)}
+.nl-workout-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}.nl-workout-context{margin:0}.nl-workout-context p,.nl-workout-suggestion>p{font-size:12px;color:#718775;line-height:1.5}
+.nl-workout-suggestion{background:#e7f2e8;border-radius:20px;padding:24px}.nl-workout-suggestion h2{font-size:21px;margin:8px 0 18px}.nl-workout-suggestion .nl-filter-row{gap:6px}
+.nl-workout-suggestion .nl-chip{font-size:10px;padding:8px 10px}.nl-workout-suggestion .nl-button{margin-top:10px}
+.nl-plan-card{background:white;border:1px solid var(--line);border-radius:20px;padding:24px;margin:23px 0}.nl-plan-card>p{font-size:13px;color:#5a7561;line-height:1.6}
+.nl-plan-stage{font-size:11px;color:#4c8862;text-transform:capitalize;font-weight:800}.nl-plan-exercises{display:grid;gap:9px;margin:20px 0}
+.nl-plan-exercises article{display:flex;align-items:start;gap:13px;background:#f5f9f3;border-radius:12px;padding:13px}.nl-plan-exercises article>span{color:#b6875d;font-size:17px;font-weight:850}
+.nl-plan-exercises article>div{flex:1}.nl-plan-exercises strong{display:block;font-size:13px}.nl-plan-exercises small{font-size:11px;color:#60846b}.nl-plan-exercises p{font-size:11px;color:#829685;margin:6px 0 0;line-height:1.45}
+.nl-exercise-grid{margin-top:12px}.nl-exercise-card h3{text-transform:capitalize}
+.nl-bottom-nav{display:none}
+.nl-photo-card{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(220px,.9fr);gap:22px;background:#e8f2e9;border:1px solid #d5e8d9;border-radius:22px;padding:24px;margin:0 0 25px}
+.nl-photo-copy h2{font-size:24px;letter-spacing:-.8px;margin:7px 0}.nl-photo-copy>p{font-size:13px;color:#617b69;line-height:1.5;margin:0 0 10px}.nl-photo-copy .nl-photo-privacy{font-size:11px;color:#76917e}
+.nl-photo-picker{display:inline-flex;align-items:center;justify-content:center;background:#fff;color:var(--green);font-size:12px;font-weight:850;border:1px solid #bfd9c6;border-radius:11px;padding:11px 17px;cursor:pointer;margin:5px 0}.nl-photo-picker input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.nl-photo-copy .nl-field-label{margin:10px 0}.nl-photo-copy>.nl-button{margin-top:2px}
+.nl-photo-panel{min-height:235px;border:1px dashed #b4d0bb;background:#f6fbf4;border-radius:16px;overflow:hidden;display:grid;place-items:center}.nl-photo-panel img{width:100%;height:100%;max-height:310px;object-fit:cover}.nl-photo-empty{display:grid;justify-items:center;gap:5px;color:#8ba792}.nl-photo-empty span{font-size:58px;line-height:1;color:#bad1bc}.nl-photo-empty strong{font-size:13px}.nl-photo-empty small{font-size:11px}
+.nl-photo-error{grid-column:1/-1;color:#a44631;background:#fff3e9;border-radius:9px;padding:10px 12px;font-size:12px;margin:0}
+.nl-photo-result{grid-column:1/-1;border-top:1px solid #cce0d0;padding-top:19px;scroll-margin-top:90px}.nl-photo-result h3{margin:5px 0;font-size:20px}.nl-photo-result>p{font-size:12px;color:#617b69;line-height:1.5;margin:0 0 15px}
+.nl-photo-food{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:9px;align-items:end;margin:9px 0}.nl-photo-food label{display:grid;gap:5px;font-size:10px;font-weight:800;color:#6a806f}.nl-photo-food input{min-width:0;width:100%;border:1px solid #d1e1d3;border-radius:9px;background:white;padding:10px;font-size:12px;color:var(--ink)}.nl-photo-food .nl-text-link{padding:10px 3px}
+.nl-photo-questions{font-size:12px;color:#617b69;line-height:1.5;padding-left:19px}.nl-photo-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+.nl-nutrition-match{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.4fr) auto minmax(0,2fr) minmax(130px,.8fr);align-items:end;gap:9px;background:#f7fbf5;border:1px solid #dce9dc;padding:12px;border-radius:11px}.nl-nutrition-match label{min-width:0}.nl-nutrition-match select{min-width:0;width:100%;border:1px solid #d1e1d3;border-radius:9px;background:white;padding:10px;font-size:12px;color:var(--ink)}.nl-nutrition-match p{grid-column:1/-1;color:#9b704c;font-size:11px;margin:0}.nl-nutrition-match .nl-button{white-space:nowrap}
+.nl-nutrition-estimate{margin-top:16px;display:grid;gap:5px;padding:16px;border-radius:13px;background:#fff;border:1px solid #cfe1d1}.nl-nutrition-estimate strong{font-size:19px;color:var(--deep)}.nl-nutrition-estimate span,.nl-nutrition-estimate p{font-size:12px;color:#617b69;margin:0;line-height:1.5}.nl-nutrition-estimate a{font-size:11px;color:var(--green);font-weight:750;text-decoration:none}
+@media(max-width:950px){.nl-sidebar{width:205px;flex-basis:205px}.nl-food-card-featured{grid-template-columns:42% 58%}}
+@media(max-width:700px){
+  .nl-sidebar{display:none}.nl-topbar{height:64px;padding:0 18px}.nl-mobile-brand{display:block;font-size:21px}
+  .nl-demo-switch{font-size:0;gap:0}.nl-demo-switch select{max-width:130px;font-size:10px;padding:7px 7px}
+  .nl-avatar{width:34px;height:34px;margin-left:9px}.nl-main{padding:30px 18px 95px}
+  .nl-page-intro h1{font-size:37px;letter-spacing:-1.8px}.nl-page-intro p{font-size:14px}
+  .nl-food-grid{grid-template-columns:1fr}.nl-food-card-featured{grid-column:span 1;display:block}.nl-food-card-featured .nl-meal-art{min-height:180px}
+  .nl-recommend-action{align-items:start;flex-direction:column}.nl-summary-card{padding:17px}
+  .nl-bottom-nav{height:68px;position:fixed;z-index:30;bottom:0;left:0;right:0;background:#ffffffed;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding-bottom:env(safe-area-inset-bottom)}
+  .nl-bottom-item{min-width:0;flex:1;border:0;background:none;color:#91a597;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:9px;font-weight:750}
+  .nl-bottom-item[data-active=true]{color:var(--green)}.nl-bottom-item svg{width:20px;height:20px}
+  .nl-workout-layout,.nl-place-grid,.nl-source-grid,.nl-exercise-grid{grid-template-columns:1fr}
+  .nl-photo-card{grid-template-columns:1fr;padding:18px}.nl-photo-panel{min-height:190px}.nl-photo-result,.nl-photo-error{grid-column:1}
+  .nl-photo-food{grid-template-columns:1fr 1fr}.nl-photo-food label:first-child{grid-column:1/-1}
+  .nl-nutrition-match{grid-template-columns:1fr 1fr}.nl-nutrition-match label:first-child{grid-column:1/-1}.nl-nutrition-match .nl-button{grid-column:1/-1}.nl-nutrition-match label:nth-of-type(2){grid-column:1/-1}
+  .nl-plan-exercises article{flex-wrap:wrap}.nl-plan-exercises a{margin-left:32px}
+}
+@media(max-width:480px){.nl-habit-grid,.nl-badge-grid{grid-template-columns:1fr}.nl-composer{padding:15px;gap:10px}.nl-composer-fields{flex-direction:column}.nl-composer-fields select,.nl-composer-fields input,.nl-composer-fields button{width:100%}.nl-summary-stats strong{font-size:20px}.nl-history-row .nl-button{width:100%}.nl-reward-links{flex-wrap:wrap}.nl-discover-community{align-items:start;flex-direction:column}}

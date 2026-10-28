@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, JSON, String, Text
+from datetime import date
+from decimal import Decimal
+
+from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, JSON, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from apps.api.core.database import Base
@@ -15,6 +18,20 @@ class Venue(Base, IdMixin, TimestampMixin):
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     campus_area: Mapped[str] = mapped_column(String(120), nullable=False)
     is_demo: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    scope: Mapped[str] = mapped_column(String(20), default="demo", nullable=False)
+    source_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    source_checked_at: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+
+class ExternalNote(Base, IdMixin):
+    __tablename__ = "external_notes"
+
+    scope: Mapped[str] = mapped_column(String(20), nullable=False)
+    title: Mapped[str] = mapped_column(String(120), nullable=False)
+    summary: Mapped[str] = mapped_column(String(500), nullable=False)
+    source_platform: Mapped[str] = mapped_column(String(40), nullable=False)
+    source_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    source_checked_at: Mapped[date] = mapped_column(Date, nullable=False)
 
 
 class MenuItem(Base, IdMixin, TimestampMixin):
@@ -45,3 +62,18 @@ class NutritionFact(Base):
     basis: Mapped[str] = mapped_column(String(30), default="per_serving", nullable=False)
     provenance: Mapped[str] = mapped_column(String(30), nullable=False)
     uncertainty_note: Mapped[str] = mapped_column(String(240), nullable=False)
+
+
+class NutritionFood(Base):
+    """A cached, source-backed USDA SR Legacy density (per 100 edible grams)."""
+
+    __tablename__ = "nutrition_foods"
+
+    fdc_id: Mapped[int] = mapped_column(primary_key=True)
+    description: Mapped[str] = mapped_column(String(300), nullable=False)
+    data_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    calories_kcal: Mapped[Decimal] = mapped_column(Numeric(10, 3), nullable=False)
+    protein_g: Mapped[Decimal] = mapped_column(Numeric(10, 3), nullable=False)
+    carbs_g: Mapped[Decimal] = mapped_column(Numeric(10, 3), nullable=False)
+    fat_g: Mapped[Decimal] = mapped_column(Numeric(10, 3), nullable=False)
+    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

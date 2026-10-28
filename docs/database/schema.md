@@ -8,7 +8,8 @@ Alembic revision `20261024_0002` creates NourishLoop tables after the historical
 | `user_profiles` | One row per user; preferences and allergies as JSON arrays | Private dietary information |
 | `user_goals` | One row per user; goal and optional daily target | Private wellness information |
 | `user_consents` | One row per user; analytics opt-in defaults false | Private consent state |
-| `venues` | Public demo venue data | Catalog |
+| `venues` | Source scope, official URL and check date for real listings; separate demo venues | Catalog |
+| `external_notes` | Attributed, dated paraphrases linking to public discussion sources | Public reference material |
 | `menu_items` | Venue FK; availability, tags, source and freshness fields | Catalog |
 | `nutrition_facts` | One per item; kcal/macros per serving, provenance and uncertainty | Catalog estimates |
 | `recommendation_runs` | User FK; meal slot, scoring version/config | Private behavior history |
@@ -38,3 +39,11 @@ Revision `20261028_0004` adds Community comments, unique per-user post reactions
 | `reward_redemptions` | One redemption per user/badge, with cost snapshot |
 
 Habit events and credit grants commit with their confirmed meal log or voluntary Community post. Removing a credited post appends a negative reversal and marks its habit event reversed; it does not change the meal log. A revoked credit can leave a negative balance after a prior redemption, which future earned credits offset. No cash-value rewards, merchant funding, or payment integration exist.
+
+## Places and workouts extension
+
+Revision `20261028_0005` adds venue source fields and the `external_notes` table. It adds `exercises` (sourced action catalog), `workout_profiles` (one private stage/equipment/weekly goal per user), `workout_plans` (owned recommendation snapshot with stage, focus, prescriptions and explanation source), and `workout_sessions` (unique plan reference and completion time). A completed session creates one `complete_workout` habit event per Hong Kong day and a signed demo credit row in the same transaction. Plans alone do not award credits. Exercise and venue sources are dated or directly linked; real venues do not acquire invented nutrition facts.
+
+## Photo meal records
+
+Revision `20261028_0006` adds `photo_meal_records` with user ID, reviewed food names, optional notes, model name and consumption time. It has no image or image URL column. Revision `20261028_0007` adds a `nutrition_foods` cache of USDA SR Legacy per-100-g nutrient densities and nullable nutrition/item snapshots to photo records. Each item snapshot retains the selected source ID/description, entered edible grams and calculated values; later cache changes do not rewrite history. A photo meal with complete reviewed matches contributes its approximate values to that day's totals. A names-only photo meal counts toward the confirmed-meal count but contributes no nutrition values. Both can earn the daily `confirm_meal` credit. Photo records have their own paginated History list and cannot be shared through the existing menu-meal Community post route.

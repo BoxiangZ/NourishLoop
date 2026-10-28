@@ -1,8 +1,19 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
+
+
+class NutritionFoodRead(BaseModel):
+    fdc_id: int
+    description: str
+    data_type: str
+    calories_kcal: float
+    protein_g: float
+    carbs_g: float
+    fat_g: float
+    source_url: str
 
 
 class VenueRead(BaseModel):
@@ -10,6 +21,20 @@ class VenueRead(BaseModel):
     name: str
     campus_area: str
     is_demo: bool
+    scope: str
+    source_url: str | None
+    source_checked_at: date | None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ExternalNoteRead(BaseModel):
+    id: str
+    scope: str
+    title: str
+    summary: str
+    source_platform: str
+    source_url: str
+    source_checked_at: date
     model_config = ConfigDict(from_attributes=True)
 
 

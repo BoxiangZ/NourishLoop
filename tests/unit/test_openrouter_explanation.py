@@ -37,6 +37,7 @@ def test_openrouter_rewords_only_grounded_candidate_and_uses_key():
     body = requests[0].read().decode()
     assert "Chickpea salad" in body
     assert "Estimated 470 kcal" in body
+    assert '"reasoning":{"enabled":false}' in body
     assert "test-only" not in body
 
 

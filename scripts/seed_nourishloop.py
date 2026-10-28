@@ -9,7 +9,7 @@ def main() -> None:
     with session_factory() as db:
         seed(db)
     engine.dispose()
-    print("Seeded NourishLoop fictional demo catalog and student.")
+    print("Seeded demo accounts and meals, sourced venues, discussions and exercises.")
 
 
 if __name__ == "__main__":

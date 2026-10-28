@@ -17,6 +17,7 @@ from apps.api.modules.identity.router import router as identity_router
 from apps.api.modules.recommendations.router import router as recommendations_router
 from apps.api.modules.rewards.router import router as rewards_router
 from apps.api.modules.tracking.router import router as tracking_router
+from apps.api.modules.workouts.router import router as workouts_router
 
 
 app = FastAPI(
@@ -26,7 +27,7 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[get_settings().cors_origin],
+    allow_origins=[origin.strip() for origin in get_settings().cors_origin.split(",") if origin.strip()],
     allow_credentials=False,
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
     allow_headers=["Content-Type", "X-Demo-User-Id"],
@@ -37,6 +38,7 @@ app.include_router(recommendations_router)
 app.include_router(tracking_router)
 app.include_router(community_router)
 app.include_router(rewards_router)
+app.include_router(workouts_router)
 
 
 @app.exception_handler(HTTPException)

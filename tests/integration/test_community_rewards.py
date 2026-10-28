@@ -10,6 +10,7 @@ from apps.api.modules.catalog.models import MenuItem, NutritionFact, Venue
 from apps.api.modules.identity.models import User
 from apps.api.modules.rewards.models import CreditTransaction
 from apps.api.seed import seed
+from apps.api.real_sources import HKUST_VENUES, LOHAS_VENUES
 
 
 def test_demo_seed_respects_foreign_keys_and_is_idempotent(tmp_path, monkeypatch):
@@ -26,7 +27,7 @@ def test_demo_seed_respects_foreign_keys_and_is_idempotent(tmp_path, monkeypatch
     with factory() as db:
         seed(db)
         seed(db)
-        assert db.scalar(select(func.count()).select_from(Venue)) == 2
+        assert db.scalar(select(func.count()).select_from(Venue)) == 2 + len(HKUST_VENUES) + len(LOHAS_VENUES)
         assert db.scalar(select(func.count()).select_from(MenuItem)) == 6
         assert db.scalar(select(func.count()).select_from(NutritionFact)) == 6
     engine.dispose()
@@ -41,6 +42,45 @@ def confirm_meal(client, item_id: str, headers=None) -> str:
     )
     assert log.status_code == 201
     return log.json()["id"]
+
+
+def test_food_search_filters_and_stable_pages(nl_client):
+    first = nl_client.get("/api/v1/menu-items?limit=2&offset=0")
+    second = nl_client.get("/api/v1/menu-items?limit=2&offset=2")
+    assert first.status_code == second.status_code == 200
+    assert len(first.json()) == len(second.json()) == 2
+    assert {row["id"] for row in first.json()}.isdisjoint(
+        {row["id"] for row in second.json()}
+    )
+    vegan = nl_client.get("/api/v1/menu-items?tag=vegan").json()
+    assert vegan and all("vegan" in row["tags"] for row in vegan)
+    cheap = nl_client.get("/api/v1/menu-items?max_price_hkd=50").json()
+    assert cheap and all(row["price_hkd"] <= 50 for row in cheap)
+    searched = nl_client.get("/api/v1/menu-items?q=chickpea").json()
+    assert len(searched) == 1 and searched[0]["name"] == "Chickpea salad"
+    assert nl_client.get("/api/v1/menu-items?offset=-1").status_code == 422
+
+
+def test_history_and_community_pages_keep_stable_boundaries(nl_client):
+    item_id = nl_client.get("/api/v1/menu-items?limit=1").json()[0]["id"]
+    for index in range(3):
+        log_id = confirm_meal(nl_client, item_id)
+        post = nl_client.post(
+            "/api/v1/community/posts",
+            json={"meal_log_id": log_id, "caption": f"Lunch tip {index}"},
+        )
+        assert post.status_code == 201
+
+    for path in ("/me/decisions", "/me/meal-logs", "/community/posts"):
+        first = nl_client.get(f"/api/v1{path}?limit=2&offset=0")
+        second = nl_client.get(f"/api/v1{path}?limit=2&offset=2")
+        assert first.status_code == second.status_code == 200
+        assert len(first.json()) == 2
+        assert len(second.json()) == 1
+        assert {row["id"] for row in first.json()}.isdisjoint(
+            {row["id"] for row in second.json()}
+        )
+        assert nl_client.get(f"/api/v1{path}?offset=-1").status_code == 422
 
 
 def test_habits_credits_redemption_and_share_reversal(nl_stack):
@@ -86,6 +126,15 @@ def test_habits_credits_redemption_and_share_reversal(nl_stack):
     assert redeemed.json()["balance"] == 3
     assert client.post("/api/v1/rewards/starter_badge/redeem").status_code == 409
     assert client.delete(f"/api/v1/community/posts/{post_id}").status_code == 204
+    credit_first = client.get("/api/v1/rewards/overview?transaction_limit=2&transaction_offset=0")
+    credit_second = client.get("/api/v1/rewards/overview?transaction_limit=2&transaction_offset=2")
+    assert credit_first.status_code == credit_second.status_code == 200
+    assert len(credit_first.json()["transactions"]) == 2
+    assert len(credit_second.json()["transactions"]) == 2
+    assert {row["id"] for row in credit_first.json()["transactions"]}.isdisjoint(
+        {row["id"] for row in credit_second.json()["transactions"]}
+    )
+    assert client.get("/api/v1/rewards/overview?transaction_offset=-1").status_code == 422
     assert client.get("/api/v1/community/posts").json() == []
     assert client.get("/api/v1/community/me/shared-meal-log-ids").json() == [log.json()["id"]]
     overview = client.get("/api/v1/rewards/overview").json()

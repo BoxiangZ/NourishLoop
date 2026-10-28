@@ -24,6 +24,11 @@ services:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/maie6000c
       CORS_ORIGIN: http://localhost:3000
       EXPLANATION_PROVIDER: ${EXPLANATION_PROVIDER:-deterministic}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-nvidia/nemotron-3.5-super-vl:free}
+      OPENROUTER_TIMEOUT_SECONDS: ${OPENROUTER_TIMEOUT_SECONDS:-20}
+      USDA_API_KEY: ${USDA_API_KEY:-DEMO_KEY}
+      USDA_TIMEOUT_SECONDS: ${USDA_TIMEOUT_SECONDS:-12}
     ports:
       - "${API_HOST_PORT:-8000}:8000"
     depends_on:

@@ -339,6 +339,112 @@
         }
       }
     },
+    "/api/v1/nutrition-foods": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Nutrition Foods",
+        "operationId": "nutrition_foods_api_v1_nutrition_foods_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 120,
+              "title": "Q"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "default": 6,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NutritionFoodRead"
+                  },
+                  "title": "Response Nutrition Foods Api V1 Nutrition Foods Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
     "/api/v1/venues": {
       "get": {
         "tags": [
@@ -358,6 +464,51 @@
               "default": 50,
               "title": "Limit"
             }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(hkust|lohas|demo)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Scope"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
           }
         ],
         "responses": {
@@ -371,6 +522,84 @@
                     "$ref": "#/components/schemas/VenueRead"
                   },
                   "title": "Response Venues Api V1 Venues Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/external-notes": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "External Notes",
+        "operationId": "external_notes_api_v1_external_notes_get",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(hkust|lohas)$",
+              "default": "hkust",
+              "title": "Scope"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExternalNoteRead"
+                  },
+                  "title": "Response External Notes Api V1 External Notes Get"
                 }
               }
             }
@@ -524,6 +753,68 @@
               "minimum": 1,
               "default": 50,
               "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 40
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tag"
+            }
+          },
+          {
+            "name": "max_price_hkd",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Max Price Hkd"
             }
           }
         ],
@@ -1014,6 +1305,468 @@
         }
       }
     },
+    "/api/v1/meals/analyze-photo": {
+      "post": {
+        "tags": [
+          "tracking"
+        ],
+        "summary": "Analyze Meal Photo",
+        "operationId": "analyze_meal_photo_api_v1_meals_analyze_photo_post",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhotoAnalysisRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoAnalysisRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/photo-meals": {
+      "post": {
+        "tags": [
+          "tracking"
+        ],
+        "summary": "Record Photo Meal",
+        "operationId": "record_photo_meal_api_v1_photo_meals_post",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhotoMealCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoMealRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/photo-meals/estimate": {
+      "post": {
+        "tags": [
+          "tracking"
+        ],
+        "summary": "Preview Photo Nutrition",
+        "operationId": "preview_photo_nutrition_api_v1_photo_meals_estimate_post",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhotoNutritionEstimateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoNutritionEstimateRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/photo-meals/auto-estimate": {
+      "post": {
+        "tags": [
+          "tracking"
+        ],
+        "summary": "Auto Preview Photo Nutrition",
+        "operationId": "auto_preview_photo_nutrition_api_v1_photo_meals_auto_estimate_post",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhotoAutoEstimateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoAutoEstimateRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/me/photo-meals": {
+      "get": {
+        "tags": [
+          "tracking"
+        ],
+        "summary": "Photo Meals",
+        "operationId": "photo_meals_api_v1_me_photo_meals_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PhotoMealRead"
+                  },
+                  "title": "Response Photo Meals Api V1 Me Photo Meals Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
     "/api/v1/decisions": {
       "post": {
         "tags": [
@@ -1121,6 +1874,17 @@
               "minimum": 1,
               "default": 20,
               "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
             }
           },
           {
@@ -1305,6 +2069,17 @@
               "minimum": 1,
               "default": 20,
               "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
             }
           },
           {
@@ -2476,6 +3251,29 @@
         "operationId": "read_overview_api_v1_rewards_overview_get",
         "parameters": [
           {
+            "name": "transaction_limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Transaction Limit"
+            }
+          },
+          {
+            "name": "transaction_offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Transaction Offset"
+            }
+          },
+          {
             "name": "X-Demo-User-Id",
             "in": "header",
             "required": false,
@@ -2587,6 +3385,608 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RedemptionRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/exercises": {
+      "get": {
+        "tags": [
+          "workouts"
+        ],
+        "summary": "Exercises",
+        "operationId": "exercises_api_v1_exercises_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "muscle_group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "back",
+                    "shoulders",
+                    "chest",
+                    "legs",
+                    "core"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Muscle Group"
+            }
+          },
+          {
+            "name": "equipment",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "bodyweight",
+                    "machine",
+                    "dumbbell",
+                    "cable"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Equipment"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExerciseRead"
+                  },
+                  "title": "Response Exercises Api V1 Exercises Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/me/workout-profile": {
+      "get": {
+        "tags": [
+          "workouts"
+        ],
+        "summary": "Read Workout Profile",
+        "operationId": "read_workout_profile_api_v1_me_workout_profile_get",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutProfileRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "workouts"
+        ],
+        "summary": "Save Workout Profile",
+        "operationId": "save_workout_profile_api_v1_me_workout_profile_put",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkoutProfileUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutProfileRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/workouts/recommend": {
+      "post": {
+        "tags": [
+          "workouts"
+        ],
+        "summary": "Recommend Workout",
+        "operationId": "recommend_workout_api_v1_workouts_recommend_post",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkoutRecommendRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutPlanRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/workouts/sessions": {
+      "post": {
+        "tags": [
+          "workouts"
+        ],
+        "summary": "Log Workout",
+        "operationId": "log_workout_api_v1_workouts_sessions_post",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkoutSessionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutSessionRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/me/workout-sessions": {
+      "get": {
+        "tags": [
+          "workouts"
+        ],
+        "summary": "Workout History",
+        "operationId": "workout_history_api_v1_me_workout_sessions_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkoutSessionRead"
+                  },
+                  "title": "Response Workout History Api V1 Me Workout Sessions Get"
                 }
               }
             }
@@ -3136,6 +4536,138 @@
         ],
         "title": "ErrorResponse"
       },
+      "ExercisePrescription": {
+        "properties": {
+          "exercise": {
+            "$ref": "#/components/schemas/ExerciseRead"
+          },
+          "sets": {
+            "type": "integer",
+            "title": "Sets"
+          },
+          "reps": {
+            "type": "string",
+            "title": "Reps"
+          },
+          "rest_seconds": {
+            "type": "integer",
+            "title": "Rest Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exercise",
+          "sets",
+          "reps",
+          "rest_seconds"
+        ],
+        "title": "ExercisePrescription"
+      },
+      "ExerciseRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "muscle_group": {
+            "type": "string",
+            "enum": [
+              "back",
+              "shoulders",
+              "chest",
+              "legs",
+              "core"
+            ],
+            "title": "Muscle Group"
+          },
+          "equipment": {
+            "type": "string",
+            "enum": [
+              "bodyweight",
+              "machine",
+              "dumbbell",
+              "cable"
+            ],
+            "title": "Equipment"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced"
+            ],
+            "title": "Difficulty"
+          },
+          "instructions": {
+            "type": "string",
+            "title": "Instructions"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "muscle_group",
+          "equipment",
+          "difficulty",
+          "instructions",
+          "source_url"
+        ],
+        "title": "ExerciseRead"
+      },
+      "ExternalNoteRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "source_platform": {
+            "type": "string",
+            "title": "Source Platform"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "source_checked_at": {
+            "type": "string",
+            "format": "date",
+            "title": "Source Checked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "scope",
+          "title",
+          "summary",
+          "source_platform",
+          "source_url",
+          "source_checked_at"
+        ],
+        "title": "ExternalNoteRead"
+      },
       "FeedbackCreate": {
         "properties": {
           "helpful": {
@@ -3447,6 +4979,54 @@
         ],
         "title": "MenuItemRead"
       },
+      "NutritionFoodRead": {
+        "properties": {
+          "fdc_id": {
+            "type": "integer",
+            "title": "Fdc Id"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "data_type": {
+            "type": "string",
+            "title": "Data Type"
+          },
+          "calories_kcal": {
+            "type": "number",
+            "title": "Calories Kcal"
+          },
+          "protein_g": {
+            "type": "number",
+            "title": "Protein G"
+          },
+          "carbs_g": {
+            "type": "number",
+            "title": "Carbs G"
+          },
+          "fat_g": {
+            "type": "number",
+            "title": "Fat G"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fdc_id",
+          "description",
+          "data_type",
+          "calories_kcal",
+          "protein_g",
+          "carbs_g",
+          "fat_g",
+          "source_url"
+        ],
+        "title": "NutritionFoodRead"
+      },
       "NutritionRead": {
         "properties": {
           "calories_kcal": {
@@ -3515,6 +5095,499 @@
         },
         "type": "object",
         "title": "NutritionTotals"
+      },
+      "PhotoAnalysisRead": {
+        "properties": {
+          "foods": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoFood"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "title": "Foods"
+          },
+          "review_questions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "Review Questions"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "requires_review": {
+            "type": "boolean",
+            "const": false,
+            "title": "Requires Review",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "foods",
+          "review_questions",
+          "model"
+        ],
+        "title": "PhotoAnalysisRead"
+      },
+      "PhotoAnalysisRequest": {
+        "properties": {
+          "image_base64": {
+            "type": "string",
+            "maxLength": 7000000,
+            "minLength": 1,
+            "title": "Image Base64"
+          },
+          "mime_type": {
+            "type": "string",
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ],
+            "title": "Mime Type"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Notes",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "image_base64",
+          "mime_type"
+        ],
+        "title": "PhotoAnalysisRequest"
+      },
+      "PhotoAutoEstimateRead": {
+        "properties": {
+          "estimate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoNutritionEstimateRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "partial_estimate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoNutritionEstimateRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "selections": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoNutritionSelection"
+            },
+            "type": "array",
+            "title": "Selections"
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoAutoMatchRead"
+            },
+            "type": "array",
+            "title": "Matches"
+          },
+          "unresolved": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unresolved"
+          }
+        },
+        "type": "object",
+        "title": "PhotoAutoEstimateRead"
+      },
+      "PhotoAutoEstimateRequest": {
+        "properties": {
+          "foods": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoFood"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "minItems": 1,
+            "title": "Foods"
+          }
+        },
+        "type": "object",
+        "required": [
+          "foods"
+        ],
+        "title": "PhotoAutoEstimateRequest"
+      },
+      "PhotoAutoMatchRead": {
+        "properties": {
+          "food_index": {
+            "type": "integer",
+            "title": "Food Index"
+          },
+          "match": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NutritionFoodRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "food_index"
+        ],
+        "title": "PhotoAutoMatchRead"
+      },
+      "PhotoFood": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "preparation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preparation"
+          },
+          "quantity_from_notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity From Notes"
+          },
+          "estimated_grams": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 5000.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Grams"
+          },
+          "portion_basis": {
+            "type": "string",
+            "enum": [
+              "user_note",
+              "visual_estimate",
+              "unknown"
+            ],
+            "title": "Portion Basis",
+            "default": "unknown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "PhotoFood"
+      },
+      "PhotoMealCreate": {
+        "properties": {
+          "foods": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoFood"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "minItems": 1,
+            "title": "Foods"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Notes",
+            "default": ""
+          },
+          "model": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Model"
+          },
+          "nutrition_selections": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoNutritionSelection"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "title": "Nutrition Selections"
+          }
+        },
+        "type": "object",
+        "required": [
+          "foods",
+          "model"
+        ],
+        "title": "PhotoMealCreate"
+      },
+      "PhotoMealRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "foods": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoFood"
+            },
+            "type": "array",
+            "title": "Foods"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "consumed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Consumed At"
+          },
+          "nutrition": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NutritionTotals"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nutrition_items": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoNutritionItemRead"
+            },
+            "type": "array",
+            "title": "Nutrition Items"
+          },
+          "nutrition_status": {
+            "type": "string",
+            "enum": [
+              "complete",
+              "partial",
+              "none"
+            ],
+            "title": "Nutrition Status",
+            "default": "none"
+          },
+          "unresolved_foods": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unresolved Foods"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "foods",
+          "notes",
+          "model",
+          "consumed_at"
+        ],
+        "title": "PhotoMealRead"
+      },
+      "PhotoNutritionEstimateRead": {
+        "properties": {
+          "nutrition": {
+            "$ref": "#/components/schemas/NutritionTotals"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoNutritionItemRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "uncertainty_note": {
+            "type": "string",
+            "title": "Uncertainty Note",
+            "default": "Approximate: USDA values are scaled by estimated edible grams. A photo cannot measure portion weight, cooking oil, sauces or hidden ingredients reliably."
+          }
+        },
+        "type": "object",
+        "required": [
+          "nutrition",
+          "items"
+        ],
+        "title": "PhotoNutritionEstimateRead"
+      },
+      "PhotoNutritionEstimateRequest": {
+        "properties": {
+          "foods": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoFood"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "minItems": 1,
+            "title": "Foods"
+          },
+          "nutrition_selections": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoNutritionSelection"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "minItems": 1,
+            "title": "Nutrition Selections"
+          }
+        },
+        "type": "object",
+        "required": [
+          "foods",
+          "nutrition_selections"
+        ],
+        "title": "PhotoNutritionEstimateRequest"
+      },
+      "PhotoNutritionItemRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "fdc_id": {
+            "type": "integer",
+            "title": "Fdc Id"
+          },
+          "source_description": {
+            "type": "string",
+            "title": "Source Description"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "grams": {
+            "type": "number",
+            "title": "Grams"
+          },
+          "portion_basis": {
+            "type": "string",
+            "enum": [
+              "user_note",
+              "visual_estimate",
+              "user_adjusted"
+            ],
+            "title": "Portion Basis",
+            "default": "user_adjusted"
+          },
+          "calories_kcal": {
+            "type": "number",
+            "title": "Calories Kcal"
+          },
+          "protein_g": {
+            "type": "number",
+            "title": "Protein G"
+          },
+          "carbs_g": {
+            "type": "number",
+            "title": "Carbs G"
+          },
+          "fat_g": {
+            "type": "number",
+            "title": "Fat G"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "fdc_id",
+          "source_description",
+          "source_url",
+          "grams",
+          "calories_kcal",
+          "protein_g",
+          "carbs_g",
+          "fat_g"
+        ],
+        "title": "PhotoNutritionItemRead"
+      },
+      "PhotoNutritionSelection": {
+        "properties": {
+          "food_index": {
+            "type": "integer",
+            "maximum": 11.0,
+            "minimum": 0.0,
+            "title": "Food Index"
+          },
+          "fdc_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Fdc Id"
+          },
+          "grams": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Grams"
+          },
+          "portion_basis": {
+            "type": "string",
+            "enum": [
+              "user_note",
+              "visual_estimate",
+              "user_adjusted"
+            ],
+            "title": "Portion Basis",
+            "default": "user_adjusted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "food_index",
+          "fdc_id",
+          "grams"
+        ],
+        "title": "PhotoNutritionSelection"
       },
       "ProfileRead": {
         "properties": {
@@ -3908,6 +5981,33 @@
           "is_demo": {
             "type": "boolean",
             "title": "Is Demo"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "source_checked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Checked At"
           }
         },
         "type": "object",
@@ -3915,9 +6015,285 @@
           "id",
           "name",
           "campus_area",
-          "is_demo"
+          "is_demo",
+          "scope",
+          "source_url",
+          "source_checked_at"
         ],
         "title": "VenueRead"
+      },
+      "WorkoutPlanRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "requested_focus": {
+            "type": "string",
+            "enum": [
+              "back",
+              "shoulders",
+              "chest",
+              "legs",
+              "core"
+            ],
+            "title": "Requested Focus"
+          },
+          "focus": {
+            "type": "string",
+            "enum": [
+              "back",
+              "shoulders",
+              "chest",
+              "legs",
+              "core"
+            ],
+            "title": "Focus"
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced"
+            ],
+            "title": "Stage"
+          },
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes"
+          },
+          "exercises": {
+            "items": {
+              "$ref": "#/components/schemas/ExercisePrescription"
+            },
+            "type": "array",
+            "title": "Exercises"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          },
+          "explanation_source": {
+            "type": "string",
+            "enum": [
+              "rules",
+              "openrouter"
+            ],
+            "title": "Explanation Source"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "requested_focus",
+          "focus",
+          "stage",
+          "minutes",
+          "exercises",
+          "explanation",
+          "explanation_source",
+          "created_at"
+        ],
+        "title": "WorkoutPlanRead"
+      },
+      "WorkoutProfileRead": {
+        "properties": {
+          "stage": {
+            "type": "string",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced"
+            ],
+            "title": "Stage"
+          },
+          "equipment": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "bodyweight",
+                "machine",
+                "dumbbell",
+                "cable"
+              ]
+            },
+            "type": "array",
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Equipment"
+          },
+          "days_per_week": {
+            "type": "integer",
+            "maximum": 6.0,
+            "minimum": 1.0,
+            "title": "Days Per Week"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stage",
+          "equipment",
+          "days_per_week",
+          "user_id"
+        ],
+        "title": "WorkoutProfileRead"
+      },
+      "WorkoutProfileUpdate": {
+        "properties": {
+          "stage": {
+            "type": "string",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced"
+            ],
+            "title": "Stage"
+          },
+          "equipment": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "bodyweight",
+                "machine",
+                "dumbbell",
+                "cable"
+              ]
+            },
+            "type": "array",
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Equipment"
+          },
+          "days_per_week": {
+            "type": "integer",
+            "maximum": 6.0,
+            "minimum": 1.0,
+            "title": "Days Per Week"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stage",
+          "equipment",
+          "days_per_week"
+        ],
+        "title": "WorkoutProfileUpdate"
+      },
+      "WorkoutRecommendRequest": {
+        "properties": {
+          "focus": {
+            "type": "string",
+            "enum": [
+              "back",
+              "shoulders",
+              "chest",
+              "legs",
+              "core"
+            ],
+            "title": "Focus"
+          },
+          "minutes": {
+            "type": "integer",
+            "maximum": 75.0,
+            "minimum": 15.0,
+            "title": "Minutes",
+            "default": 30
+          }
+        },
+        "type": "object",
+        "required": [
+          "focus"
+        ],
+        "title": "WorkoutRecommendRequest"
+      },
+      "WorkoutSessionCreate": {
+        "properties": {
+          "plan_id": {
+            "type": "string",
+            "title": "Plan Id"
+          },
+          "duration_min": {
+            "type": "integer",
+            "maximum": 180.0,
+            "minimum": 5.0,
+            "title": "Duration Min"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan_id",
+          "duration_min"
+        ],
+        "title": "WorkoutSessionCreate"
+      },
+      "WorkoutSessionRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "plan_id": {
+            "type": "string",
+            "title": "Plan Id"
+          },
+          "focus": {
+            "type": "string",
+            "enum": [
+              "back",
+              "shoulders",
+              "chest",
+              "legs",
+              "core"
+            ],
+            "title": "Focus"
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced"
+            ],
+            "title": "Stage"
+          },
+          "duration_min": {
+            "type": "integer",
+            "title": "Duration Min"
+          },
+          "exercise_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Exercise Names"
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Completed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "plan_id",
+          "focus",
+          "stage",
+          "duration_min",
+          "exercise_names",
+          "completed_at"
+        ],
+        "title": "WorkoutSessionRead"
       }
     }
   }

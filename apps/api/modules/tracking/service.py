@@ -13,6 +13,7 @@ from apps.api.modules.identity.models import User
 from apps.api.modules.recommendations.models import RecommendationItem, RecommendationRun
 from apps.api.modules.rewards.service import award_event
 from apps.api.modules.tracking.models import Decision, MealLog
+from apps.api.modules.tracking.photo import photo_meal_stats
 from apps.api.modules.tracking.schemas import (
     DailySummary,
     DecisionCreate,
@@ -56,11 +57,12 @@ def create_decision(db: Session, user: User, payload: DecisionCreate) -> Decisio
     return decision_read(db, decision)
 
 
-def list_decisions(db: Session, user: User, limit: int) -> list[DecisionRead]:
+def list_decisions(db: Session, user: User, limit: int, offset: int = 0) -> list[DecisionRead]:
     rows = db.scalars(
         select(Decision)
         .where(Decision.user_id == user.id)
         .order_by(Decision.created_at.desc())
+        .offset(offset)
         .limit(limit)
     )
     return [decision_read(db, row) for row in rows]
@@ -110,11 +112,12 @@ def create_meal_log(db: Session, user: User, payload: MealLogCreate) -> MealLogR
     return meal_log_read(db, log)
 
 
-def list_meal_logs(db: Session, user: User, limit: int) -> list[MealLogRead]:
+def list_meal_logs(db: Session, user: User, limit: int, offset: int = 0) -> list[MealLogRead]:
     rows = db.scalars(
         select(MealLog)
         .where(MealLog.user_id == user.id)
         .order_by(MealLog.consumed_at.desc())
+        .offset(offset)
         .limit(limit)
     )
     return [meal_log_read(db, row) for row in rows]
@@ -137,4 +140,7 @@ def daily_summary(db: Session, user: User, day: date) -> DailySummary:
     for log in logs:
         for key, value in log.nutrition_snapshot.items():
             setattr(totals, key, round(getattr(totals, key) + value, 2))
-    return DailySummary(date=day, meal_count=len(logs), totals=totals)
+    photo_count, photo_totals = photo_meal_stats(db, user, day)
+    for key, value in photo_totals.items():
+        setattr(totals, key, round(getattr(totals, key) + value, 1))
+    return DailySummary(date=day, meal_count=len(logs) + photo_count, totals=totals)

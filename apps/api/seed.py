@@ -8,9 +8,15 @@ from uuid import NAMESPACE_DNS, uuid5
 from sqlalchemy.orm import Session
 
 from apps.api.core.config import get_settings
-from apps.api.modules.catalog.models import MenuItem, NutritionFact, Venue
+from apps.api.modules.catalog.models import ExternalNote, MenuItem, NutritionFact, Venue
 from apps.api.modules.identity.models import User, UserConsent, UserGoal, UserProfile
 from apps.api.modules.rewards.models import HabitDefinition, RewardItem
+from apps.api.modules.workouts.models import Exercise, WorkoutProfile
+from apps.api.modules.workouts.sources import EXERCISES
+from apps.api.real_sources import (
+    CHECKED_AT, HKUST_SOURCE, HKUST_VENUES, LOHAS_SOURCE, LOHAS_VENUES,
+    PUBLIC_DISCUSSIONS,
+)
 
 
 def stable_id(name: str) -> str:
@@ -142,14 +148,22 @@ def seed(db: Session) -> None:
         ))
     if db.get(UserGoal, "demo-peer") is None:
         db.add(UserGoal(user_id="demo-peer", goal="eat_healthier"))
-    for habit_id, title, description, points in (
-        ("confirm_meal", "Log a confirmed meal", "Confirm a meal you actually ate.", 5),
-        ("share_meal", "Share a meal", "Share one confirmed meal with Community.", 3),
+    for demo_user in (user_id, "demo-peer"):
+        if db.get(WorkoutProfile, demo_user) is None:
+            db.add(WorkoutProfile(
+                user_id=demo_user, stage="beginner",
+                equipment=["bodyweight", "machine", "dumbbell", "cable"],
+                days_per_week=2,
+            ))
+    for habit_id, title, description, points, weekly_target in (
+        ("confirm_meal", "Log a confirmed meal", "Confirm a meal you actually ate.", 5, 3),
+        ("share_meal", "Share a meal", "Share one confirmed meal with Community.", 3, 3),
+        ("complete_workout", "Complete a workout", "Log one completed training session.", 5, 2),
     ):
         if db.get(HabitDefinition, habit_id) is None:
             db.add(HabitDefinition(
                 id=habit_id, title=title, description=description,
-                points=points, weekly_target=3,
+                points=points, weekly_target=weekly_target,
             ))
     for reward_id, title, description, cost in (
         ("starter_badge", "Starter badge", "A demo profile badge with no cash value.", 5),
@@ -199,4 +213,34 @@ def seed(db: Session) -> None:
                         ),
                     )
                 )
+    for scope, source_url, rows in (
+        ("hkust", HKUST_SOURCE, HKUST_VENUES),
+        ("lohas", LOHAS_SOURCE, LOHAS_VENUES),
+    ):
+        for name, location in rows:
+            venue_id = stable_id(f"real:{scope}:{name}")
+            venue = db.get(Venue, venue_id)
+            if venue is None:
+                venue = Venue(id=venue_id, name=name)
+                db.add(venue)
+            venue.campus_area = location
+            venue.is_demo = False
+            venue.scope = scope
+            venue.source_url = source_url
+            venue.source_checked_at = CHECKED_AT
+    for scope, title, summary, platform, source_url in PUBLIC_DISCUSSIONS:
+        note_id = stable_id(f"note:{source_url}:{title}")
+        if db.get(ExternalNote, note_id) is None:
+            db.add(ExternalNote(
+                id=note_id, scope=scope, title=title, summary=summary,
+                source_platform=platform, source_url=source_url,
+                source_checked_at=CHECKED_AT,
+            ))
+    for name, group, equipment, difficulty, instructions, source_url in EXERCISES:
+        exercise_id = stable_id(f"exercise:{name}")
+        if db.get(Exercise, exercise_id) is None:
+            db.add(Exercise(
+                id=exercise_id, name=name, muscle_group=group, equipment=equipment,
+                difficulty=difficulty, instructions=instructions, source_url=source_url,
+            ))
     db.commit()

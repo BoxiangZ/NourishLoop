@@ -26,6 +26,7 @@ class OpenRouterExplanationProvider:
                 json={
                     "model": self.settings.openrouter_model,
                     "max_tokens": 180,
+                    "reasoning": {"enabled": False},
                     "messages": [
                         {
                             "role": "system",
