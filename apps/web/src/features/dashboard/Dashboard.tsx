@@ -288,7 +288,9 @@ export default function Dashboard() {
               {record.notes && <small>{record.notes}</small>}
               {record.review_status === "pending" || record.review_status === "processing" ? <small>AI review in progress. This meal is not counted yet.</small> : null}
               {record.review_status === "failed" && <small>{record.review_error ?? "Photo review failed"}</small>}
-              {record.review_status !== "failed" && record.review_status !== "pending" && record.review_status !== "processing" && record.nutrition_status === "none" && <small>This record has no source backed nutrition estimate.</small>}
+              {record.review_status !== "failed" && record.review_status !== "pending" && record.review_status !== "processing" && record.nutrition_status === "none" && <small>{record.ai_review?.estimated_nutrition
+                ? "USDA match unavailable; AI visual nutrition is shown below."
+                : "This older record has no nutrition result. Its original photo was not stored; re-upload it to estimate nutrition."}</small>}
               {record.nutrition && <div className="nl-photo-history-nutrition">
               {record.nutrition_status === "partial" && <small>Matched foods only · excluded ingredients are not counted</small>}
               <small>Protein {record.nutrition.protein_g} g · Carbs {record.nutrition.carbs_g} g · Fat {record.nutrition.fat_g} g</small>
@@ -297,13 +299,16 @@ export default function Dashboard() {
               {(record.unresolved_foods?.length ?? 0) > 0 && record.nutrition_status === "partial" &&
                 <small>Not counted: {(record.unresolved_foods ?? []).join(", ")}</small>}
               </div>}</div>
-            {record.ai_review?.estimated_nutrition && <div className="nl-photo-history-nutrition"><small>AI visual estimate: ≈ {record.ai_review.estimated_nutrition.calories_kcal} kcal</small><small>Not included in daily totals</small></div>}
+            {record.ai_review?.estimated_nutrition && <div className="nl-photo-history-nutrition">
+              <small>AI visual estimate: ≈ {record.ai_review.estimated_nutrition.calories_kcal} kcal</small>
+              <small>Protein {record.ai_review.estimated_nutrition.protein_g} g · Carbs {record.ai_review.estimated_nutrition.carbs_g} g · Fat {record.ai_review.estimated_nutrition.fat_g} g</small>
+              <small>Unverified; not included in daily totals</small></div>}
             <span className="nl-status-pill">{record.review_status === "pending" || record.review_status === "processing" ? record.review_status : record.review_status === "failed" ? "Review failed" : record.nutrition
               ? `${record.nutrition_status === "partial" ? "Partial · " : "≈ "}${record.nutrition.calories_kcal} kcal`
               : record.ai_review?.estimated_nutrition ? `AI ≈ ${record.ai_review.estimated_nutrition.calories_kcal} kcal` : "No nutrition estimate"}</span>
             {record.review_status === "failed" && (record.review_attempts ?? 0) < 3 && <button className="nl-button nl-button-soft" onClick={() => void act(() => api.retryPhotoReview(record.id))}>Retry review</button>}
             {(record.review_status === "failed" || record.review_status === "pending") && <button className="nl-text-link" onClick={() => void act(() => api.deletePhotoReview(record.id))}>Remove photo</button>}
-            {record.review_status === "not_requested" && record.nutrition_status === "none" && <button className="nl-button nl-button-soft"
+            {record.review_status === "not_requested" && record.nutrition_status === "none" && !record.ai_review?.estimated_nutrition && <button className="nl-button nl-button-soft"
               onClick={() => { setDiscoverMode("food"); setPhotoMode("instant"); navigate("discover"); }}>Re-upload photo</button>}</article>) :
             <div className="nl-empty">No photo meals yet. Recognize one from Discover, then confirm what you ate.</div>}</div>
         <Pager page={photoPage} hasNext={photoHasNext} onChange={setPhotoPage} label="photo meals" />

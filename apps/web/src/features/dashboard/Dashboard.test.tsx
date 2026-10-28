@@ -135,6 +135,24 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("NourishLoop app pages", () => {
+  it("shows saved AI calories and macros in photo History when USDA has no match", async () => {
+    apiMock.photoMeals.mockResolvedValue([{ id: "photo-ai",
+      foods: [{ name: "Rice and tofu" }], notes: "", model: "vision-model",
+      consumed_at: "2026-10-28T12:00:00Z", nutrition: null,
+      nutrition_status: "none", unresolved_foods: ["No reliable USDA match"],
+      review_status: "not_requested", ai_review: { is_food: true,
+        detected_foods: ["Rice and tofu"], confidence: 0.55,
+        estimated_nutrition: { calories_kcal: 470, protein_g: 18, carbs_g: 60, fat_g: 16 },
+        summary: "Rice and tofu", assumptions: ["Portion estimated"], suggestions: [],
+      },
+    }]);
+    render(<Dashboard />);
+    fireEvent.click(mainNav().getByRole("button", { name: "History" }));
+    fireEvent.click(await screen.findByRole("tab", { name: "Photo meals" }));
+    expect(await screen.findByText("AI ≈ 470 kcal")).toBeTruthy();
+    expect(screen.getByText(/Protein 18 g · Carbs 60 g · Fat 16 g/)).toBeTruthy();
+  });
+
   it("keeps a saved partial photo nutrition estimate visible in History", async () => {
     apiMock.photoMeals.mockResolvedValue([{ id: "photo-partial",
       foods: [{ name: "Egg", preparation: "fried" }, { name: "Sauce" }],

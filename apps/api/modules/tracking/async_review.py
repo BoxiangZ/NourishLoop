@@ -187,6 +187,8 @@ def process_photo_review_once(
                     db.rollback()
                     logger.warning("photo_usda_lookup_failed", extra={"record_id": record_id, "error": type(exc).__name__})
                     unresolved = ["USDA lookup unavailable"]
+            if nutrition is None and not (ai_result and ai_result.is_food):
+                raise ValueError("Nutrition unavailable")
             record = db.get(PhotoMealRecord, record_id)
             if record.review_claim_token != token or record.review_status != "processing":
                 return record_id

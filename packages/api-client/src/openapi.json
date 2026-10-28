@@ -5590,6 +5590,16 @@
             "const": false,
             "title": "Requires Review",
             "default": false
+          },
+          "ai_review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MealAIReview"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -5822,6 +5832,16 @@
             "type": "array",
             "maxItems": 12,
             "title": "Nutrition Selections"
+          },
+          "ai_review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MealAIReview"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",

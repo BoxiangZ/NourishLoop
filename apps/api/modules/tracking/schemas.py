@@ -82,6 +82,7 @@ class PhotoAnalysisRead(BaseModel):
     review_questions: list[str] = Field(max_length=8)
     model: str
     requires_review: Literal[False] = False
+    ai_review: MealAIReview | None = None
 
 
 class PhotoNutritionSelection(BaseModel):
@@ -114,6 +115,7 @@ class PhotoMealCreate(BaseModel):
     notes: str = Field(default="", max_length=500)
     model: str = Field(min_length=1, max_length=120)
     nutrition_selections: list[PhotoNutritionSelection] = Field(default_factory=list, max_length=12)
+    ai_review: MealAIReview | None = None
 
 
 class PhotoNutritionEstimateRequest(BaseModel):

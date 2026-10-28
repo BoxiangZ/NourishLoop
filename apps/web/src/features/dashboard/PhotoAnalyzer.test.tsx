@@ -70,6 +70,7 @@ describe("food photo recognition", () => {
       notes: "", model: "vision-model",
       nutrition_selections: [{ food_index: 0, fdc_id: 168878, grams: 150,
         portion_basis: "visual_estimate" }],
+      ai_review: null,
     }));
     expect(onConfirmed).toHaveBeenCalledOnce();
   });
@@ -83,6 +84,36 @@ describe("food photo recognition", () => {
     expect(screen.getByRole("alert").textContent).toContain("JPEG, PNG or WebP");
     expect(apiMock.analyzePhoto).not.toHaveBeenCalled();
     expect(screen.getByRole<HTMLButtonElement>("button", { name: "Recognize food" }).disabled).toBe(true);
+  });
+
+  it("saves AI visual nutrition when USDA has no reliable match", async () => {
+    vi.stubGlobal("createImageBitmap", vi.fn(async () => ({ width: 800, height: 600, close: vi.fn() })));
+    mockPreviewUrl();
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+      fillStyle: "white", fillRect: vi.fn(), drawImage: vi.fn(),
+    } as unknown as CanvasRenderingContext2D);
+    vi.spyOn(HTMLCanvasElement.prototype, "toDataURL").mockReturnValue("data:image/jpeg;base64,YWJj");
+    const aiReview = { is_food: true, detected_foods: ["Rice and tofu"],
+      estimated_nutrition: { calories_kcal: 470, protein_g: 18, carbs_g: 60, fat_g: 16 },
+      confidence: 0.55, summary: "Rice and tofu", assumptions: ["Portion estimated"], suggestions: [] };
+    apiMock.analyzePhoto.mockResolvedValue({ model: "vision-model", requires_review: false,
+      foods: [{ name: "Rice and tofu", estimated_grams: 300, portion_basis: "visual_estimate" }],
+      review_questions: [], ai_review: aiReview,
+    });
+    apiMock.autoEstimatePhotoNutrition.mockResolvedValue({ estimate: null, partial_estimate: null,
+      selections: [], matches: [], unresolved: ["No reliable USDA match"],
+    });
+    apiMock.recordPhotoMeal.mockResolvedValue({ id: "visual-photo", ai_review: aiReview });
+    render(<PhotoAnalyzer onConfirmed={async () => {}} />);
+    fireEvent.change(screen.getByLabelText("Food photo"), { target: {
+      files: [new File(["fake bytes"], "lunch.png", { type: "image/png" })],
+    } });
+    fireEvent.click(screen.getByRole("button", { name: "Recognize food" }));
+    expect(await screen.findByText(/AI visual estimate · approx. 470 kcal/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Save AI estimate to History" }));
+    await waitFor(() => expect(apiMock.recordPhotoMeal).toHaveBeenCalledWith(expect.objectContaining({
+      ai_review: aiReview, nutrition_selections: [],
+    })));
   });
 
   it("shows sourced nutrition for matched foods after Recognize even when another ingredient is unresolved", async () => {
@@ -125,6 +156,7 @@ describe("food photo recognition", () => {
       notes: "", model: "vision-model",
       nutrition_selections: [{ food_index: 0, fdc_id: 173423, grams: 50,
         portion_basis: "visual_estimate" }],
+      ai_review: null,
     }));
   });
 

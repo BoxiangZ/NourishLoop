@@ -189,7 +189,8 @@ export default function PhotoAnalyzer({ onConfirmed }: Props) {
   }
 
   async function confirm() {
-    if (!analysis || !foods.some(food => food.name.trim())) return;
+    if (!analysis || !foods.some(food => food.name.trim()) ||
+        !(estimate || partialEstimate || analysis.ai_review?.estimated_nutrition)) return;
     setBusy(true); setError(null);
     try {
       await api.recordPhotoMeal({
@@ -201,6 +202,7 @@ export default function PhotoAnalyzer({ onConfirmed }: Props) {
         })),
         notes, model: analysis.model,
         nutrition_selections: estimate || partialEstimate ? nutritionSelections() : [],
+        ai_review: analysis.ai_review ?? null,
       });
       setFile(null); setAnalysis(null); setFoods([]); setNotes("");
       setQueries({}); setMatches({}); setSelected({}); setEstimate(null); setPartialEstimate(null);
@@ -212,6 +214,8 @@ export default function PhotoAnalyzer({ onConfirmed }: Props) {
   }
 
   const visibleEstimate = estimate ?? partialEstimate;
+  const visualEstimate = analysis?.ai_review?.estimated_nutrition;
+  const hasNutrition = !!(visibleEstimate || visualEstimate);
 
   return <section className="nl-photo-card" aria-label="Food photo recognition">
     <div className="nl-photo-copy"><span className="nl-eyebrow">PHOTO / REMEMBER</span>
@@ -244,16 +248,24 @@ export default function PhotoAnalyzer({ onConfirmed }: Props) {
     {busy && <p role="status" className="nl-photo-result">Identifying food and calculating nutrition…</p>}
     {analysis && !busy && <div ref={resultRef} className="nl-photo-result" aria-live="polite"><span className="nl-eyebrow">YOUR PHOTO RESULT</span>
       <h3>{estimate ? "Nutrition estimate" : partialEstimate ? "Known foods · partial nutrition" :
+        visualEstimate ? "AI visual nutrition estimate" :
         foods.length ? "Foods identified" : "No food found"}</h3>
       <p>{estimate ? "Your result is ready. You can save it to History or adjust it below." :
-        partialEstimate ? "This total covers only the matched foods below; unresolved ingredients are excluded." :
-          "A complete nutrition total is not available for this photo. You can adjust details below."}</p>
+        partialEstimate ? "This USDA total covers only matched foods. The AI estimate below covers the visible meal." :
+        visualEstimate ? "A visual estimate is ready. You can save it to History or adjust the food details." :
+          "Nutrition could not be estimated for this photo. Retry recognition or adjust the foods before saving."}</p>
       {visibleEstimate && <div className="nl-nutrition-estimate" role="status">
         <strong>{estimate ? "Approx." : "Matched foods only · approx."} {visibleEstimate.nutrition.calories_kcal} kcal</strong>
         <span>Protein {visibleEstimate.nutrition.protein_g} g · Carbs {visibleEstimate.nutrition.carbs_g} g · Fat {visibleEstimate.nutrition.fat_g} g</span>
         <p>{visibleEstimate.uncertainty_note}</p>
         {visibleEstimate.items.map(item => <a key={item.fdc_id + item.name} href={item.source_url} target="_blank" rel="noreferrer">
           {item.name}: about {item.grams} g of {item.source_description} ({item.portion_basis === "visual_estimate" ? "photo estimate" : "reviewed portion"}) ↗</a>)}
+      </div>}
+      {visualEstimate && <div className="nl-nutrition-estimate" role="status">
+        <strong>AI visual estimate · approx. {visualEstimate.calories_kcal} kcal</strong>
+        <span>Protein {visualEstimate.protein_g} g · Carbs {visualEstimate.carbs_g} g · Fat {visualEstimate.fat_g} g</span>
+        <p>{analysis.ai_review?.summary} This is an unverified visual estimate and is not included in daily nutrition totals.</p>
+        {(analysis.ai_review?.assumptions ?? []).map((item, index) => <small key={index}>{item}</small>)}
       </div>}
       {foods.map((food, index) => <p key={index}><strong>{food.name}</strong>{food.preparation ? ` · ${food.preparation}` : ""}
         {selected[index]?.grams ? ` · about ${selected[index].grams} g` : " · portion unclear"}</p>)}
@@ -311,10 +323,10 @@ export default function PhotoAnalyzer({ onConfirmed }: Props) {
           onClick={() => void previewNutrition()}>{busy ? "Calculating…" : "Recalculate nutrition"}</button></div>}
       {foods.length > 0 && <div className="nl-photo-actions">
         <button type="button" className="nl-button nl-button-primary"
-          disabled={busy || !foods.every(food => food.name.trim())}
+          disabled={busy || !hasNutrition || !foods.every(food => food.name.trim())}
           onClick={() => void confirm()}>{busy ? "Saving…" :
             estimate ? "Save result to History" : partialEstimate
-              ? "Save partial estimate to History" : "Save foods to History"}</button>
+              ? "Save partial estimate to History" : visualEstimate ? "Save AI estimate to History" : "Nutrition unavailable"}</button>
       </div>}
     </div>}
   </section>;

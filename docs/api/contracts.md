@@ -19,11 +19,11 @@ Current product routes are under `/api/v1`; OpenAPI is at `/openapi.json`. Run `
 | POST | `/api/v1/recommendations/{id}/feedback` | Helpfulness feedback |
 | POST, GET | `/api/v1/decisions`, `/api/v1/me/decisions` | Plan/read decisions; list supports `limit` and `offset` |
 | POST, GET | `/api/v1/meal-logs`, `/api/v1/me/meal-logs` | Confirm/read consumed meals; list supports `limit` and `offset` |
-| POST | `/api/v1/meals/analyze-photo` | Send a JPEG/PNG/WebP image (base64, max 5 MB) to OpenRouter vision; return food names, rough edible grams when discernible, portion basis and optional review questions, no model nutrient values |
+| POST | `/api/v1/meals/analyze-photo` | Send a JPEG/PNG/WebP image (base64, max 5 MB) to OpenRouter vision; return food names, rough edible grams, review questions and a clearly labelled AI visual nutrition estimate when available |
 | POST | `/api/v1/photo-meals/auto-estimate` | Match visible foods to USDA entries; return `estimate` for a complete meal, or `partial_estimate` for matched foods plus `unresolved` reasons |
 | GET | `/api/v1/nutrition-foods` | Search the bundled USDA SR Legacy index, then cached or live entries by `q`; returns sourced per-100-g kcal/macros |
 | POST | `/api/v1/photo-meals/estimate` | Recalculate an optionally edited result from one USDA entry and edible gram amount per food; no model-derived totals |
-| POST, GET | `/api/v1/photo-meals`, `/api/v1/me/photo-meals` | Save recognized foods and matched nutrition, including partial snapshots. Responses carry `nutrition_status` (`complete`, `partial`, `none`) and `unresolved_foods`; partial snapshots are excluded from daily totals |
+| POST, GET | `/api/v1/photo-meals`, `/api/v1/me/photo-meals` | Save recognized foods with USDA matched nutrition and/or the AI visual estimate. A new photo meal without either estimate is rejected. Responses carry `nutrition_status` (`complete`, `partial`, `none`) and `unresolved_foods`; AI and partial USDA snapshots are excluded from daily totals |
 | POST | `/api/v1/photo-meals/reviews` | Multipart `photo` (JPEG/PNG/WebP, max 8 MB) and optional `notes`; returns 202 with a pending photo meal. The server removes metadata and temporarily stores a resized copy for worker processing. |
 | GET, DELETE | `/api/v1/photo-meals/{id}` | Read own review status/result; delete an own pending or failed review and its temporary photo. |
 | POST | `/api/v1/photo-meals/{id}/retry` | Retry an own failed review while its temporary photo exists, up to three total attempts. |

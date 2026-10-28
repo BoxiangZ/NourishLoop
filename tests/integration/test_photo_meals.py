@@ -27,7 +27,10 @@ def test_vision_payload_and_reviewed_foods() -> None:
         return httpx.Response(200, json={"choices": [{"message": {"content": (
             '{"foods":[{"name":"Rice","preparation":null,'
             '"quantity_from_notes":"half a bowl","estimated_grams":100},'
-            '{"name":"Rice","estimated_grams":150}],"review_questions":[]}'
+            '{"name":"Rice","estimated_grams":150}],"review_questions":[],"ai_review":'
+            '{"is_food":true,"detected_foods":["Rice"],"estimated_nutrition":'
+            '{"calories_kcal":195,"protein_g":4,"carbs_g":42,"fat_g":1},'
+            '"confidence":0.6,"summary":"Rice serving","assumptions":["Portion estimated"]}}'
         )}}]})
 
     image = base64.b64encode(b"\xff\xd8\xfftest-image").decode()
@@ -39,14 +42,15 @@ def test_vision_payload_and_reviewed_foods() -> None:
     assert len(result.foods) == 1
     assert result.foods[0].estimated_grams == 150
     assert not result.requires_review
+    assert result.ai_review.estimated_nutrition.calories_kcal == 195
     assert captured["messages"][0]["content"][1]["image_url"]["url"] == (
         f"data:image/jpeg;base64,{image}"
     )
     assert captured["reasoning"] == {"enabled": False}
-    assert captured["max_tokens"] == 1500
+    assert captured["max_tokens"] == 2200
 
 
-def test_photo_record_counts_without_inventing_nutrition(nl_stack, monkeypatch):
+def test_photo_record_requires_nutrition_before_saving(nl_stack, monkeypatch):
     client, session_factory = nl_stack
     router = importlib.import_module("apps.api.modules.tracking.router")
     monkeypatch.setattr(router, "analyze_photo", lambda *_: PhotoAnalysisRead(
@@ -63,19 +67,39 @@ def test_photo_record_counts_without_inventing_nutrition(nl_stack, monkeypatch):
         "foods": [{"name": "Rice and tofu", "preparation": "steamed"}],
         "notes": "I ate this for lunch", "model": analyzed.json()["model"],
     })
+    assert saved.status_code == 422
+    assert client.get("/api/v1/me/photo-meals?limit=1&offset=0").json() == []
+    assert client.get("/api/v1/me/photo-meals", headers={"X-Demo-User-Id": "demo-peer"}).json() == []
+    summary = client.get("/api/v1/me/daily-summary").json()
+    assert summary["meal_count"] == 0
+    assert summary["totals"]["calories_kcal"] == 0
+    assert client.get("/api/v1/rewards/overview").json()["balance"] == 0
+    with session_factory() as db:
+        assert db.scalar(select(PhotoMealRecord)) is None
+
+
+def test_visual_nutrition_is_saved_and_visible_in_history(nl_stack):
+    client, _ = nl_stack
+    visual = {
+        "is_food": True, "detected_foods": ["Rice and tofu"],
+        "estimated_nutrition": {"calories_kcal": 470, "protein_g": 18,
+                                "carbs_g": 60, "fat_g": 16},
+        "confidence": 0.55, "summary": "Rice and tofu meal",
+        "assumptions": ["Portion and oil are estimated"], "suggestions": [],
+    }
+    saved = client.post("/api/v1/photo-meals", json={
+        "foods": [{"name": "Rice and tofu", "estimated_grams": 300}],
+        "notes": "Lunch", "model": "vision-test", "ai_review": visual,
+    })
     assert saved.status_code == 201
     record = saved.json()
-    assert record["foods"][0]["name"] == "Rice and tofu"
-    assert record["nutrition_status"] == "none"
-    assert client.get("/api/v1/me/photo-meals?limit=1&offset=0").json()[0]["id"] == record["id"]
-    assert client.get("/api/v1/me/photo-meals", headers={"X-Demo-User-Id": "demo-peer"}).json() == []
+    assert record["nutrition"] is None
+    assert record["ai_review"]["estimated_nutrition"]["calories_kcal"] == 470
+    history = client.get("/api/v1/me/photo-meals").json()
+    assert history[0]["ai_review"]["estimated_nutrition"]["protein_g"] == 18
     summary = client.get("/api/v1/me/daily-summary").json()
     assert summary["meal_count"] == 1
     assert summary["totals"]["calories_kcal"] == 0
-    assert client.get("/api/v1/rewards/overview").json()["balance"] == 5
-    with session_factory() as db:
-        row = db.scalar(select(PhotoMealRecord).where(PhotoMealRecord.id == record["id"]))
-        assert row is not None and not hasattr(row, "image_base64")
 
 
 def test_source_backed_photo_nutrition_preview_confirmation_and_daily_total(nl_stack):

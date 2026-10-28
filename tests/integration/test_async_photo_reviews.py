@@ -129,3 +129,26 @@ def test_ai_result_remains_visible_when_usda_recognition_is_unavailable(nl_stack
     summary = client.get("/api/v1/me/daily-summary").json()
     assert summary["meal_count"] == 1
     assert summary["totals"]["calories_kcal"] == 0
+
+
+def test_background_review_does_not_complete_without_any_nutrition(nl_stack, monkeypatch, tmp_path):
+    client, session_factory = nl_stack
+    monkeypatch.setenv("UPLOAD_DIR", str(tmp_path / "uploads"))
+    get_settings.cache_clear()
+    record_id = client.post("/api/v1/photo-meals/reviews", files={
+        "photo": ("lunch.jpg", image_bytes(), "image/jpeg"),
+    }).json()["id"]
+    class UnavailableProvider:
+        def review(self, *_):
+            raise RuntimeError("model unavailable")
+
+    monkeypatch.setattr(async_review, "auto_estimate_photo_nutrition", lambda *_:
+        PhotoAutoEstimateRead(estimate=None, partial_estimate=None, unresolved=["No match"]))
+    async_review.process_photo_review_once(session_factory,
+        Settings(upload_dir=str(tmp_path / "uploads")),
+        provider_factory=lambda _: UnavailableProvider(),
+        analyzer=lambda *_: PhotoAnalysisRead(foods=[{"name": "Rice"}], review_questions=[], model="test"))
+    result = client.get(f"/api/v1/photo-meals/{record_id}").json()
+    assert result["review_status"] == "failed"
+    assert result["ai_review"] is None and result["nutrition"] is None
+    assert client.get("/api/v1/me/daily-summary").json()["meal_count"] == 0

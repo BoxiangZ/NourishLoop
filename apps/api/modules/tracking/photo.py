@@ -23,6 +23,7 @@ from apps.api.modules.tracking.schemas import (
     PhotoNutritionSelection, PhotoFood,
 )
 from apps.api.modules.catalog.nutrition import search_nutrition_foods, _word_tokens, _first_subject
+from apps.api.modules.tracking.review import MealAIReview, OpenRouterMealReviewProvider
 import re
 
 
@@ -65,8 +66,14 @@ def analyze_photo(
         "Set portion_basis to user_note only for explicit grams in notes, visual_estimate "
         "for visual estimates, or unknown if null. Never infer exact weight from the photo. "
         "Optional review questions may mention unclear food or portions. If the image does not show food, "
-        "return an empty foods array. Do not estimate calories, macros, hidden ingredients, "
-        "health effects, or plan alignment. "
+        "return an empty foods array. Also return ai_review as an object containing "
+        "is_food, detected_foods (names of the visible foods), estimated_nutrition "
+        "(calories_kcal, protein_g, carbs_g, fat_g for the entire visible meal), "
+        "confidence (0 to 1), summary, suggestions and assumptions. "
+        "Nutrition is a rough visual estimate, not a measured value: state portion, "
+        "oil and sauce uncertainty in assumptions. For a non-food image, use "
+        "is_food=false, detected_foods=[], estimated_nutrition=null. "
+        "Do not invent hidden ingredients, health effects, or plan alignment. "
         f"User notes: {request.notes or '(none)'}"
     )
     try:
@@ -76,7 +83,7 @@ def analyze_photo(
                 headers={"Authorization": f"Bearer {secret.get_secret_value()}"},
                 json={
                     "model": settings.openrouter_model,
-                    "max_tokens": 1500,
+                    "max_tokens": 2200,
                     "reasoning": {"enabled": False},
                     "messages": [{"role": "user", "content": [
                         {"type": "text", "text": prompt},
@@ -94,8 +101,23 @@ def analyze_photo(
         if body.startswith("```"):
             body = body.split("\n", 1)[1].rsplit("```", 1)[0].strip()
         data = json.loads(body)
+        review = None
+        if isinstance(data, dict) and isinstance(data.get("ai_review"), dict):
+            try:
+                review = MealAIReview.model_validate(data["ai_review"])
+            except ValueError:
+                pass
+        if review is None and isinstance(data, dict) and data.get("foods"):
+            try:
+                review = OpenRouterMealReviewProvider(settings, transport).review(
+                    raw, request.mime_type, request.notes,
+                ).review
+            except Exception:
+                pass
         result = PhotoAnalysisRead.model_validate({
-            **data, "model": settings.openrouter_model, "requires_review": False,
+            "foods": data["foods"], "review_questions": data.get("review_questions", []),
+            "model": settings.openrouter_model, "requires_review": False,
+            "ai_review": review if review and review.is_food else None,
         })
         if any(food.quantity_from_notes and
                food.quantity_from_notes.lower() not in request.notes.lower()
@@ -288,6 +310,10 @@ def confirm_photo_meal(db: Session, user: User, payload: PhotoMealCreate) -> Pho
         nutrition_selections=[item.model_copy(update={"food_index": index})
                               for index, item in enumerate(selections)],
     )) if selections else None
+    if estimate is None and not (
+        payload.ai_review and payload.ai_review.is_food and payload.ai_review.estimated_nutrition
+    ):
+        raise HTTPException(422, "A nutrition estimate is required before saving this photo meal")
     nutrition_status = ("complete" if len(selections) == len(payload.foods) else "partial") \
         if estimate else "none"
     unresolved_foods = [food.name for index, food in enumerate(payload.foods)
@@ -299,6 +325,7 @@ def confirm_photo_meal(db: Session, user: User, payload: PhotoMealCreate) -> Pho
         nutrition_snapshot=estimate.nutrition.model_dump() if estimate else None,
         nutrition_items=[item.model_dump() for item in estimate.items] if estimate else None,
         nutrition_status=nutrition_status, unresolved_foods=unresolved_foods,
+        ai_review=payload.ai_review.model_dump() if payload.ai_review else None,
     )
     db.add(record)
     db.flush()
