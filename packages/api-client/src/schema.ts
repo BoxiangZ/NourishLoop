@@ -1,5 +1,6 @@
 // Generated from FastAPI OpenAPI. Run: python -m scripts.generate_api_types
 
+export type Body_start_photo_review_api_v1_photo_meals_reviews_post = { "photo": string; "notes"?: string; };
 export type CommunityCommentCreate = { "body": string; };
 export type CommunityCommentRead = { "id": string; "post_id": string; "author_display_name": string; "is_mine": boolean; "body": string; "created_at": string; };
 export type CommunityPostCreate = { "meal_log_id": string; "caption": string; };
@@ -21,9 +22,11 @@ export type GoalRead = { "goal": "eat_healthier" | "reduce_body_fat" | "build_mu
 export type GoalUpdate = { "goal": "eat_healthier" | "reduce_body_fat" | "build_muscle"; "daily_calorie_target"?: number | null; };
 export type HabitProgressRead = { "id": string; "title": string; "description": string; "points": number; "completed_today": boolean; "streak_days": number; "completed_this_week": number; "weekly_target": number; };
 export type MeRead = { "id": string; "is_moderator": boolean; "profile": ProfileRead; "goal": GoalRead; };
+export type MealAIReview = { "is_food": boolean; "detected_foods"?: Array<string>; "estimated_nutrition"?: NutritionEstimate | null; "confidence": number; "summary": string; "suggestions"?: Array<string>; "assumptions"?: Array<string>; };
 export type MealLogCreate = { "decision_id": string; "servings"?: number; };
 export type MealLogRead = { "id": string; "decision_id": string; "servings": number; "consumed_at": string; "nutrition": NutritionTotals; "menu_item": MenuItemRead; };
 export type MenuItemRead = { "id": string; "venue_id": string; "name": string; "description": string; "category": string; "tags": Array<string>; "allergen_tags": Array<string>; "price_hkd": number | null; "available": boolean; "source_label": string; "observed_at": string | null; "nutrition": NutritionRead; };
+export type NutritionEstimate = { "calories_kcal": number; "protein_g": number; "carbs_g": number; "fat_g": number; };
 export type NutritionFoodRead = { "fdc_id": number; "description": string; "data_type": string; "calories_kcal": number; "protein_g": number; "carbs_g": number; "fat_g": number; "source_url": string; };
 export type NutritionRead = { "calories_kcal": number; "protein_g": number; "carbs_g": number; "fat_g": number; "basis": string; "provenance": string; "uncertainty_note": string; };
 export type NutritionTotals = { "calories_kcal"?: number; "protein_g"?: number; "carbs_g"?: number; "fat_g"?: number; };
@@ -34,7 +37,7 @@ export type PhotoAutoEstimateRequest = { "foods": Array<PhotoFood>; };
 export type PhotoAutoMatchRead = { "food_index": number; "match"?: NutritionFoodRead | null; "reason"?: string | null; };
 export type PhotoFood = { "name": string; "preparation"?: string | null; "quantity_from_notes"?: string | null; "estimated_grams"?: number | null; "portion_basis"?: "user_note" | "visual_estimate" | "unknown"; };
 export type PhotoMealCreate = { "foods": Array<PhotoFood>; "notes"?: string; "model": string; "nutrition_selections"?: Array<PhotoNutritionSelection>; };
-export type PhotoMealRead = { "id": string; "foods": Array<PhotoFood>; "notes": string; "model": string; "consumed_at": string; "nutrition"?: NutritionTotals | null; "nutrition_items"?: Array<PhotoNutritionItemRead>; "nutrition_status"?: "complete" | "partial" | "none"; "unresolved_foods"?: Array<string>; };
+export type PhotoMealRead = { "id": string; "foods": Array<PhotoFood>; "notes": string; "model": string; "consumed_at": string; "nutrition"?: NutritionTotals | null; "nutrition_items"?: Array<PhotoNutritionItemRead>; "nutrition_status"?: "complete" | "partial" | "none"; "unresolved_foods"?: Array<string>; "review_status"?: "not_requested" | "pending" | "processing" | "completed" | "failed"; "review_attempts"?: number; "review_error"?: string | null; "ai_review"?: MealAIReview | null; "review_questions"?: Array<string>; };
 export type PhotoNutritionEstimateRead = { "nutrition": NutritionTotals; "items": Array<PhotoNutritionItemRead>; "uncertainty_note"?: string; };
 export type PhotoNutritionEstimateRequest = { "foods": Array<PhotoFood>; "nutrition_selections": Array<PhotoNutritionSelection>; };
 export type PhotoNutritionItemRead = { "name": string; "fdc_id": number; "source_description": string; "source_url": string; "grams": number; "portion_basis"?: "user_note" | "visual_estimate" | "user_adjusted"; "calories_kcal": number; "protein_g": number; "carbs_g": number; "fat_g": number; };

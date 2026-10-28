@@ -3,12 +3,17 @@ from __future__ import annotations
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
 from apps.api.core.auth import current_user
 from apps.api.core.database import get_db
 from apps.api.core.config import get_settings
+from apps.api.core.images import ImageTooLargeError, InvalidImageError, MAX_UPLOAD_BYTES
+from apps.api.modules.tracking.async_review import (
+    delete_photo_review, get_photo_review, queue_photo_review, retry_photo_review,
+)
+from apps.api.modules.tracking.photo import photo_meal_read
 from apps.api.modules.identity.models import User
 from apps.api.modules.tracking.schemas import (
     DailySummary,
@@ -38,6 +43,37 @@ from apps.api.modules.tracking.service import (
 )
 
 router = APIRouter(prefix="/api/v1", tags=["tracking"])
+
+
+@router.post("/photo-meals/reviews", response_model=PhotoMealRead, status_code=202)
+async def start_photo_review(
+    photo: UploadFile = File(...),
+    notes: str = Form(default="", max_length=500),
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    raw = await photo.read(MAX_UPLOAD_BYTES + 1)
+    try:
+        return queue_photo_review(db, user.id, raw, photo.content_type or "", notes, get_settings())
+    except ImageTooLargeError as exc:
+        raise HTTPException(413, str(exc)) from exc
+    except InvalidImageError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@router.get("/photo-meals/{record_id}", response_model=PhotoMealRead)
+def photo_review_status(record_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    return photo_meal_read(get_photo_review(db, user.id, record_id))
+
+
+@router.post("/photo-meals/{record_id}/retry", response_model=PhotoMealRead, status_code=202)
+def retry_review(record_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    return retry_photo_review(db, user.id, record_id)
+
+
+@router.delete("/photo-meals/{record_id}", status_code=204)
+def remove_review(record_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    delete_photo_review(db, user.id, record_id)
 
 
 @router.post("/meals/analyze-photo", response_model=PhotoAnalysisRead)

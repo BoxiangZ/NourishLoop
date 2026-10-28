@@ -8,6 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from apps.api.core.config import get_settings
+from apps.api.core.request_limits import MealPhotoBodyLimitMiddleware
 from apps.api.core.database import get_db
 from apps.api.core.import_models import catalog_models  # noqa: F401
 from apps.api.core.schemas import ErrorResponse
@@ -32,6 +33,7 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
     allow_headers=["Content-Type", "X-Demo-User-Id"],
 )
+app.add_middleware(MealPhotoBodyLimitMiddleware)
 app.include_router(identity_router)
 app.include_router(catalog_router)
 app.include_router(recommendations_router)

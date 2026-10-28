@@ -136,6 +136,11 @@ def photo_meal_read(record: PhotoMealRecord) -> PhotoMealRead:
         nutrition_items=record.nutrition_items or [],
         nutrition_status=record.nutrition_status,
         unresolved_foods=record.unresolved_foods or [],
+        review_status=record.review_status,
+        review_attempts=record.review_attempts,
+        review_error=record.review_error,
+        ai_review=record.ai_review,
+        review_questions=record.review_questions or [],
     )
 
 
@@ -324,7 +329,9 @@ def photo_meal_stats(db: Session, user: User, day) -> tuple[int, dict[str, float
         "calories_kcal", "protein_g", "carbs_g", "fat_g",
     )}
     for row in rows:
+        if row.review_status not in ("not_requested", "completed"):
+            continue
         if row.nutrition_status == "complete" and row.nutrition_snapshot:
             for key in totals:
                 totals[key] += Decimal(str(row.nutrition_snapshot[key]))
-    return len(rows), {key: float(value) for key, value in totals.items()}
+    return sum(row.review_status in ("not_requested", "completed") for row in rows), {key: float(value) for key, value in totals.items()}

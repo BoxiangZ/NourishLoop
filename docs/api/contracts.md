@@ -24,6 +24,9 @@ Current product routes are under `/api/v1`; OpenAPI is at `/openapi.json`. Run `
 | GET | `/api/v1/nutrition-foods` | Search the bundled USDA SR Legacy index, then cached or live entries by `q`; returns sourced per-100-g kcal/macros |
 | POST | `/api/v1/photo-meals/estimate` | Recalculate an optionally edited result from one USDA entry and edible gram amount per food; no model-derived totals |
 | POST, GET | `/api/v1/photo-meals`, `/api/v1/me/photo-meals` | Save recognized foods and matched nutrition, including partial snapshots. Responses carry `nutrition_status` (`complete`, `partial`, `none`) and `unresolved_foods`; partial snapshots are excluded from daily totals |
+| POST | `/api/v1/photo-meals/reviews` | Multipart `photo` (JPEG/PNG/WebP, max 8 MB) and optional `notes`; returns 202 with a pending photo meal. The server removes metadata and temporarily stores a resized copy for worker processing. |
+| GET, DELETE | `/api/v1/photo-meals/{id}` | Read own review status/result; delete an own pending or failed review and its temporary photo. |
+| POST | `/api/v1/photo-meals/{id}/retry` | Retry an own failed review while its temporary photo exists, up to three total attempts. |
 | GET | `/api/v1/me/daily-summary` | Confirmed totals for HK local day |
 | POST, GET | `/api/v1/community/posts` | Explicitly share a confirmed log/read feed; feed supports `limit` and `offset` |
 | DELETE | `/api/v1/community/posts/{id}` | Retract own post |
@@ -37,6 +40,8 @@ Current product routes are under `/api/v1`; OpenAPI is at `/openapi.json`. Run `
 | POST | `/api/v1/rewards/{id}/redeem` | Redeem one noncommercial badge |
 
 Demo private routes resolve identity on the server. In development with demo auth enabled, `X-Demo-User-Id` can select only the seeded moderator or peer; it is a local impersonation mechanism. Job reads and post removal check ownership. Community post creation checks that its meal log belongs to the current user; a meal can have one post. The feed shows a shared meal, illustrative nutrition snapshot, caption, and demo display name.
+
+Background photo reviews use the existing `PhotoMealRecord` table. `review_status` moves through `pending`, `processing`, and `completed` or `failed`; `review_attempts` and a private append-only attempt log record worker activity. The result exposes AI visual nutrition separately from USDA matched nutrition. Only a complete USDA match enters daily macro totals; pending and failed reviews do not count as meals or earn habit credit. The temporary image is deleted on success or explicit removal. Failed reviews retain it for retry. The existing instant recognition route and its manual correction panel remain available.
 
 Community likes are idempotent per user/post. Comments require a visible post; the author or demo moderator can delete them. Reports require a different author, allow one report per reporter/post, and are resolved by a moderator as dismissed or removed. Reported content is not hidden automatically. The seeded Demo Student has moderator role; the peer does not.
 

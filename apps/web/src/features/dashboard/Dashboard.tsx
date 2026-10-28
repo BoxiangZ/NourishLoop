@@ -13,6 +13,7 @@ import FoodCard from "./FoodCard";
 import Pager from "./Pager";
 import PlacesSection from "./PlacesSection";
 import PhotoAnalyzer from "./PhotoAnalyzer";
+import MealCheckinCard from "./MealCheckinCard";
 import ProfileView from "./ProfileView";
 import RewardsSection from "./RewardsSection";
 import WorkoutSection from "./WorkoutSection";
@@ -41,6 +42,7 @@ function weekDays(date: string): string[] {
 export default function Dashboard() {
   const [screen, setScreen] = useState<Screen>("discover");
   const [discoverMode, setDiscoverMode] = useState<"food" | "places">("food");
+  const [photoMode, setPhotoMode] = useState<"instant" | "background">("instant");
   const [me, setMe] = useState<MeRead | null>(null);
   const [venues, setVenues] = useState<VenueRead[]>([]);
   const [menu, setMenu] = useState<MenuItemRead[]>([]);
@@ -119,6 +121,13 @@ export default function Dashboard() {
 
   useEffect(() => { refresh().catch((cause: Error) => setError(cause.message)); }, [refresh]);
 
+  useEffect(() => {
+    if (screen !== "history" || historyMode !== "photos" ||
+        !photoMeals.some(record => record.review_status === "pending" || record.review_status === "processing")) return;
+    const timer = window.setInterval(() => { void refresh().catch(() => {}); }, 3000);
+    return () => window.clearInterval(timer);
+  }, [screen, historyMode, photoMeals, refresh]);
+
   async function act(action: () => Promise<unknown>): Promise<boolean> {
     setBusy(true); setError(null);
     try { await action(); await refresh(); return true; }
@@ -174,9 +183,13 @@ export default function Dashboard() {
         <button role="tab" aria-selected={false} onClick={() => navigate("workouts")}>Workouts</button>
       </div>
       {discoverMode === "places" ? <PlacesSection /> : <>
-      <PhotoAnalyzer key={me?.id} onConfirmed={async () => {
+      <div className="nl-discover-tabs" role="tablist" aria-label="Photo check-in mode">
+        <button role="tab" aria-selected={photoMode === "instant"} onClick={() => setPhotoMode("instant")}>Instant nutrition</button>
+        <button role="tab" aria-selected={photoMode === "background"} onClick={() => setPhotoMode("background")}>Background AI review</button>
+      </div>
+      {photoMode === "instant" ? <PhotoAnalyzer key={me?.id} onConfirmed={async () => {
         setPhotoPage(0); setHistoryMode("photos"); await refresh(); navigate("history");
-      }} />
+      }} /> : <MealCheckinCard key={me?.id} onCompleted={refresh} />}
       <p className="nl-directory-note">These six example meals are fictional and support the recommendation and logging flow. Browse Real places for sourced restaurant listings.</p>
       <form className="nl-search" onSubmit={event => { event.preventDefault(); setMenuPage(0); setSearch(searchDraft.trim()); }}>
         <span aria-hidden="true">⌕</span>
@@ -270,10 +283,12 @@ export default function Dashboard() {
       </> : <>
         <div className="nl-history-list">{photoMeals.length ? photoMeals.map(record =>
           <article key={record.id} className="nl-history-row"><span className="nl-history-icon">◒</span>
-            <div><strong>{record.foods.map(food => food.name).join(", ")}</strong>
+            <div><strong>{record.foods.length ? record.foods.map(food => food.name).join(", ") : "Photo review"}</strong>
               <small>{new Date(record.consumed_at).toLocaleDateString()} · Photo meal record</small>
               {record.notes && <small>{record.notes}</small>}
-              {record.nutrition_status === "none" && <small>This record has no saved nutrition or photo. Re-upload the photo to estimate it.</small>}
+              {record.review_status === "pending" || record.review_status === "processing" ? <small>AI review in progress. This meal is not counted yet.</small> : null}
+              {record.review_status === "failed" && <small>{record.review_error ?? "Photo review failed"}</small>}
+              {record.review_status !== "failed" && record.review_status !== "pending" && record.review_status !== "processing" && record.nutrition_status === "none" && <small>This record has no source backed nutrition estimate.</small>}
               {record.nutrition && <div className="nl-photo-history-nutrition">
               {record.nutrition_status === "partial" && <small>Matched foods only · excluded ingredients are not counted</small>}
               <small>Protein {record.nutrition.protein_g} g · Carbs {record.nutrition.carbs_g} g · Fat {record.nutrition.fat_g} g</small>
@@ -282,11 +297,14 @@ export default function Dashboard() {
               {(record.unresolved_foods?.length ?? 0) > 0 && record.nutrition_status === "partial" &&
                 <small>Not counted: {(record.unresolved_foods ?? []).join(", ")}</small>}
               </div>}</div>
-            <span className="nl-status-pill">{record.nutrition
+            {record.ai_review?.estimated_nutrition && <div className="nl-photo-history-nutrition"><small>AI visual estimate: ≈ {record.ai_review.estimated_nutrition.calories_kcal} kcal</small><small>Not included in daily totals</small></div>}
+            <span className="nl-status-pill">{record.review_status === "pending" || record.review_status === "processing" ? record.review_status : record.review_status === "failed" ? "Review failed" : record.nutrition
               ? `${record.nutrition_status === "partial" ? "Partial · " : "≈ "}${record.nutrition.calories_kcal} kcal`
-              : "No nutrition estimate"}</span>
-            {record.nutrition_status === "none" && <button className="nl-button nl-button-soft"
-              onClick={() => { setDiscoverMode("food"); navigate("discover"); }}>Re-upload photo</button>}</article>) :
+              : record.ai_review?.estimated_nutrition ? `AI ≈ ${record.ai_review.estimated_nutrition.calories_kcal} kcal` : "No nutrition estimate"}</span>
+            {record.review_status === "failed" && (record.review_attempts ?? 0) < 3 && <button className="nl-button nl-button-soft" onClick={() => void act(() => api.retryPhotoReview(record.id))}>Retry review</button>}
+            {(record.review_status === "failed" || record.review_status === "pending") && <button className="nl-text-link" onClick={() => void act(() => api.deletePhotoReview(record.id))}>Remove photo</button>}
+            {record.review_status === "not_requested" && record.nutrition_status === "none" && <button className="nl-button nl-button-soft"
+              onClick={() => { setDiscoverMode("food"); setPhotoMode("instant"); navigate("discover"); }}>Re-upload photo</button>}</article>) :
             <div className="nl-empty">No photo meals yet. Recognize one from Discover, then confirm what you ate.</div>}</div>
         <Pager page={photoPage} hasNext={photoHasNext} onChange={setPhotoPage} label="photo meals" />
       </>}

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import time
+from threading import Thread
 from datetime import timedelta
 from typing import Callable
 
@@ -20,6 +21,7 @@ from apps.api.modules.recommendations.models import RecommendationJob
 from apps.api.modules.recommendations.openrouter import OpenRouterExplanationProvider
 from apps.api.modules.recommendations.schemas import RecommendationRequest
 from apps.api.modules.recommendations.service import generate
+from apps.api.modules.tracking.async_review import process_photo_review_once
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +116,17 @@ def run_forever() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     engine = make_engine(settings.database_url)
     session_factory = make_session_factory(engine)
+    def photo_loop() -> None:
+        logger.info("photo_review_worker_started")
+        while True:
+            try:
+                if process_photo_review_once(session_factory, settings) is None:
+                    time.sleep(settings.worker_poll_seconds)
+            except Exception:
+                logger.exception("photo_review_worker_loop_failed")
+                time.sleep(settings.worker_poll_seconds)
+
+    Thread(target=photo_loop, name="photo-review-worker", daemon=True).start()
     logger.info("recommendation_worker_started")
     while True:
         if process_once(session_factory, settings) is None:

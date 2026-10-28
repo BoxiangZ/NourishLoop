@@ -43,6 +43,22 @@ function json(method: string, body: unknown): RequestInit {
   return { method, body: JSON.stringify(body) };
 }
 
+async function uploadPhotoReview(file: File, notes: string): Promise<PhotoMealRead> {
+  const form = new FormData();
+  form.append("photo", file);
+  form.append("notes", notes);
+  const response = await fetch(`${baseUrl}/api/v1/photo-meals/reviews`, {
+    method: "POST", body: form,
+    headers: demoUserId ? { "X-Demo-User-Id": demoUserId } : {},
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new ApiError(response.status, body.error?.message ?? "Photo upload failed");
+  }
+  return response.json() as Promise<PhotoMealRead>;
+}
+
 export const api = {
   setDemoUserId: (id: string) => { demoUserId = id; },
   me: () => request<MeRead>("/me"),
@@ -90,6 +106,10 @@ export const api = {
     request<PhotoMealRead>("/photo-meals", json("POST", body)),
   photoMeals: (limit = 20, offset = 0) =>
     request<PhotoMealRead[]>(`/me/photo-meals?limit=${limit}&offset=${offset}`),
+  startPhotoReview: uploadPhotoReview,
+  photoReview: (id: string) => request<PhotoMealRead>(`/photo-meals/${encodeURIComponent(id)}`),
+  retryPhotoReview: (id: string) => request<PhotoMealRead>(`/photo-meals/${encodeURIComponent(id)}/retry`, { method: "POST" }),
+  deletePhotoReview: (id: string) => request<void>(`/photo-meals/${encodeURIComponent(id)}`, { method: "DELETE" }),
   nutritionFoods: (q: string, limit = 6) =>
     request<NutritionFoodRead[]>(`/nutrition-foods?q=${encodeURIComponent(q)}&limit=${limit}`),
   estimatePhotoNutrition: (body: PhotoNutritionEstimateRequest) =>

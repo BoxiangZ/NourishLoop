@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, ForeignKey, JSON, String
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from apps.api.core.database import Base
@@ -36,7 +36,7 @@ class MealLog(Base, IdMixin, TimestampMixin):
 
 
 class PhotoMealRecord(Base, IdMixin, TimestampMixin):
-    """User-confirmed food names from a photo; the image itself is never stored."""
+    """Photo meal and its optional asynchronous review."""
 
     __tablename__ = "photo_meal_records"
 
@@ -49,3 +49,13 @@ class PhotoMealRecord(Base, IdMixin, TimestampMixin):
     nutrition_items: Mapped[list | None] = mapped_column(JSON, nullable=True)
     nutrition_status: Mapped[str] = mapped_column(String(20), nullable=False, default="none")
     unresolved_foods: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    review_status: Mapped[str] = mapped_column(String(20), nullable=False, default="not_requested")
+    review_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    review_claimed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    review_claim_token: Mapped[str | None] = mapped_column(String(36))
+    review_error: Mapped[str | None] = mapped_column(String(120))
+    review_log: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    image_path: Mapped[str | None] = mapped_column(String(500))
+    image_type: Mapped[str | None] = mapped_column(String(30))
+    ai_review: Mapped[dict | None] = mapped_column(JSON)
+    review_questions: Mapped[list] = mapped_column(JSON, nullable=False, default=list)

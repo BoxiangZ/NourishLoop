@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     demo_auth_enabled: bool = False
     demo_user_id: str = "demo-student"
     database_url: str = "postgresql+psycopg://postgres:postgres@db:5432/maie6000c"
+    upload_dir: str = "/tmp/nourishloop-photo-reviews"
     cors_origin: str = "http://localhost:3000"
     explanation_provider: Literal["deterministic", "openrouter"] = "deterministic"
     openrouter_api_key: SecretStr | None = None

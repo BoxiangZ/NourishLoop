@@ -9,6 +9,7 @@ import binascii
 from pydantic import BaseModel, Field, field_validator
 
 from apps.api.modules.catalog.schemas import MenuItemRead, NutritionFoodRead
+from apps.api.modules.tracking.review import MealAIReview
 
 
 class DecisionCreate(BaseModel):
@@ -152,3 +153,8 @@ class PhotoMealRead(BaseModel):
     nutrition_items: list[PhotoNutritionItemRead] = Field(default_factory=list)
     nutrition_status: Literal["complete", "partial", "none"] = "none"
     unresolved_foods: list[str] = Field(default_factory=list)
+    review_status: Literal["not_requested", "pending", "processing", "completed", "failed"] = "not_requested"
+    review_attempts: int = 0
+    review_error: str | None = None
+    ai_review: MealAIReview | None = None
+    review_questions: list[str] = Field(default_factory=list)
