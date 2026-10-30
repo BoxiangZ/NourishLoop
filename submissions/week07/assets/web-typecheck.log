@@ -1,0 +1,5 @@
+
+> @nourishloop/web@0.1.0 typecheck /app/apps/web
+> tsc --noEmit
+
+

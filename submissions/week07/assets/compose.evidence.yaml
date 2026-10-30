@@ -1,0 +1,18 @@
+services:
+  db:
+    ports: !override ["127.0.0.1:15480:5432"]
+  api:
+    ports: !override ["127.0.0.1:18080:8000"]
+    environment:
+      CORS_ORIGIN: http://localhost:13000
+      EXPLANATION_PROVIDER: deterministic
+      OPENROUTER_API_KEY: ""
+      USDA_API_KEY: ""
+  worker:
+    environment:
+      EXPLANATION_PROVIDER: deterministic
+      OPENROUTER_API_KEY: ""
+  web:
+    ports: !override ["127.0.0.1:13000:3000"]
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:18080
