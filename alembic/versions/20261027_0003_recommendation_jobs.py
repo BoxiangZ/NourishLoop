@@ -17,7 +17,9 @@ def upgrade() -> None:
     op.create_table(
         "recommendation_jobs",
         sa.Column("id", sa.String(36), primary_key=True),
-        sa.Column("user_id", sa.String(36), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "user_id", sa.String(36), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("meal_slot", sa.String(20), nullable=False),
         sa.Column("result_limit", sa.Integer(), nullable=False),
         sa.Column("provider", sa.String(30), nullable=False),
@@ -35,7 +37,12 @@ def upgrade() -> None:
     op.create_table(
         "community_posts",
         sa.Column("id", sa.String(36), primary_key=True),
-        sa.Column("author_id", sa.String(36), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "author_id",
+            sa.String(36),
+            sa.ForeignKey("users.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column(
             "meal_log_id",
             sa.String(36),

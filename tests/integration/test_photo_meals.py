@@ -24,17 +24,33 @@ def test_vision_payload_and_reviewed_foods() -> None:
 
     def response(request: httpx.Request) -> httpx.Response:
         captured.update(json.loads(request.content))
-        return httpx.Response(200, json={"choices": [{"message": {"content": (
-            '{"foods":[{"name":"Rice","preparation":null,'
-            '"quantity_from_notes":"half a bowl","estimated_grams":100},'
-            '{"name":"Rice","estimated_grams":150}],"review_questions":[]}'
-        )}}]})
+        return httpx.Response(
+            200,
+            json={
+                "choices": [
+                    {
+                        "message": {
+                            "content": (
+                                '{"foods":[{"name":"Rice","preparation":null,'
+                                '"quantity_from_notes":"half a bowl","estimated_grams":100},'
+                                '{"name":"Rice","estimated_grams":150}],"review_questions":[]}'
+                            )
+                        }
+                    }
+                ]
+            },
+        )
 
     image = base64.b64encode(b"\xff\xd8\xfftest-image").decode()
-    result = analyze_photo(PhotoAnalysisRequest(
-        image_base64=image, mime_type="image/jpeg", notes="half a bowl",
-    ), Settings(openrouter_api_key=SecretStr("test-key"), openrouter_model="vision-test"),
-        httpx.MockTransport(response))
+    result = analyze_photo(
+        PhotoAnalysisRequest(
+            image_base64=image,
+            mime_type="image/jpeg",
+            notes="half a bowl",
+        ),
+        Settings(openrouter_api_key=SecretStr("test-key"), openrouter_model="vision-test"),
+        httpx.MockTransport(response),
+    )
     assert result.foods[0].name == "Rice"
     assert len(result.foods) == 1
     assert result.foods[0].estimated_grams == 150
@@ -49,26 +65,41 @@ def test_vision_payload_and_reviewed_foods() -> None:
 def test_photo_record_counts_without_inventing_nutrition(nl_stack, monkeypatch):
     client, session_factory = nl_stack
     router = importlib.import_module("apps.api.modules.tracking.router")
-    monkeypatch.setattr(router, "analyze_photo", lambda *_: PhotoAnalysisRead(
-        foods=[{"name": "Rice", "preparation": None, "quantity_from_notes": None}],
-        review_questions=["How much rice?"], model="vision-test",
-    ))
+    monkeypatch.setattr(
+        router,
+        "analyze_photo",
+        lambda *_: PhotoAnalysisRead(
+            foods=[{"name": "Rice", "preparation": None, "quantity_from_notes": None}],
+            review_questions=["How much rice?"],
+            model="vision-test",
+        ),
+    )
     image = base64.b64encode(b"\xff\xd8\xfftest-image").decode()
-    analyzed = client.post("/api/v1/meals/analyze-photo", json={
-        "image_base64": image, "mime_type": "image/jpeg",
-    })
+    analyzed = client.post(
+        "/api/v1/meals/analyze-photo",
+        json={
+            "image_base64": image,
+            "mime_type": "image/jpeg",
+        },
+    )
     assert analyzed.status_code == 200
     assert analyzed.json()["foods"][0]["name"] == "Rice"
-    saved = client.post("/api/v1/photo-meals", json={
-        "foods": [{"name": "Rice and tofu", "preparation": "steamed"}],
-        "notes": "I ate this for lunch", "model": analyzed.json()["model"],
-    })
+    saved = client.post(
+        "/api/v1/photo-meals",
+        json={
+            "foods": [{"name": "Rice and tofu", "preparation": "steamed"}],
+            "notes": "I ate this for lunch",
+            "model": analyzed.json()["model"],
+        },
+    )
     assert saved.status_code == 201
     record = saved.json()
     assert record["foods"][0]["name"] == "Rice and tofu"
     assert record["nutrition_status"] == "none"
     assert client.get("/api/v1/me/photo-meals?limit=1&offset=0").json()[0]["id"] == record["id"]
-    assert client.get("/api/v1/me/photo-meals", headers={"X-Demo-User-Id": "demo-peer"}).json() == []
+    assert (
+        client.get("/api/v1/me/photo-meals", headers={"X-Demo-User-Id": "demo-peer"}).json() == []
+    )
     summary = client.get("/api/v1/me/daily-summary").json()
     assert summary["meal_count"] == 1
     assert summary["totals"]["calories_kcal"] == 0
@@ -82,33 +113,63 @@ def test_source_backed_photo_nutrition_preview_confirmation_and_daily_total(nl_s
     client, session_factory = nl_stack
 
     def usda_response(_: httpx.Request) -> httpx.Response:
-        return httpx.Response(200, json={"foods": [{
-            "fdcId": 173423, "description": "Egg, whole, cooked, fried",
-            "dataType": "SR Legacy", "foodNutrients": [
-                {"nutrientId": 1008, "value": 196},
-                {"nutrientId": 1003, "value": 13.6},
-                {"nutrientId": 1005, "value": 0.83},
-                {"nutrientId": 1004, "value": 14.8},
-            ],
-        }]})
+        return httpx.Response(
+            200,
+            json={
+                "foods": [
+                    {
+                        "fdcId": 173423,
+                        "description": "Egg, whole, cooked, fried",
+                        "dataType": "SR Legacy",
+                        "foodNutrients": [
+                            {"nutrientId": 1008, "value": 196},
+                            {"nutrientId": 1003, "value": 13.6},
+                            {"nutrientId": 1005, "value": 0.83},
+                            {"nutrientId": 1004, "value": 14.8},
+                        ],
+                    }
+                ]
+            },
+        )
 
     with session_factory() as db:
         foods = search_nutrition_foods(
-            db, "egg fried", 6, Settings(usda_api_key=SecretStr("DEMO_KEY")),
+            db,
+            "egg fried",
+            6,
+            Settings(usda_api_key=SecretStr("DEMO_KEY")),
             httpx.MockTransport(usda_response),
         )
     assert foods[0].fdc_id == 173423
     assert foods[0].source_url.startswith("https://fdc.nal.usda.gov/")
-    automatic = client.post("/api/v1/photo-meals/auto-estimate", json={"foods": [{
-        "name": "Egg", "preparation": "fried", "estimated_grams": 50,
-        "portion_basis": "visual_estimate",
-    }]})
+    automatic = client.post(
+        "/api/v1/photo-meals/auto-estimate",
+        json={
+            "foods": [
+                {
+                    "name": "Egg",
+                    "preparation": "fried",
+                    "estimated_grams": 50,
+                    "portion_basis": "visual_estimate",
+                }
+            ]
+        },
+    )
     assert automatic.status_code == 200
     assert automatic.json()["estimate"]["nutrition"]["calories_kcal"] == 98
     assert automatic.json()["selections"][0]["portion_basis"] == "visual_estimate"
-    unresolved = client.post("/api/v1/photo-meals/auto-estimate", json={"foods": [{
-        "name": "Egg", "preparation": "fried", "estimated_grams": None,
-    }]})
+    unresolved = client.post(
+        "/api/v1/photo-meals/auto-estimate",
+        json={
+            "foods": [
+                {
+                    "name": "Egg",
+                    "preparation": "fried",
+                    "estimated_grams": None,
+                }
+            ]
+        },
+    )
     assert unresolved.status_code == 200
     assert unresolved.json()["estimate"] is None
     assert "Portion weight unclear" in unresolved.json()["unresolved"][0]
@@ -122,12 +183,19 @@ def test_source_backed_photo_nutrition_preview_confirmation_and_daily_total(nl_s
     preview = client.post("/api/v1/photo-meals/estimate", json=payload)
     assert preview.status_code == 200
     assert preview.json()["nutrition"] == {
-        "calories_kcal": 98, "protein_g": 6.8,
-        "carbs_g": 0.4, "fat_g": 7.4,
+        "calories_kcal": 98,
+        "protein_g": 6.8,
+        "carbs_g": 0.4,
+        "fat_g": 7.4,
     }
-    saved = client.post("/api/v1/photo-meals", json={
-        **payload, "notes": "One egg, approximately 50 g edible portion", "model": "vision-test",
-    })
+    saved = client.post(
+        "/api/v1/photo-meals",
+        json={
+            **payload,
+            "notes": "One egg, approximately 50 g edible portion",
+            "model": "vision-test",
+        },
+    )
     assert saved.status_code == 201
     assert saved.json()["nutrition"] == preview.json()["nutrition"]
     assert saved.json()["nutrition_status"] == "complete"
@@ -136,34 +204,62 @@ def test_source_backed_photo_nutrition_preview_confirmation_and_daily_total(nl_s
     summary = client.get("/api/v1/me/daily-summary").json()
     assert summary["meal_count"] == 1
     assert summary["totals"] == preview.json()["nutrition"]
-    assert client.get("/api/v1/me/photo-meals", headers={"X-Demo-User-Id": "demo-peer"}).json() == []
-    assert client.post("/api/v1/photo-meals/estimate", json={
-        "foods": payload["foods"], "nutrition_selections": [],
-    }).status_code == 422
-    assert client.post("/api/v1/photo-meals/estimate", json={
-        "foods": payload["foods"],
-        "nutrition_selections": [{"food_index": 0, "fdc_id": 999999, "grams": 50}],
-    }).status_code == 422
+    assert (
+        client.get("/api/v1/me/photo-meals", headers={"X-Demo-User-Id": "demo-peer"}).json() == []
+    )
+    assert (
+        client.post(
+            "/api/v1/photo-meals/estimate",
+            json={
+                "foods": payload["foods"],
+                "nutrition_selections": [],
+            },
+        ).status_code
+        == 422
+    )
+    assert (
+        client.post(
+            "/api/v1/photo-meals/estimate",
+            json={
+                "foods": payload["foods"],
+                "nutrition_selections": [{"food_index": 0, "fdc_id": 999999, "grams": 50}],
+            },
+        ).status_code
+        == 422
+    )
 
 
 def test_invalid_photo_bytes_and_quantity_are_rejected():
     settings = Settings(openrouter_api_key=SecretStr("test-key"))
     request = PhotoAnalysisRequest(
-        image_base64=base64.b64encode(b"not-an-image").decode(), mime_type="image/png",
+        image_base64=base64.b64encode(b"not-an-image").decode(),
+        mime_type="image/png",
     )
     with pytest.raises(HTTPException) as exc:
         analyze_photo(request, settings, httpx.MockTransport(lambda _: httpx.Response(200)))
     assert exc.value.status_code == 422
 
     def invented_quantity(_: httpx.Request) -> httpx.Response:
-        return httpx.Response(200, json={"choices": [{"message": {"content": (
-            '{"foods":[{"name":"Rice","quantity_from_notes":"200 g"}],'
-            '"review_questions":[]}'
-        )}}]})
+        return httpx.Response(
+            200,
+            json={
+                "choices": [
+                    {
+                        "message": {
+                            "content": (
+                                '{"foods":[{"name":"Rice","quantity_from_notes":"200 g"}],'
+                                '"review_questions":[]}'
+                            )
+                        }
+                    }
+                ]
+            },
+        )
 
     request = PhotoAnalysisRequest(
         image_base64=base64.b64encode(b"\xff\xd8\xfftest-image").decode(),
-        mime_type="image/jpeg", notes="small bowl",
+        mime_type="image/jpeg",
+        notes="small bowl",
     )
     with pytest.raises(HTTPException) as exc:
         analyze_photo(request, settings, httpx.MockTransport(invented_quantity))
@@ -173,54 +269,94 @@ def test_invalid_photo_bytes_and_quantity_are_rejected():
 def test_auto_matching_rejects_wrong_food_or_preparation():
     def source(description: str, fdc_id: int) -> NutritionFoodRead:
         return NutritionFoodRead(
-            fdc_id=fdc_id, description=description, data_type="SR Legacy",
-            calories_kcal=100, protein_g=1, carbs_g=1, fat_g=1, source_url="https://example.test",
+            fdc_id=fdc_id,
+            description=description,
+            data_type="SR Legacy",
+            calories_kcal=100,
+            protein_g=1,
+            carbs_g=1,
+            fat_g=1,
+            source_url="https://example.test",
         )
 
     food = PhotoFood(name="Rice, white, cooked")
-    assert _best_match(food, [source("Rice noodles, cooked", 1),
-                              source("Rice, white, dry", 2)]) is None
-    assert _best_match(food, [source("Rice noodles, cooked", 1),
-                              source("Rice, white, cooked", 3)]).fdc_id == 3
-    assert _best_match(PhotoFood(name="Egg", preparation="fried"), [
-        source("Egg, white, cooked, fried", 4),
-    ]) is None
-    assert _best_match(PhotoFood(name="egg, chicken, whole, fried"), [
-        source("Egg, whole, cooked, fried", 173423),
-    ]).fdc_id == 173423
+    assert (
+        _best_match(food, [source("Rice noodles, cooked", 1), source("Rice, white, dry", 2)])
+        is None
+    )
+    assert (
+        _best_match(
+            food, [source("Rice noodles, cooked", 1), source("Rice, white, cooked", 3)]
+        ).fdc_id
+        == 3
+    )
+    assert (
+        _best_match(
+            PhotoFood(name="Egg", preparation="fried"),
+            [
+                source("Egg, white, cooked, fried", 4),
+            ],
+        )
+        is None
+    )
+    assert (
+        _best_match(
+            PhotoFood(name="egg, chicken, whole, fried"),
+            [
+                source("Egg, whole, cooked, fried", 173423),
+            ],
+        ).fdc_id
+        == 173423
+    )
 
 
 def test_local_usda_index_and_partial_auto_result(nl_stack, monkeypatch):
     client, session_factory = nl_stack
     with session_factory() as db:
         foods = search_nutrition_foods(
-            db, "tomato raw", 12, Settings(),
+            db,
+            "tomato raw",
+            12,
+            Settings(),
             httpx.MockTransport(lambda _: (_ for _ in ()).throw(AssertionError("remote call"))),
         )
     assert foods
     assert foods[0].description.startswith("Tomatoes, red, ripe, raw")
     photo = importlib.import_module("apps.api.modules.tracking.photo")
     original_search = photo.search_nutrition_foods
-    monkeypatch.setattr(photo, "search_nutrition_foods", lambda db, query, limit, settings,
-                        **kwargs: [] if query == "Unknown sauce" else original_search(
-                            db, query, limit, settings, **kwargs))
-    result = client.post("/api/v1/photo-meals/auto-estimate", json={"foods": [
-        {"name": "Egg", "preparation": "fried", "estimated_grams": 50},
-        {"name": "Unknown sauce", "estimated_grams": 30},
-    ]})
+    monkeypatch.setattr(
+        photo,
+        "search_nutrition_foods",
+        lambda db, query, limit, settings, **kwargs: []
+        if query == "Unknown sauce"
+        else original_search(db, query, limit, settings, **kwargs),
+    )
+    result = client.post(
+        "/api/v1/photo-meals/auto-estimate",
+        json={
+            "foods": [
+                {"name": "Egg", "preparation": "fried", "estimated_grams": 50},
+                {"name": "Unknown sauce", "estimated_grams": 30},
+            ]
+        },
+    )
     assert result.status_code == 200
     body = result.json()
     assert body["estimate"] is None
     assert body["partial_estimate"]["nutrition"]["calories_kcal"] == 98
     assert [item["name"] for item in body["partial_estimate"]["items"]] == ["Egg"]
     assert "Unknown sauce" in body["unresolved"][0]
-    saved = client.post("/api/v1/photo-meals", json={
-        "foods": [
-            {"name": "Egg", "preparation": "fried", "estimated_grams": 50},
-            {"name": "Unknown sauce", "estimated_grams": 30},
-        ],
-        "model": "vision-test", "nutrition_selections": body["selections"],
-    })
+    saved = client.post(
+        "/api/v1/photo-meals",
+        json={
+            "foods": [
+                {"name": "Egg", "preparation": "fried", "estimated_grams": 50},
+                {"name": "Unknown sauce", "estimated_grams": 30},
+            ],
+            "model": "vision-test",
+            "nutrition_selections": body["selections"],
+        },
+    )
     assert saved.status_code == 201
     assert saved.json()["nutrition_status"] == "partial"
     assert saved.json()["nutrition"]["calories_kcal"] == 98
