@@ -54,7 +54,7 @@ The seed grants moderator role to the local demo user only and also creates a no
 
 ## W07 captured validation and final checks
 
-The [milestone README](../submissions/week07/README.md) distinguishes the original PPT capture from final checkpoint changes. PostgreSQL startup, migration 0008, seed and the browser main path were exercised. API/worker restart retained records. Backend automated fixtures use SQLite.
+The [milestone README](../submissions/week07/README.md) records the actual 29 October runtime evidence and the final 30 October validation reflected in the revised PPT. PostgreSQL startup, migration 0008, seed and the browser main path were exercised. API/worker restart retained records. Backend automated fixtures use SQLite.
 
 From the repository root:
 
