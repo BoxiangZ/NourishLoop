@@ -17,10 +17,19 @@ from apps.api.modules.catalog.models import NutritionFood
 from apps.api.modules.rewards.service import award_event
 from apps.api.modules.tracking.models import PhotoMealRecord
 from apps.api.modules.tracking.schemas import (
-    PhotoAnalysisRead, PhotoAnalysisRequest, PhotoMealCreate, PhotoMealRead,
-    PhotoNutritionEstimateRead, PhotoNutritionEstimateRequest, PhotoNutritionItemRead,
-    NutritionTotals, PhotoAutoEstimateRequest, PhotoAutoEstimateRead, PhotoAutoMatchRead,
-    PhotoNutritionSelection, PhotoFood,
+    PhotoAnalysisRead,
+    PhotoAnalysisRequest,
+    PhotoMealCreate,
+    PhotoMealRead,
+    PhotoNutritionEstimateRead,
+    PhotoNutritionEstimateRequest,
+    PhotoNutritionItemRead,
+    NutritionTotals,
+    PhotoAutoEstimateRequest,
+    PhotoAutoEstimateRead,
+    PhotoAutoMatchRead,
+    PhotoNutritionSelection,
+    PhotoFood,
 )
 from apps.api.modules.catalog.nutrition import search_nutrition_foods, _word_tokens, _first_subject
 import re
@@ -37,7 +46,8 @@ def _check_image(raw: bytes, mime_type: str) -> None:
 
 
 def analyze_photo(
-    request: PhotoAnalysisRequest, settings: Settings,
+    request: PhotoAnalysisRequest,
+    settings: Settings,
     transport: httpx.BaseTransport | None = None,
 ) -> PhotoAnalysisRead:
     raw = base64.b64decode(request.image_base64, validate=True)
@@ -64,13 +74,16 @@ def analyze_photo(
         "in the notes. Use null only when the photo is too unclear to estimate. "
         "Set portion_basis to user_note only for explicit grams in notes, visual_estimate "
         "for visual estimates, or unknown if null. Never infer exact weight from the photo. "
-        "Optional review questions may mention unclear food or portions. If the image does not show food, "
+        "Optional review questions may mention unclear food or portions. "
+        "If the image does not show food, "
         "return an empty foods array. Do not estimate calories, macros, hidden ingredients, "
         "health effects, or plan alignment. "
         f"User notes: {request.notes or '(none)'}"
     )
     try:
-        with httpx.Client(timeout=settings.openrouter_timeout_seconds, transport=transport) as client:
+        with httpx.Client(
+            timeout=settings.openrouter_timeout_seconds, transport=transport
+        ) as client:
             response = client.post(
                 "https://openrouter.ai/api/v1/chat/completions",
                 headers={"Authorization": f"Bearer {secret.get_secret_value()}"},
@@ -78,12 +91,22 @@ def analyze_photo(
                     "model": settings.openrouter_model,
                     "max_tokens": 1500,
                     "reasoning": {"enabled": False},
-                    "messages": [{"role": "user", "content": [
-                        {"type": "text", "text": prompt},
-                        {"type": "image_url", "image_url": {
-                            "url": f"data:{request.mime_type};base64,{request.image_base64}",
-                        }},
-                    ]}],
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": prompt},
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                    "url": (
+                                        f"data:{request.mime_type};base64,{request.image_base64}"
+                                    ),
+                                    },
+                                },
+                            ],
+                        }
+                    ],
                 },
             )
             response.raise_for_status()
@@ -94,20 +117,29 @@ def analyze_photo(
         if body.startswith("```"):
             body = body.split("\n", 1)[1].rsplit("```", 1)[0].strip()
         data = json.loads(body)
-        result = PhotoAnalysisRead.model_validate({
-            **data, "model": settings.openrouter_model, "requires_review": False,
-        })
-        if any(food.quantity_from_notes and
-               food.quantity_from_notes.lower() not in request.notes.lower()
-               for food in result.foods):
+        result = PhotoAnalysisRead.model_validate(
+            {
+                **data,
+                "model": settings.openrouter_model,
+                "requires_review": False,
+            }
+        )
+        if any(
+            food.quantity_from_notes
+            and food.quantity_from_notes.lower() not in request.notes.lower()
+            for food in result.foods
+        ):
             raise ValueError("Quantity absent from notes")
         for food in result.foods:
             if food.portion_basis == "user_note":
                 grams_in_notes = re.findall(
                     r"\b(\d+(?:\.\d+)?)\s*(?:g|grams?)\b",
-                    food.quantity_from_notes or "", re.I,
+                    food.quantity_from_notes or "",
+                    re.I,
                 )
-                if not grams_in_notes or food.estimated_grams not in [float(value) for value in grams_in_notes]:
+                if not grams_in_notes or food.estimated_grams not in [
+                    float(value) for value in grams_in_notes
+                ]:
                     food.portion_basis = "visual_estimate" if food.estimated_grams else "unknown"
             if food.estimated_grams is None:
                 food.portion_basis = "unknown"
@@ -130,9 +162,14 @@ def analyze_photo(
 
 def photo_meal_read(record: PhotoMealRecord) -> PhotoMealRead:
     return PhotoMealRead(
-        id=record.id, foods=record.foods, notes=record.notes,
-        model=record.model, consumed_at=record.consumed_at,
-        nutrition=NutritionTotals(**record.nutrition_snapshot) if record.nutrition_snapshot else None,
+        id=record.id,
+        foods=record.foods,
+        notes=record.notes,
+        model=record.model,
+        consumed_at=record.consumed_at,
+        nutrition=NutritionTotals(**record.nutrition_snapshot)
+        if record.nutrition_snapshot
+        else None,
         nutrition_items=record.nutrition_items or [],
         nutrition_status=record.nutrition_status,
         unresolved_foods=record.unresolved_foods or [],
@@ -140,12 +177,13 @@ def photo_meal_read(record: PhotoMealRecord) -> PhotoMealRead:
 
 
 def estimate_photo_nutrition(
-    db: Session, payload: PhotoNutritionEstimateRequest,
+    db: Session,
+    payload: PhotoNutritionEstimateRequest,
 ) -> PhotoNutritionEstimateRead:
     selections = payload.nutrition_selections
-    if len(selections) != len(payload.foods) or {
-        item.food_index for item in selections
-    } != set(range(len(payload.foods))):
+    if len(selections) != len(payload.foods) or {item.food_index for item in selections} != set(
+        range(len(payload.foods))
+    ):
         raise HTTPException(422, "Select one USDA food and enter grams for every food")
     keys = ("calories_kcal", "protein_g", "carbs_g", "fat_g")
     totals = {key: Decimal("0") for key in keys}
@@ -158,21 +196,27 @@ def estimate_photo_nutrition(
         values = {key: Decimal(getattr(source, key)) * grams / Decimal("100") for key in keys}
         for key in keys:
             totals[key] += values[key]
-        items.append(PhotoNutritionItemRead(
-            name=payload.foods[selection.food_index].name,
-            fdc_id=source.fdc_id,
-            source_description=source.description,
-            source_url=f"https://fdc.nal.usda.gov/food-search/?query={source.fdc_id}",
-            grams=float(grams),
-            portion_basis=selection.portion_basis,
-            **{key: float(value.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP))
-               for key, value in values.items()},
-        ))
+        items.append(
+            PhotoNutritionItemRead(
+                name=payload.foods[selection.food_index].name,
+                fdc_id=source.fdc_id,
+                source_description=source.description,
+                source_url=f"https://fdc.nal.usda.gov/food-search/?query={source.fdc_id}",
+                grams=float(grams),
+                portion_basis=selection.portion_basis,
+                **{
+                    key: float(value.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP))
+                    for key, value in values.items()
+                },
+            )
+        )
     return PhotoNutritionEstimateRead(
-        nutrition=NutritionTotals(**{
-            key: float(value.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP))
-            for key, value in totals.items()
-        }),
+        nutrition=NutritionTotals(
+            **{
+                key: float(value.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP))
+                for key, value in totals.items()
+            }
+        ),
         items=items,
     )
 
@@ -183,8 +227,19 @@ def _tokens(value: str) -> set[str]:
 
 def _best_match(food, candidates):
     wanted = _tokens(f"{food.name} {food.preparation or ''}")
-    preparations = {"cooked", "raw", "fried", "boiled", "steamed", "roasted", "baked",
-                    "dry", "uncooked", "dehydrated", "instant"}
+    preparations = {
+        "cooked",
+        "raw",
+        "fried",
+        "boiled",
+        "steamed",
+        "roasted",
+        "baked",
+        "dry",
+        "uncooked",
+        "dehydrated",
+        "instant",
+    }
     core = wanted - preparations
     if not core:
         return None
@@ -196,32 +251,78 @@ def _best_match(food, candidates):
             continue
         if not core.issubset(got):
             continue
-        if primary == "beef" and "ground" not in wanted and not {
-            "composite", "all", "grade",
-        }.issubset(got):
+        if (
+            primary == "beef"
+            and "ground" not in wanted
+            and not {
+                "composite",
+                "all",
+                "grade",
+            }.issubset(got)
+        ):
             continue
-        if primary == "tomato" and not {"green", "yellow", "orange", "red"} & wanted \
-                and not {"red", "ripe"}.issubset(got):
+        if (
+            primary == "tomato"
+            and not {"green", "yellow", "orange", "red"} & wanted
+            and not {"red", "ripe"}.issubset(got)
+        ):
             continue
-        if any(term in got and term not in wanted for term in
-               ("white", "brown", "wild", "yolk", "glutinous", "duck", "goose",
-                "quail", "turkey", "noodle", "ring", "breaded", "sausage",
-                "salami", "soup", "pie", "cake", "sandwich", "burger", "cured")):
+        if any(
+            term in got and term not in wanted
+            for term in (
+                "white",
+                "brown",
+                "wild",
+                "yolk",
+                "glutinous",
+                "duck",
+                "goose",
+                "quail",
+                "turkey",
+                "noodle",
+                "ring",
+                "breaded",
+                "sausage",
+                "salami",
+                "soup",
+                "pie",
+                "cake",
+                "sandwich",
+                "burger",
+                "cured",
+            )
+        ):
             continue
-        conflict = any(term in got and term not in wanted for term in
-                       ("raw", "fried", "boiled", "steamed", "roasted", "baked",
-                        "dry", "uncooked", "dehydrated", "instant"))
+        conflict = any(
+            term in got and term not in wanted
+            for term in (
+                "raw",
+                "fried",
+                "boiled",
+                "steamed",
+                "roasted",
+                "baked",
+                "dry",
+                "uncooked",
+                "dehydrated",
+                "instant",
+            )
+        )
         if conflict:
             continue
-        if any(term in wanted and term not in got for term in
-               ("cooked", "raw", "fried", "boiled", "steamed", "roasted", "baked")):
+        if any(
+            term in wanted and term not in got
+            for term in ("cooked", "raw", "fried", "boiled", "steamed", "roasted", "baked")
+        ):
             continue
         ranked.append((len(wanted & got), -len(got - wanted), candidate))
     return max(ranked, key=lambda row: row[:2])[2] if ranked else None
 
 
 def auto_estimate_photo_nutrition(
-    db: Session, payload: PhotoAutoEstimateRequest, settings: Settings,
+    db: Session,
+    payload: PhotoAutoEstimateRequest,
+    settings: Settings,
 ) -> PhotoAutoEstimateRead:
     matches: list[PhotoAutoMatchRead] = []
     selections: list[PhotoNutritionSelection] = []
@@ -233,9 +334,16 @@ def auto_estimate_photo_nutrition(
             candidates = search_nutrition_foods(db, query, 12, settings)
             match = _best_match(food, candidates)
             if match is None and candidates:
-                match = _best_match(food, search_nutrition_foods(
-                    db, query, 12, settings, bypass_cache=True,
-                ))
+                match = _best_match(
+                    food,
+                    search_nutrition_foods(
+                        db,
+                        query,
+                        12,
+                        settings,
+                        bypass_cache=True,
+                    ),
+                )
         except HTTPException:
             match = None
             lookup_unavailable = True
@@ -250,24 +358,45 @@ def auto_estimate_photo_nutrition(
         if reason:
             unresolved.append(f"{food.name}: {reason}")
         else:
-            selections.append(PhotoNutritionSelection(
-                food_index=index, fdc_id=match.fdc_id, grams=food.estimated_grams,
-                portion_basis=("user_note" if food.portion_basis == "user_note"
-                               else "visual_estimate"),
-            ))
-    estimate = estimate_photo_nutrition(db, PhotoNutritionEstimateRequest(
-        foods=payload.foods, nutrition_selections=selections,
-    )) if not unresolved else None
+            selections.append(
+                PhotoNutritionSelection(
+                    food_index=index,
+                    fdc_id=match.fdc_id,
+                    grams=food.estimated_grams,
+                    portion_basis=(
+                        "user_note" if food.portion_basis == "user_note" else "visual_estimate"
+                    ),
+                )
+            )
+    estimate = (
+        estimate_photo_nutrition(
+            db,
+            PhotoNutritionEstimateRequest(
+                foods=payload.foods,
+                nutrition_selections=selections,
+            ),
+        )
+        if not unresolved
+        else None
+    )
     partial_estimate = None
     if unresolved and selections:
-        partial_estimate = estimate_photo_nutrition(db, PhotoNutritionEstimateRequest(
-            foods=[payload.foods[item.food_index] for item in selections],
-            nutrition_selections=[item.model_copy(update={"food_index": index})
-                                  for index, item in enumerate(selections)],
-        ))
+        partial_estimate = estimate_photo_nutrition(
+            db,
+            PhotoNutritionEstimateRequest(
+                foods=[payload.foods[item.food_index] for item in selections],
+                nutrition_selections=[
+                    item.model_copy(update={"food_index": index})
+                    for index, item in enumerate(selections)
+                ],
+            ),
+        )
     return PhotoAutoEstimateRead(
-        estimate=estimate, partial_estimate=partial_estimate,
-        selections=selections, matches=matches, unresolved=unresolved,
+        estimate=estimate,
+        partial_estimate=partial_estimate,
+        selections=selections,
+        matches=matches,
+        unresolved=unresolved,
     )
 
 
@@ -278,22 +407,36 @@ def confirm_photo_meal(db: Session, user: User, payload: PhotoMealCreate) -> Pho
         index >= len(payload.foods) for index in selected_indices
     ):
         raise HTTPException(422, "Nutrition selections must reference distinct foods in this meal")
-    estimate = estimate_photo_nutrition(db, PhotoNutritionEstimateRequest(
-        foods=[payload.foods[item.food_index] for item in selections],
-        nutrition_selections=[item.model_copy(update={"food_index": index})
-                              for index, item in enumerate(selections)],
-    )) if selections else None
-    nutrition_status = ("complete" if len(selections) == len(payload.foods) else "partial") \
-        if estimate else "none"
-    unresolved_foods = [food.name for index, food in enumerate(payload.foods)
-                        if index not in selected_indices]
+    estimate = (
+        estimate_photo_nutrition(
+            db,
+            PhotoNutritionEstimateRequest(
+                foods=[payload.foods[item.food_index] for item in selections],
+                nutrition_selections=[
+                    item.model_copy(update={"food_index": index})
+                    for index, item in enumerate(selections)
+                ],
+            ),
+        )
+        if selections
+        else None
+    )
+    nutrition_status = (
+        ("complete" if len(selections) == len(payload.foods) else "partial") if estimate else "none"
+    )
+    unresolved_foods = [
+        food.name for index, food in enumerate(payload.foods) if index not in selected_indices
+    ]
     record = PhotoMealRecord(
-        user_id=user.id, foods=[food.model_dump() for food in payload.foods],
-        notes=payload.notes, model=payload.model,
+        user_id=user.id,
+        foods=[food.model_dump() for food in payload.foods],
+        notes=payload.notes,
+        model=payload.model,
         consumed_at=datetime.now(timezone.utc),
         nutrition_snapshot=estimate.nutrition.model_dump() if estimate else None,
         nutrition_items=[item.model_dump() for item in estimate.items] if estimate else None,
-        nutrition_status=nutrition_status, unresolved_foods=unresolved_foods,
+        nutrition_status=nutrition_status,
+        unresolved_foods=unresolved_foods,
     )
     db.add(record)
     db.flush()
@@ -304,25 +447,38 @@ def confirm_photo_meal(db: Session, user: User, payload: PhotoMealCreate) -> Pho
 
 
 def list_photo_meals(db: Session, user: User, limit: int, offset: int) -> list[PhotoMealRead]:
-    rows = db.scalars(select(PhotoMealRecord).where(PhotoMealRecord.user_id == user.id)
-                      .order_by(PhotoMealRecord.consumed_at.desc(), PhotoMealRecord.id.desc())
-                      .offset(offset).limit(limit)).all()
+    rows = db.scalars(
+        select(PhotoMealRecord)
+        .where(PhotoMealRecord.user_id == user.id)
+        .order_by(PhotoMealRecord.consumed_at.desc(), PhotoMealRecord.id.desc())
+        .offset(offset)
+        .limit(limit)
+    ).all()
     return [photo_meal_read(row) for row in rows]
 
 
 def photo_meal_stats(db: Session, user: User, day) -> tuple[int, dict[str, float]]:
     zone = ZoneInfo("Asia/Hong_Kong")
     start = datetime.combine(day, datetime.min.time(), tzinfo=zone).astimezone(timezone.utc)
-    end = (datetime.combine(day, datetime.min.time(), tzinfo=zone) + timedelta(days=1))\
-        .astimezone(timezone.utc)
-    rows = db.scalars(select(PhotoMealRecord).where(
-        PhotoMealRecord.user_id == user.id,
-        PhotoMealRecord.consumed_at >= start,
-        PhotoMealRecord.consumed_at < end,
-    )).all()
-    totals = {key: Decimal("0") for key in (
-        "calories_kcal", "protein_g", "carbs_g", "fat_g",
-    )}
+    end = (datetime.combine(day, datetime.min.time(), tzinfo=zone) + timedelta(days=1)).astimezone(
+        timezone.utc
+    )
+    rows = db.scalars(
+        select(PhotoMealRecord).where(
+            PhotoMealRecord.user_id == user.id,
+            PhotoMealRecord.consumed_at >= start,
+            PhotoMealRecord.consumed_at < end,
+        )
+    ).all()
+    totals = {
+        key: Decimal("0")
+        for key in (
+            "calories_kcal",
+            "protein_g",
+            "carbs_g",
+            "fat_g",
+        )
+    }
     for row in rows:
         if row.nutrition_status == "complete" and row.nutrition_snapshot:
             for key in totals:

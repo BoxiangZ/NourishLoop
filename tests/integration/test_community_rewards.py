@@ -27,7 +27,9 @@ def test_demo_seed_respects_foreign_keys_and_is_idempotent(tmp_path, monkeypatch
     with factory() as db:
         seed(db)
         seed(db)
-        assert db.scalar(select(func.count()).select_from(Venue)) == 2 + len(HKUST_VENUES) + len(LOHAS_VENUES)
+        assert db.scalar(select(func.count()).select_from(Venue)) == 2 + len(HKUST_VENUES) + len(
+            LOHAS_VENUES
+        )
         assert db.scalar(select(func.count()).select_from(MenuItem)) == 6
         assert db.scalar(select(func.count()).select_from(NutritionFact)) == 6
     engine.dispose()
@@ -37,9 +39,7 @@ def test_demo_seed_respects_foreign_keys_and_is_idempotent(tmp_path, monkeypatch
 def confirm_meal(client, item_id: str, headers=None) -> str:
     plan = client.post("/api/v1/decisions", json={"menu_item_id": item_id}, headers=headers)
     assert plan.status_code == 201
-    log = client.post(
-        "/api/v1/meal-logs", json={"decision_id": plan.json()["id"]}, headers=headers
-    )
+    log = client.post("/api/v1/meal-logs", json={"decision_id": plan.json()["id"]}, headers=headers)
     assert log.status_code == 201
     return log.json()["id"]
 
@@ -49,9 +49,7 @@ def test_food_search_filters_and_stable_pages(nl_client):
     second = nl_client.get("/api/v1/menu-items?limit=2&offset=2")
     assert first.status_code == second.status_code == 200
     assert len(first.json()) == len(second.json()) == 2
-    assert {row["id"] for row in first.json()}.isdisjoint(
-        {row["id"] for row in second.json()}
-    )
+    assert {row["id"] for row in first.json()}.isdisjoint({row["id"] for row in second.json()})
     vegan = nl_client.get("/api/v1/menu-items?tag=vegan").json()
     assert vegan and all("vegan" in row["tags"] for row in vegan)
     cheap = nl_client.get("/api/v1/menu-items?max_price_hkd=50").json()
@@ -77,9 +75,7 @@ def test_history_and_community_pages_keep_stable_boundaries(nl_client):
         assert first.status_code == second.status_code == 200
         assert len(first.json()) == 2
         assert len(second.json()) == 1
-        assert {row["id"] for row in first.json()}.isdisjoint(
-            {row["id"] for row in second.json()}
-        )
+        assert {row["id"] for row in first.json()}.isdisjoint({row["id"] for row in second.json()})
         assert nl_client.get(f"/api/v1{path}?offset=-1").status_code == 422
 
 
@@ -100,22 +96,36 @@ def test_habits_credits_redemption_and_share_reversal(nl_stack):
     confirm_meal(client, item_id)
     assert client.get("/api/v1/rewards/overview").json()["balance"] == 5
 
-    post = client.post("/api/v1/community/posts", json={
-        "meal_log_id": log.json()["id"], "caption": "Today's lunch",
-    })
+    post = client.post(
+        "/api/v1/community/posts",
+        json={
+            "meal_log_id": log.json()["id"],
+            "caption": "Today's lunch",
+        },
+    )
     assert post.status_code == 201
     post_id = post.json()["id"]
     assert client.get("/api/v1/community/me/shared-meal-log-ids").json() == [log.json()["id"]]
     assert client.get("/api/v1/rewards/overview").json()["balance"] == 8
-    assert client.post("/api/v1/community/posts", json={
-        "meal_log_id": log.json()["id"], "caption": "Duplicate",
-    }).status_code == 409
+    assert (
+        client.post(
+            "/api/v1/community/posts",
+            json={
+                "meal_log_id": log.json()["id"],
+                "caption": "Duplicate",
+            },
+        ).status_code
+        == 409
+    )
     assert client.put(f"/api/v1/community/posts/{post_id}/like").json()["like_count"] == 1
     assert client.put(f"/api/v1/community/posts/{post_id}/like").json()["like_count"] == 1
     assert client.delete(f"/api/v1/community/posts/{post_id}/like").json()["like_count"] == 0
-    comment = client.post(f"/api/v1/community/posts/{post_id}/comments", json={
-        "body": "Looks good",
-    })
+    comment = client.post(
+        f"/api/v1/community/posts/{post_id}/comments",
+        json={
+            "body": "Looks good",
+        },
+    )
     assert comment.status_code == 201
     assert len(client.get("/api/v1/community/posts").json()[0]["comments"]) == 1
     assert client.delete(f"/api/v1/community/comments/{comment.json()['id']}").status_code == 204
@@ -139,8 +149,10 @@ def test_habits_credits_redemption_and_share_reversal(nl_stack):
     assert client.get("/api/v1/community/me/shared-meal-log-ids").json() == [log.json()["id"]]
     overview = client.get("/api/v1/rewards/overview").json()
     assert overview["balance"] == 0
-    assert any(row["reason"] == "share_retracted" and row["amount"] == -3
-               for row in overview["transactions"])
+    assert any(
+        row["reason"] == "share_retracted" and row["amount"] == -3
+        for row in overview["transactions"]
+    )
     share_habit = next(h for h in overview["habits"] if h["id"] == "share_meal")
     assert share_habit["completed_today"] is False
     assert next(r for r in overview["rewards"] if r["id"] == "starter_badge")["redeemed"] is True
@@ -159,30 +171,50 @@ def test_reporting_and_moderation_require_role(nl_stack):
     assert client.get("/api/v1/me", headers=peer_headers).json()["is_moderator"] is False
     assert client.get("/api/v1/me", headers={"X-Demo-User-Id": "unknown"}).status_code == 403
     log_id = confirm_meal(client, item_id)
-    post = client.post("/api/v1/community/posts", json={
-        "meal_log_id": log_id, "caption": "Demo student's lunch",
-    })
+    post = client.post(
+        "/api/v1/community/posts",
+        json={
+            "meal_log_id": log_id,
+            "caption": "Demo student's lunch",
+        },
+    )
     assert post.status_code == 201
     post_id = post.json()["id"]
     assert client.get("/api/v1/community/reports/pending", headers=peer_headers).status_code == 403
 
     assert client.get("/api/v1/community/posts", headers=peer_headers).json()[0]["is_mine"] is False
-    report = client.post(f"/api/v1/community/posts/{post_id}/reports", json={
-        "reason": "misinformation", "detail": "Nutrition claim needs review",
-    }, headers=peer_headers)
+    report = client.post(
+        f"/api/v1/community/posts/{post_id}/reports",
+        json={
+            "reason": "misinformation",
+            "detail": "Nutrition claim needs review",
+        },
+        headers=peer_headers,
+    )
     assert report.status_code == 201
-    assert client.post(f"/api/v1/community/posts/{post_id}/reports", json={
-        "reason": "spam",
-    }, headers=peer_headers).status_code == 409
+    assert (
+        client.post(
+            f"/api/v1/community/posts/{post_id}/reports",
+            json={
+                "reason": "spam",
+            },
+            headers=peer_headers,
+        ).status_code
+        == 409
+    )
     pending = client.get("/api/v1/community/reports/pending").json()
     assert len(pending) == 1
-    resolved = client.post(f"/api/v1/community/reports/{report.json()['id']}/resolve", json={
-        "action": "remove",
-    })
+    resolved = client.post(
+        f"/api/v1/community/reports/{report.json()['id']}/resolve",
+        json={
+            "action": "remove",
+        },
+    )
     assert resolved.status_code == 200
     assert resolved.json()["status"] == "removed"
     assert client.get("/api/v1/community/posts").json() == []
     assert client.get("/api/v1/community/reports/pending").json() == []
     with session_factory() as db:
         from apps.api.modules.rewards.service import credit_balance
+
         assert credit_balance(db, "demo-student") == 5

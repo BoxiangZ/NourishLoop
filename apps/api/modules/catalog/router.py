@@ -8,9 +8,19 @@ from apps.api.core.config import get_settings
 from apps.api.core.auth import current_user
 from apps.api.modules.identity.models import User
 from apps.api.modules.catalog.nutrition import search_nutrition_foods
-from apps.api.modules.catalog.schemas import ExternalNoteRead, MenuItemRead, NutritionFoodRead, VenueRead, menu_item_read
+from apps.api.modules.catalog.schemas import (
+    ExternalNoteRead,
+    MenuItemRead,
+    NutritionFoodRead,
+    VenueRead,
+    menu_item_read,
+)
 from apps.api.modules.catalog.service import (
-    get_menu_item, get_venue, list_external_notes, list_menu_items, list_venues,
+    get_menu_item,
+    get_venue,
+    list_external_notes,
+    list_menu_items,
+    list_venues,
 )
 
 router = APIRouter(prefix="/api/v1", tags=["catalog"])
@@ -64,9 +74,8 @@ def menu_items(
     db: Session = Depends(get_db),
 ):
     return [
-        menu_item_read(item, nutrition) for item, nutrition in list_menu_items(
-            db, venue_id, limit, offset, q, tag, max_price_hkd
-        )
+        menu_item_read(item, nutrition)
+        for item, nutrition in list_menu_items(db, venue_id, limit, offset, q, tag, max_price_hkd)
     ]
 
 

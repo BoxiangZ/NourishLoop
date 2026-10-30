@@ -17,7 +17,9 @@ def upgrade() -> None:
     op.create_table(
         "photo_meal_records",
         sa.Column("id", sa.String(36), primary_key=True),
-        sa.Column("user_id", sa.String(36), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "user_id", sa.String(36), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("foods", sa.JSON(), nullable=False),
         sa.Column("notes", sa.String(500), nullable=False),
         sa.Column("model", sa.String(120), nullable=False),
