@@ -1,0 +1,62 @@
+{
+  "captured_at": "2026-10-29T13:47:55.911Z",
+  "source_commit": "6bfc9b8bf72b63a819646f8780d421d15fb3f329",
+  "database": {
+    "job_id": "ad6b70b1-fa77-43e6-a9e6-58f40dce50e5",
+    "status": "completed",
+    "run_id": "c2831e07-0dda-43e4-9d81-9adddb3f6fe0",
+    "attempts": 1,
+    "provider": "deterministic",
+    "recommendation_count": 3
+  },
+  "linked": {
+    "decision_id": "24ee92a0-e18f-48b2-9065-afcc57afa967",
+    "status": "confirmed",
+    "meal_log_id": "87072ec8-9b9c-4035-9faa-f2dbb3792dbe",
+    "nutrition_snapshot": {
+      "calories_kcal": 640,
+      "protein_g": 39,
+      "carbs_g": 58,
+      "fat_g": 25
+    },
+    "post_id": "6704c818-2486-40d7-87c5-861cc88cdb27",
+    "caption": "W07 demo: a confirmed meal, shared by choice."
+  },
+  "containers": [
+    {
+      "Service": "api",
+      "State": "running",
+      "Health": "healthy",
+      "Image": "w07-ppt-evidence-api",
+      "Ports": "127.0.0.1:18080->8000/tcp"
+    },
+    {
+      "Service": "db",
+      "State": "running",
+      "Health": "healthy",
+      "Image": "postgres:16-alpine",
+      "Ports": "127.0.0.1:15480->5432/tcp"
+    },
+    {
+      "Service": "web",
+      "State": "running",
+      "Health": "",
+      "Image": "w07-ppt-evidence-web",
+      "Ports": "127.0.0.1:13000->3000/tcp"
+    },
+    {
+      "Service": "worker",
+      "State": "running",
+      "Health": "",
+      "Image": "w07-ppt-evidence-worker",
+      "Ports": ""
+    }
+  ],
+  "worker": "worker-1  | 2026-10-29T13:33:16.233811675Z 2026-10-29 13:33:16,233 INFO __main__ recommendation_worker_started\nworker-1  | 2026-10-29T13:35:15.066760883Z 2026-10-29 13:35:15,066 INFO __main__ recommendation_worker_started\nworker-1  | 2026-10-29T13:35:15.082568008Z 2026-10-29 13:35:15,082 INFO __main__ recommendation_job_claimed\nworker-1  | 2026-10-29T13:35:15.089910717Z 2026-10-29 13:35:15,089 INFO __main__ recommendation_job_completed\nworker-1  | 2026-10-29T13:37:48.875194802Z 2026-10-29 13:37:48,875 INFO __main__ recommendation_worker_started",
+  "api": [
+    "api-1  | 2026-10-29T13:34:59.548785918Z INFO:     172.18.0.1:64556 - \"POST /api/v1/recommendations/jobs HTTP/1.1\" 202 Accepted",
+    "api-1  | 2026-10-29T13:35:45.610316175Z INFO:     172.18.0.1:59814 - \"POST /api/v1/decisions HTTP/1.1\" 201 Created",
+    "api-1  | 2026-10-29T13:35:58.202127209Z INFO:     172.18.0.1:60098 - \"POST /api/v1/meal-logs HTTP/1.1\" 201 Created",
+    "api-1  | 2026-10-29T13:36:19.399412760Z INFO:     172.18.0.1:64640 - \"POST /api/v1/community/posts HTTP/1.1\" 201 Created"
+  ]
+}

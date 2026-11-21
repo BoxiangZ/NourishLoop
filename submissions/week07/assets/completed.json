@@ -1,0 +1,206 @@
+{
+  "phase": "completed",
+  "captured_at": "2026-10-29T13:35:40.231Z",
+  "source_commit": "6bfc9b8bf72b63a819646f8780d421d15fb3f329",
+  "context": "Isolated Docker/PostgreSQL demo; deterministic ranking; no live model call",
+  "health": {
+    "status": "ok"
+  },
+  "database_jobs": [
+    {
+      "id": "ad6b70b1-fa77-43e6-a9e6-58f40dce50e5",
+      "status": "completed",
+      "attempts": 1,
+      "provider": "deterministic",
+      "run_id": "c2831e07-0dda-43e4-9d81-9adddb3f6fe0",
+      "claimed_at": "2026-10-29T13:35:15.08115+00:00",
+      "completed_at": "2026-10-29T13:35:15.089273+00:00",
+      "created_at": "2026-10-29T13:34:59.541008+00:00",
+      "error": null
+    }
+  ],
+  "job": {
+    "id": "ad6b70b1-fa77-43e6-a9e6-58f40dce50e5",
+    "status": "completed",
+    "attempts": 1,
+    "provider": "deterministic",
+    "error": null,
+    "created_at": "2026-10-29T13:34:59.541008Z",
+    "completed_at": "2026-10-29T13:35:15.089273Z",
+    "run": {
+      "id": "c2831e07-0dda-43e4-9d81-9adddb3f6fe0",
+      "scoring_version": "rules-v1",
+      "meal_slot": "lunch",
+      "recommendations": [
+        {
+          "id": "59b6439c-bdc9-446d-ac13-9918f014ecbe",
+          "rank": 1,
+          "score": 0.8942,
+          "explanation": "Estimated 640 kcal and 39 g protein per serving; compared with an approximate 633 kcal meal budget. Nutrition is an estimate, not a medical recommendation.",
+          "confidence": "low",
+          "confidence_reason": "Fictional demo catalog with illustrative nutrition estimates.",
+          "menu_item": {
+            "id": "72515513-07ca-5867-9f5a-9ca6307f04e1",
+            "venue_id": "8b39d944-f26a-5c57-bf58-1a6ef8a3e48d",
+            "name": "Salmon quinoa plate",
+            "description": "Salmon, quinoa and vegetables",
+            "category": "plate",
+            "tags": [
+              "high_protein"
+            ],
+            "allergen_tags": [
+              "fish"
+            ],
+            "price_hkd": 68,
+            "available": true,
+            "source_label": "NourishLoop fictional demo data",
+            "observed_at": null,
+            "nutrition": {
+              "calories_kcal": 640,
+              "protein_g": 39,
+              "carbs_g": 58,
+              "fat_g": 25,
+              "basis": "per_serving",
+              "provenance": "illustrative_estimate",
+              "uncertainty_note": "Illustrative estimate for a fictional meal; not verified nutrition data."
+            }
+          }
+        },
+        {
+          "id": "dff89ed0-2c1d-4c32-a1fe-10d91c744d95",
+          "rank": 2,
+          "score": 0.8797,
+          "explanation": "Estimated 610 kcal and 42 g protein per serving; compared with an approximate 633 kcal meal budget. Nutrition is an estimate, not a medical recommendation.",
+          "confidence": "low",
+          "confidence_reason": "Fictional demo catalog with illustrative nutrition estimates.",
+          "menu_item": {
+            "id": "88e0fe00-5aa0-5493-8e74-63d91bb267c5",
+            "venue_id": "29714ef4-591c-55e7-ac5d-8e822607b9c7",
+            "name": "Chicken grain bowl",
+            "description": "Chicken, grains and vegetables",
+            "category": "bowl",
+            "tags": [
+              "high_protein"
+            ],
+            "allergen_tags": [],
+            "price_hkd": 55,
+            "available": true,
+            "source_label": "NourishLoop fictional demo data",
+            "observed_at": null,
+            "nutrition": {
+              "calories_kcal": 610,
+              "protein_g": 42,
+              "carbs_g": 68,
+              "fat_g": 18,
+              "basis": "per_serving",
+              "provenance": "illustrative_estimate",
+              "uncertainty_note": "Illustrative estimate for a fictional meal; not verified nutrition data."
+            }
+          }
+        },
+        {
+          "id": "8ef6c54b-446c-4bda-8473-49ead57d0089",
+          "rank": 3,
+          "score": 0.8363,
+          "explanation": "Estimated 560 kcal and 25 g protein per serving; compared with an approximate 633 kcal meal budget. Nutrition is an estimate, not a medical recommendation.",
+          "confidence": "low",
+          "confidence_reason": "Fictional demo catalog with illustrative nutrition estimates.",
+          "menu_item": {
+            "id": "c51f5e8f-7b8c-5dc3-b260-694bfd12680e",
+            "venue_id": "29714ef4-591c-55e7-ac5d-8e822607b9c7",
+            "name": "Grilled tofu rice bowl",
+            "description": "Tofu, brown rice and greens",
+            "category": "bowl",
+            "tags": [
+              "vegan",
+              "high_protein"
+            ],
+            "allergen_tags": [
+              "soy"
+            ],
+            "price_hkd": 48,
+            "available": true,
+            "source_label": "NourishLoop fictional demo data",
+            "observed_at": null,
+            "nutrition": {
+              "calories_kcal": 560,
+              "protein_g": 25,
+              "carbs_g": 72,
+              "fat_g": 18,
+              "basis": "per_serving",
+              "provenance": "illustrative_estimate",
+              "uncertainty_note": "Illustrative estimate for a fictional meal; not verified nutrition data."
+            }
+          }
+        }
+      ]
+    }
+  },
+  "decisions": [],
+  "meal_logs": [],
+  "daily_summary": {
+    "date": "2026-10-29",
+    "timezone": "Asia/Hong_Kong",
+    "meal_count": 0,
+    "totals": {
+      "calories_kcal": 0,
+      "protein_g": 0,
+      "carbs_g": 0,
+      "fat_g": 0
+    }
+  },
+  "posts": [],
+  "rewards": {
+    "balance": 0,
+    "suggested_next_step": "Confirm a meal you actually ate to make progress today.",
+    "habits": [
+      {
+        "id": "complete_workout",
+        "title": "Complete a workout",
+        "description": "Log one completed training session.",
+        "points": 5,
+        "completed_today": false,
+        "streak_days": 0,
+        "completed_this_week": 0,
+        "weekly_target": 2
+      },
+      {
+        "id": "confirm_meal",
+        "title": "Log a confirmed meal",
+        "description": "Confirm a meal you actually ate.",
+        "points": 5,
+        "completed_today": false,
+        "streak_days": 0,
+        "completed_this_week": 0,
+        "weekly_target": 3
+      },
+      {
+        "id": "share_meal",
+        "title": "Share a meal",
+        "description": "Share one confirmed meal with Community.",
+        "points": 3,
+        "completed_today": false,
+        "streak_days": 0,
+        "completed_this_week": 0,
+        "weekly_target": 3
+      }
+    ],
+    "rewards": [
+      {
+        "id": "starter_badge",
+        "title": "Starter badge",
+        "description": "A demo profile badge with no cash value.",
+        "cost": 5,
+        "redeemed": false
+      },
+      {
+        "id": "streak_badge",
+        "title": "Streak badge",
+        "description": "A demo habit badge with no cash value.",
+        "cost": 24,
+        "redeemed": false
+      }
+    ],
+    "transactions": []
+  }
+}

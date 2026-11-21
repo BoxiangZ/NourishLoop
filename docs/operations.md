@@ -30,7 +30,7 @@ docker compose logs --tail=40 worker
 docker compose exec api python -c "import urllib.request; print(urllib.request.urlopen('http://localhost:8000/api/v1/health').read().decode())"
 ```
 
-Worker logs include `recommendation_job_claimed` and `recommendation_job_completed` with IDs. The API health route checks PostgreSQL. `docker compose ps` shows container health.
+Worker logs include `recommendation_job_claimed` and `recommendation_job_completed`. The default formatter omits their extra IDs; correlate via the persisted job response/SQL rather than claiming the IDs are present in log text. The API health route checks PostgreSQL. `docker compose ps` shows container health.
 
 ## Failure and recovery
 
@@ -51,3 +51,22 @@ The optional historical Week 4 AI service runs only with `docker compose --profi
 Demo identity is enabled only with `APP_ENV=development` and `DEMO_AUTH_ENABLED=true`; this stack must remain local. The six seeded menu meals and their nutrition are fictional illustrative data; photo-meal nutrition uses automatically matched or user-selected USDA records and estimated or entered grams. Community shares a confirmed menu meal and its nutrition snapshot publicly within the demo feed, so do not enter private health details or real users' data. API keys stay in `.env`, which is ignored by Git; the API and worker receive the OpenRouter key in Compose. The photo is sent to the configured external vision provider when the user selects **Recognize food**. The UI re-encodes it to JPEG to drop camera metadata, and NourishLoop does not persist its bytes. The free Nemotron endpoint may log submitted content, so use food-only photos without faces or private details.
 
 The seed grants moderator role to the local demo user only and also creates a non-moderator peer. The `X-Demo-User-Id` switch header accepts only these two seeded IDs in development; it is a demo impersonation mechanism, not real authentication. Reports are not automatically hidden; the moderator must review them. There is no real identity, rate limiting, audit-grade production moderation, or monetary reward. Keep the stack private. The USDA `DEMO_KEY` in `.env.example` is limited; set your own `USDA_API_KEY` for sustained use. After updating an existing database, run `docker compose up --build` so migrations through `20261028_0008` and the current seed are applied.
+
+## W07 captured validation and final checks
+
+The [milestone README](../submissions/week07/README.md) records the actual 29 October runtime evidence and the final 30 October validation reflected in the revised PPT. PostgreSQL startup, migration 0008, seed and the browser main path were exercised. API/worker restart retained records. Backend automated fixtures use SQLite.
+
+From the repository root:
+
+```bash
+docker compose exec -T api pytest -q tests/unit tests/integration
+docker compose exec -T api ruff check .
+docker compose exec -T api python -m scripts.generate_api_types
+git diff --exit-code -- packages/api-client/src/openapi.json packages/api-client/src/schema.ts
+docker compose exec -T web pnpm typecheck
+docker compose exec -T web pnpm lint
+docker compose exec -T web pnpm test
+docker compose exec -T web pnpm build
+```
+
+When running the isolated evidence override on port 13000, the existing CORS test still expects localhost:3000. Set `-e CORS_ORIGIN=http://localhost:3000` on the test process only. The actual web application retains its 13000 origin. Raw final checks are in [final-validation.txt](../submissions/week07/assets/final-validation.txt). No model key is needed for the deterministic main path.

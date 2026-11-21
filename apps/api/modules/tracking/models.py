@@ -44,7 +44,9 @@ class PhotoMealRecord(Base, IdMixin, TimestampMixin):
     foods: Mapped[list] = mapped_column(JSON, nullable=False)
     notes: Mapped[str] = mapped_column(String(500), nullable=False, default="")
     model: Mapped[str] = mapped_column(String(120), nullable=False)
-    consumed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    consumed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
     nutrition_snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     nutrition_items: Mapped[list | None] = mapped_column(JSON, nullable=True)
     nutrition_status: Mapped[str] = mapped_column(String(20), nullable=False, default="none")

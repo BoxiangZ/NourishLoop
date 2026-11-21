@@ -1,46 +1,71 @@
-# W07 Midterm Milestone Demo — NourishLoop
+# W07 Midterm Milestone — NourishLoop
 
-Team: **group14**
+Team: **group14**  
+Required checkpoint: **w07-midterm**  
+Primary artifact: **submissions/week07/README.md**
 
-Required tag: `w07-midterm`
+## Demonstration artifact and course requirements
 
-Primary artifact: this file
+[Download the current PowerPoint](NourishLoop_W07_Midterm_Demo.pptx). The 16-slide deck now reports the verified implementation and final validation status as of 30 October 2026. No separate video, narration or stage presentation is required under the [PPT clarification](https://canvas.ust.hk/courses/74201/discussion_topics/652340). See the [assignment](https://canvas.ust.hk/courses/74201/assignments/461342) and [four-document clarification](https://canvas.ust.hk/courses/74201/discussion_topics/652495).
 
-## Product direction and change since Week 4
+**Version note:** the PPT uses verified code baseline `df9af1d3a95bee32c106780edf5a646fddbbc69e`. The original browser/PostgreSQL evidence dates from 29 October at `6bfc9b8bf72b63a819646f8780d421d15fb3f329`; subsequent Python formatting preserves ASTs and application behavior. On 30 October, final local checks and [both PR #3 CI jobs](https://github.com/Wzyoung203/MAIE6000C-starter-wzy/pull/3/checks) passed. The revised cover and slides 13–16 reflect the repaired lint, completed documentation, current risks and required checkpoint. The prior “42 lint errors / tag pending” statements have been removed from current slide content. [Final validation](assets/final-validation.txt) supersedes the historical capture logs.
 
-The midterm product is a student meal decision loop: discover fictional campus meals, receive a ranked recommendation, plan a meal, confirm consumption, view daily totals, and optionally share the confirmed meal in Community. This is the team's current NourishLoop direction. The Week 4 diet-plan and meal-photo architecture in `docs/architecture.md` is preserved as a proposal, not a claim about implemented features. The active architecture is in `docs/architecture/overview.md`.
+The follow-up PPT/documentation commit changes no application code. The required `w07-midterm` tag includes the revised deck. Its exact tagged SHA belongs in Canvas and can be resolved with `git rev-parse 'w07-midterm^{commit}'` after fetching the published tag; the PPT identifies the verified code baseline separately so it does not need to embed the hash of the commit containing itself.
 
-Community is part of the core loop: only an owned, confirmed meal log can be shared, posting requires a caption and an explicit user action, and a post can be retracted without changing intake. Recommendations remain rule ranked. The optional OpenRouter model rewords the first explanation, with deterministic fallback; it cannot alter rankings, catalog choices, or nutrition.
+## Direction, scope and progress
 
-## Live vertical slice
+NourishLoop's midterm focus is a student meal decision loop: request a recommendation → worker result → plan → confirmed meal log → voluntary Community share. This replaces the broader Week 4 diet-plan proposal as the active product direction. Historical submission files are preserved.
 
-Start with `docker compose up --build -d`, wait for `docker compose ps` to show `api` healthy, then open `http://localhost:3000`. See `docs/operations.md` for full commands and recovery. The browser is the preferred demo because it shows all actions and persisted states in one sequence.
+The current code also contains habits, demo rewards, workout planning and photo-meal estimation. Those extensions are not prerequisites for the demonstrated main slice. The captured reward ledger verifies integration from confirmed actions; real vision calls, workout completion and badge redemption were not part of this rehearsal.
 
-| Stage | User action / system signal | Persisted evidence |
-|---|---|---|
-| Request enters | Select **Find my lunch**; `POST /api/v1/recommendations/jobs` returns 202 | `recommendation_jobs.status=pending` |
-| Async work | Worker claims job; browser polls `GET /jobs/{id}` | `claimed` and attempt count; worker log with job ID |
-| Result | Worker applies restrictions/rules and optional explanation adapter | `recommendation_runs`, `recommendation_items`, job `completed` + run ID |
-| Decision | Select **Plan this meal** | `user_decisions.status=planned`; daily total unchanged |
-| Confirmation | Select **I ate this meal** | `meal_logs` nutrition snapshot, decision `confirmed`, daily total changes |
-| Community | Select confirmed meal, write caption, select **Share meal** | `community_posts` row appears in feed; author can remove it |
-| Operational signal | Show `docker compose logs --tail=40 worker`, `/api/v1/health`, and job status | Claimed/completed logs and database health |
+## One coherent persisted path
 
-For a stable demo, use `EXPLANATION_PROVIDER=deterministic`. The live model path requires a local untracked `.env` with `EXPLANATION_PROVIDER=openrouter` and `OPENROUTER_API_KEY`; if unavailable, the same job and persisted run still complete with baseline explanations.
+| Requirement / stage | Actual observation | Evidence |
+| --- | --- | --- |
+| Input | Browser Find my lunch; POST /api/v1/recommendations/jobs returns 202 | [input screenshot](assets/ui-input.png), [request log](assets/operations.json), PPT 4 |
+| Persisted change | Job pending, attempts 0, run_id null | [pending API and SQL](assets/pending.json), PPT 5 |
+| Async worker | Separate process claims and completes; attempts 1 | [worker logs and SQL](assets/operations.json), [completed response](assets/completed.json), PPT 6 |
+| Saved output | Job links to a run with three persisted ranked items | [results](assets/completed.json), [UI](assets/ui-result.png), PPT 7 |
+| Cross-module integration | Plan leaves daily total 0; confirmation creates 1 meal log and 640 illustrative kcal | [planned](assets/planned.json), [confirmed](assets/confirmed.json), PPT 8 |
+| Explicit sharing | Confirmed menu meal and caption create one Community post | [post](assets/shared.json), [UI](assets/ui-community.png), PPT 9 |
+| Habit integration | Confirmation +5 and voluntary share +3 create 8 demo credits | [reward UI](assets/ui-rewards.png), [records](assets/shared.json), PPT 10 |
+| Operational signal | Health, container states, claimed/completed event logs | [operations](assets/operations.json), PPT 11 |
+| Restart durability | API/worker restart preserves the same job, run, meal log, post and credits | [restart capture](assets/restarted.json), PPT 11 |
 
-## Evidence checked on the development machine
+Job `ad6b70b1-fa77-43e6-a9e6-58f40dce50e5` links to run `c2831e07-0dda-43e4-9d81-9adddb3f6fe0`. The worker was briefly paused to capture a real pending row, then resumed; this delay is not a benchmark. UTC timestamps are retained. Default worker formatting prints event names but omits extra IDs; correlation here comes from SQL, not invented log text.
 
-- `python -m pytest -q`: **27 passed, 2 skipped**. Integration tests cover queued → worker → completed result → plan → confirmation → Community post/retraction, plus stale job reclaim and model failure fallback.
-- Frontend: TypeScript typecheck, ESLint, 2 dashboard interaction tests, and Next.js production build all passed. The UI test verifies that Community sharing occurs only after confirmation and explicit form submission.
-- `python -m scripts.generate_api_types` regenerated browser types from the FastAPI OpenAPI contract.
-- Alembic upgraded a temporary SQLite database from the starter revision to `20261027_0003 (head)`. A full Docker Compose rehearsal was **not run on this machine** because Docker Desktop and a running daemon were unavailable. PostgreSQL migration and container startup remain to be checked on a machine with Docker before the live review. Backend integration tests use SQLite; CI is configured with PostgreSQL and Alembic, but the new revision has not yet been observed passing CI.
+## Reproduction
 
-## Current limits and second-half plan
+From the repository root with Docker Desktop/Engine and Compose:
 
-This is a local development demo with one seeded identity. The menu and nutrition are fictional estimates; they are not verified restaurant or medical data. There is no public authentication, multiuser privacy validation, Community moderation, or real-user relevance evaluation. The browser does not resume a previous job after reload. A processing exception marks a job failed; stale claims can be reclaimed but explicit failed-job retry is not yet available.
+```bash
+docker compose up --build -d
+docker compose ps
+docker compose exec api alembic current
+curl http://localhost:8000/api/v1/health
+docker compose logs --tail=80 worker
+```
 
-Next: add real authentication and multiuser ownership tests; add Community reporting/moderation and privacy controls; curate a verified menu sample; measure recommendation compliance/relevance and worker latency/failures; add resumable polling and retry/idempotency. Habits, commercial features, and historical Week 4 photo analysis stay outside this midterm slice.
+Wait for API health, open http://localhost:3000, then follow [operations](../../docs/operations.md) steps 1–5. Use deterministic explanations without model keys. Planning and confirmation must be separate actions; sharing must be explicit. New runs have different UUIDs.
 
-## Repository checkpoint
+The evidence capture used isolated ports 13000/18080/15480. To reproduce that layout, add `-p w07-ppt-evidence -f compose.yaml -f submissions/week07/assets/compose.evidence.yaml` to each Compose command and open http://localhost:13000. The override requires Compose support for `!override`. Keep default worker/UI states running separate from actual configured API/DB health checks.
 
-The required tag `w07-midterm` should identify the exact commit demonstrated. The Canvas submission must contain the repository URL, tag, tagged SHA, this path, team name, and a demo readiness note. Do not treat a local tag as pushed until `git ls-remote --tags origin w07-midterm` confirms it.
+Use `docker compose restart api worker`, then query the existing job and History/Community to inspect persistence. `docker compose down` retains the data volume. Do not use `-v` unless intentionally resetting demo data.
+
+## Validation and evidence boundaries
+
+The 29 October Docker rehearsal passed PostgreSQL migrations through `20261028_0008`, seeded successfully and exercised the browser-to-database main loop. Backend unit/integration: **42 passed, 2 dependency deprecation warnings**. Frontend: **12 passed**, plus typecheck, ESLint and Next production build. Original outputs are in [checks.json](assets/checks.json) and associated logs.
+
+The original snapshot had 42 E501 lint findings. The final formatting repair preserves Python ASTs and is separately checked in [final-validation.txt](assets/final-validation.txt). Backend automated integration fixtures use SQLite; the separate browser rehearsal used PostgreSQL. No claim is made that all automated tests ran against PostgreSQL. Real OpenRouter, food recognition accuracy, load testing, production authentication and public moderation operations remain unverified. Remote CI results must be read from the final PR, independently of local checks.
+
+## Remaining work and second-half plan
+
+| Priority | Risk / remaining work | Acceptance target |
+| --- | --- | --- |
+| Reliability | Reload loses polling context; failed jobs lack explicit retry | Resume a saved job ID; test bounded retry/idempotency |
+| Safety before public use | Development identity, limited operational moderation | Real auth, ownership/privacy tests, rate limits, moderation procedure |
+| Data evaluation | Fictional menus and uncertain photo portions | Curated sourced menu sample and fixed evaluation set; record errors and latency |
+| Model validation | Real provider not exercised | Food-only consented examples, timeout/fallback checks and sourced nutrition review |
+| Operations | No production deployment or load evidence | Structured correlation logs, recovery rehearsal and capacity measurements |
+
+See [AI use disclosure](AI_USE.md). Four documents have distinct roles: the root README gives overview/setup, architecture explains components and decisions, operations explains running/recovery, and this file reports milestone evidence and remaining risks.

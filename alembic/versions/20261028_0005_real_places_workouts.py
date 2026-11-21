@@ -21,9 +21,15 @@ def timestamps():
 
 
 def upgrade() -> None:
-    op.add_column("venues", sa.Column(
-        "scope", sa.String(20), server_default="demo", nullable=False,
-    ))
+    op.add_column(
+        "venues",
+        sa.Column(
+            "scope",
+            sa.String(20),
+            server_default="demo",
+            nullable=False,
+        ),
+    )
     op.add_column("venues", sa.Column("source_url", sa.String(500), nullable=True))
     op.add_column("venues", sa.Column("source_checked_at", sa.Date(), nullable=True))
     op.create_table(
@@ -49,7 +55,12 @@ def upgrade() -> None:
     op.create_index("ix_exercises_muscle_group", "exercises", ["muscle_group"])
     op.create_table(
         "workout_profiles",
-        sa.Column("user_id", sa.String(36), sa.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+        sa.Column(
+            "user_id",
+            sa.String(36),
+            sa.ForeignKey("users.id", ondelete="CASCADE"),
+            primary_key=True,
+        ),
         sa.Column("stage", sa.String(20), nullable=False),
         sa.Column("equipment", sa.JSON(), nullable=False),
         sa.Column("days_per_week", sa.Integer(), nullable=False),
@@ -58,7 +69,9 @@ def upgrade() -> None:
     op.create_table(
         "workout_plans",
         sa.Column("id", sa.String(36), primary_key=True),
-        sa.Column("user_id", sa.String(36), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "user_id", sa.String(36), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("requested_focus", sa.String(30), nullable=False),
         sa.Column("focus", sa.String(30), nullable=False),
         sa.Column("stage", sa.String(20), nullable=False),
@@ -72,8 +85,15 @@ def upgrade() -> None:
     op.create_table(
         "workout_sessions",
         sa.Column("id", sa.String(36), primary_key=True),
-        sa.Column("user_id", sa.String(36), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("plan_id", sa.String(36), sa.ForeignKey("workout_plans.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "user_id", sa.String(36), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ),
+        sa.Column(
+            "plan_id",
+            sa.String(36),
+            sa.ForeignKey("workout_plans.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("duration_min", sa.Integer(), nullable=False),
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=False),
         sa.UniqueConstraint("plan_id"),

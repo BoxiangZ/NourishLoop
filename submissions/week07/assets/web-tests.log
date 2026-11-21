@@ -1,0 +1,16 @@
+
+> @nourishloop/web@0.1.0 test /app/apps/web
+> vitest run
+
+
+ RUN  v3.2.4 /app/apps/web
+
+ ✓ src/features/dashboard/PhotoAnalyzer.test.tsx (4 tests) 138ms
+ ✓ src/features/dashboard/Dashboard.test.tsx (8 tests) 656ms
+
+ Test Files  2 passed (2)
+      Tests  12 passed (12)
+   Start at  13:34:59
+   Duration  1.30s (transform 206ms, setup 0ms, collect 386ms, tests 794ms, environment 345ms, prepare 231ms)
+
+
