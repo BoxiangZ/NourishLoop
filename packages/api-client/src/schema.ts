@@ -1,5 +1,7 @@
 // Generated from FastAPI OpenAPI. Run: python -m scripts.generate_api_types
 
+export type AssistantAnswerRead = { "answer": string; };
+export type AssistantAskRequest = { "question": string; };
 export type Body_start_photo_review_api_v1_photo_meals_reviews_post = { "photo": string; "notes"?: string; };
 export type CommunityCommentCreate = { "body": string; };
 export type CommunityCommentRead = { "id": string; "post_id": string; "author_display_name": string; "is_mine": boolean; "body": string; "created_at": string; };
@@ -9,6 +11,7 @@ export type CommunityReportCreate = { "reason": "spam" | "harassment" | "misinfo
 export type CommunityReportRead = { "id": string; "post_id": string; "post_caption": string; "post_author": string; "reason": string; "detail": string | null; "status": "pending" | "dismissed" | "removed"; "created_at": string; };
 export type CommunityReportResolve = { "action": "dismiss" | "remove"; };
 export type CreditTransactionRead = { "id": string; "amount": number; "reason": string; "created_at": string; };
+export type DailyCoachReport = { "headline": string; "nutrition_insight": string; "activity_insight": string; "next_actions": Array<string>; "limitations": Array<string>; };
 export type DailySummary = { "date": string; "timezone"?: string; "meal_count": number; "totals": NutritionTotals; };
 export type DecisionCreate = { "menu_item_id": string; "recommendation_id"?: string | null; };
 export type DecisionRead = { "id": string; "status": "planned" | "confirmed"; "created_at": string; "menu_item": MenuItemRead; };

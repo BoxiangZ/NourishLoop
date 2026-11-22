@@ -5,6 +5,174 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/api/v1/assistant/ask": {
+      "post": {
+        "tags": [
+          "assistant"
+        ],
+        "summary": "Ask",
+        "operationId": "ask_api_v1_assistant_ask_post",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantAskRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantAnswerRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/assistant/daily-report": {
+      "post": {
+        "tags": [
+          "assistant"
+        ],
+        "summary": "Daily Report",
+        "operationId": "daily_report_api_v1_assistant_daily_report_post",
+        "parameters": [
+          {
+            "name": "X-Demo-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyCoachReport"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
     "/api/v1/me": {
       "get": {
         "tags": [
@@ -4493,11 +4661,41 @@
   },
   "components": {
     "schemas": {
+      "AssistantAnswerRead": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "maxLength": 600,
+            "minLength": 1,
+            "title": "Answer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answer"
+        ],
+        "title": "AssistantAnswerRead"
+      },
+      "AssistantAskRequest": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "AssistantAskRequest"
+      },
       "Body_start_photo_review_api_v1_photo_meals_reviews_post": {
         "properties": {
           "photo": {
             "type": "string",
-            "contentMediaType": "application/octet-stream",
+            "format": "binary",
             "title": "Photo"
           },
           "notes": {
@@ -4785,6 +4983,57 @@
           "created_at"
         ],
         "title": "CreditTransactionRead"
+      },
+      "DailyCoachReport": {
+        "properties": {
+          "headline": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Headline"
+          },
+          "nutrition_insight": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Nutrition Insight"
+          },
+          "activity_insight": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Activity Insight"
+          },
+          "next_actions": {
+            "items": {
+              "type": "string",
+              "maxLength": 240,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Next Actions"
+          },
+          "limitations": {
+            "items": {
+              "type": "string",
+              "maxLength": 240,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Limitations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "headline",
+          "nutrition_insight",
+          "activity_insight",
+          "next_actions",
+          "limitations"
+        ],
+        "title": "DailyCoachReport"
       },
       "DailySummary": {
         "properties": {

@@ -12,6 +12,7 @@ from apps.api.core.request_limits import MealPhotoBodyLimitMiddleware
 from apps.api.core.database import get_db
 from apps.api.core.import_models import catalog_models  # noqa: F401
 from apps.api.core.schemas import ErrorResponse
+from apps.api.modules.assistant.router import router as assistant_router
 from apps.api.modules.catalog.router import router as catalog_router
 from apps.api.modules.community.router import router as community_router
 from apps.api.modules.identity.router import router as identity_router
@@ -36,6 +37,7 @@ app.add_middleware(
     allow_headers=["Content-Type", "X-Demo-User-Id"],
 )
 app.add_middleware(MealPhotoBodyLimitMiddleware)
+app.include_router(assistant_router)
 app.include_router(identity_router)
 app.include_router(catalog_router)
 app.include_router(recommendations_router)
