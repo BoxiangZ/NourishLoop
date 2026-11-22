@@ -165,6 +165,55 @@ describe("NourishLoop app pages", () => {
     expect(await screen.findByText("A good option for right now")).toBeTruthy();
   });
 
+  it("refreshes Today when switching demo users", async () => {
+    apiMock.summary.mockImplementation(async () => ({
+      date: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" }),
+      timezone: "Asia/Hong_Kong",
+      meal_count: demoUserId === "demo-peer" ? 2 : 0,
+      totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+    }));
+    apiMock.workoutSessions.mockResolvedValue([]);
+
+    render(<Dashboard />);
+    expect(await screen.findByText("No meals are logged yet today.")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Demo account"), { target: { value: "demo-peer" } });
+    expect(await screen.findByText("Meals are logged; movement is still open.")).toBeTruthy();
+  });
+
+  it("loads summary and workout sessions once on Today", async () => {
+    render(<Dashboard />);
+    expect(await screen.findByText("No meals are logged yet today.")).toBeTruthy();
+    expect(apiMock.summary).toHaveBeenCalledTimes(1);
+    expect(apiMock.workoutSessions).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses the selected summary date for Progress workout counts", async () => {
+    const todayHK = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+    const anchor = new Date(`${todayHK}T12:00:00Z`);
+    const selected = new Date(anchor);
+    selected.setUTCDate(anchor.getUTCDate() + 1);
+    const selectedKey = selected.toISOString().slice(0, 10);
+
+    apiMock.summary.mockImplementation(async (date?: string) => ({
+      date: date ?? todayHK,
+      timezone: "Asia/Hong_Kong",
+      meal_count: 1,
+      totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+    }));
+    apiMock.workoutSessions.mockResolvedValue([
+      { id: "old", plan_id: "plan-1", focus: "back", stage: "beginner", duration_min: 30,
+        exercise_names: ["Seated row"], completed_at: `${selectedKey}T02:00:00Z` },
+      { id: "now", plan_id: "plan-1", focus: "back", stage: "beginner", duration_min: 60,
+        exercise_names: ["Seated row"], completed_at: new Date().toISOString() },
+    ]);
+
+    render(<Dashboard />);
+    fireEvent.click(mainNav().getByRole("button", { name: "Progress" }));
+    expect(await screen.findByText("1 confirmed meal and 1 completed workout today.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: `Show summary for ${selectedKey}` }));
+    expect(await screen.findByText("1 confirmed meal and 1 completed workout for this day.")).toBeTruthy();
+  });
+
   it("shows the daily coach report only after navigating to Progress", async () => {
     render(<Dashboard />);
 

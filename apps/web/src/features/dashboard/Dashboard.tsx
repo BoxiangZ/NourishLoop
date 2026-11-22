@@ -19,6 +19,7 @@ import ProfileView from "./ProfileView";
 import RewardsSection from "./RewardsSection";
 import TodaySection from "./TodaySection";
 import WorkoutSection from "./WorkoutSection";
+import { hongKongDate } from "./hongKongDate";
 
 const MENU_SIZE = 4;
 const LIST_SIZE = 5;
@@ -39,10 +40,6 @@ function routeFromUrl(): { screen: Screen; foodMode: FoodMode } {
     case "profile": return { screen: "profile", foodMode: "explore" };
     default: return { screen: "today", foodMode: "explore" };
   }
-}
-
-function hongKongDate(value: string | Date): string {
-  return new Date(value).toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
 }
 
 function weekDays(date: string): string[] {
@@ -121,12 +118,11 @@ export default function Dashboard() {
   const refresh = useCallback(async () => {
     const tag = filter === "vegan" || filter === "high_protein" ? filter : undefined;
     const maxPriceHkd = filter === "under_50" ? 50 : undefined;
-    const [person, places, items, plans, totals, sessions, logs, pagedLogs, feed, progress, sharedIds, photoRecords] = await Promise.all([
+    const [person, places, items, plans, logs, pagedLogs, feed, progress, sharedIds, photoRecords] = await Promise.all([
       api.me(), api.venues(), api.menuItems({
         limit: MENU_SIZE + 1, offset: menuPage * MENU_SIZE, q: search, tag, maxPriceHkd,
       }),
-      api.decisions(LIST_SIZE + 1, historyPage * LIST_SIZE), api.summary(selectedDate ?? undefined),
-      api.workoutSessions(100, 0),
+      api.decisions(LIST_SIZE + 1, historyPage * LIST_SIZE),
       api.mealLogs(100), api.mealLogs(LIST_SIZE + 1, logPage * LIST_SIZE),
       api.communityPosts(COMMUNITY_SIZE + 1, communityPage * COMMUNITY_SIZE),
       api.rewardOverview(LIST_SIZE + 1, ledgerPage * LIST_SIZE), api.sharedMealLogIds(),
@@ -135,7 +131,7 @@ export default function Dashboard() {
     setMe(person); setVenues(places);
     setMenu(items.slice(0, MENU_SIZE)); setMenuHasNext(items.length > MENU_SIZE);
     setDecisions(plans.slice(0, LIST_SIZE)); setHistoryHasNext(plans.length > LIST_SIZE);
-    setSummary(totals); setWorkoutSessions(sessions); setMealLogs(logs);
+    setMealLogs(logs);
     setHistoryLogs(pagedLogs.slice(0, LIST_SIZE)); setLogHasNext(pagedLogs.length > LIST_SIZE);
     setPosts(feed.slice(0, COMMUNITY_SIZE)); setCommunityHasNext(feed.length > COMMUNITY_SIZE);
     setRewards({ ...progress, transactions: progress.transactions.slice(0, LIST_SIZE) });
@@ -143,9 +139,21 @@ export default function Dashboard() {
     setSharedMealLogIds(sharedIds);
     setPhotoMeals(photoRecords.slice(0, LIST_SIZE)); setPhotoHasNext(photoRecords.length > LIST_SIZE);
     setReports(person.is_moderator ? await api.pendingReports() : []);
-  }, [communityPage, filter, historyPage, ledgerPage, logPage, menuPage, photoPage, search, selectedDate]);
+  }, [communityPage, filter, historyPage, ledgerPage, logPage, menuPage, photoPage, search]);
 
   useEffect(() => { refresh().catch((cause: Error) => setError(cause.message)); }, [refresh]);
+
+  const loadDaily = useCallback(async () => {
+    if (screen !== "today" && screen !== "history") return;
+    const [nextSummary, nextSessions] = await Promise.all([
+      api.summary(selectedDate ?? undefined),
+      api.workoutSessions(100, 0),
+    ]);
+    setSummary(nextSummary);
+    setWorkoutSessions(nextSessions);
+  }, [screen, selectedDate]);
+
+  useEffect(() => { loadDaily().catch((cause: Error) => setError(cause.message)); }, [loadDaily]);
 
   useEffect(() => {
     if (screen !== "history" || historyMode !== "photos" ||
@@ -156,7 +164,7 @@ export default function Dashboard() {
 
   async function act(action: () => Promise<unknown>): Promise<boolean> {
     setBusy(true); setError(null);
-    try { await action(); await refresh(); return true; }
+    try { await action(); await refresh(); await loadDaily(); return true; }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Something went wrong"); return false; }
     finally { setBusy(false); }
   }
@@ -202,14 +210,18 @@ export default function Dashboard() {
   }
 
   const venueName = (id: string) => venues.find(venue => venue.id === id)?.name ?? "Campus kitchen";
-  const today = hongKongDate(new Date());
-  const todayWorkoutCount = workoutSessions.filter(session => hongKongDate(session.completed_at) === today).length;
+  const summaryDate = summary?.date ?? hongKongDate(new Date());
+  const summaryWorkoutSessions = workoutSessions.filter(session => hongKongDate(session.completed_at) === summaryDate);
+  const todayWorkoutMinutes = summaryWorkoutSessions.reduce((total, session) => total + session.duration_min, 0);
+  const summaryWorkoutCount = summaryWorkoutSessions.length;
+  const progressPeriod = selectedDate ? "for this day" : "today";
 
   return <AppShell screen={screen} me={me} busy={busy} rewardBalance={rewards?.balance ?? 0}
     onNavigate={navigate} onSwitchUser={switchDemoUser}>
     {error && <div role="alert" className="nl-alert">{error}</div>}
 
-    {screen === "today" && <TodaySection onNavigate={navigate} onAction={navigate} />}
+    {screen === "today" && <TodaySection mealCount={summary?.meal_count ?? 0}
+      workoutMinutes={todayWorkoutMinutes} onNavigate={navigate} onAction={navigate} />}
 
     {screen === "food" && <>
       <div className="nl-discover-tabs" role="tablist" aria-label="Food mode">
@@ -299,7 +311,7 @@ export default function Dashboard() {
           <button key={day} data-active={day === summary.date} onClick={() => setSelectedDate(day)}
             aria-label={`Show summary for ${day}`}><small>{new Date(`${day}T12:00:00Z`).toLocaleDateString("en", { weekday: "short", timeZone: "UTC" })}</small>
             <strong>{Number(day.slice(-2))}</strong></button>)}</div>}
-        <p className="nl-summary-sentence">{summary?.meal_count ?? 0} confirmed meal{(summary?.meal_count ?? 0) === 1 ? "" : "s"} and {todayWorkoutCount} completed workout{todayWorkoutCount === 1 ? "" : "s"} today.</p>
+        <p className="nl-summary-sentence">{summary?.meal_count ?? 0} confirmed meal{(summary?.meal_count ?? 0) === 1 ? "" : "s"} and {summaryWorkoutCount} completed workout{summaryWorkoutCount === 1 ? "" : "s"} {progressPeriod}.</p>
         <p className="nl-summary-foot">Totals include recorded menu estimates and photo meals with confirmed USDA matches and grams. Unestimated meals add no nutrition values.</p>
       </section>
       <DailyCoachReport key={me?.id} />
