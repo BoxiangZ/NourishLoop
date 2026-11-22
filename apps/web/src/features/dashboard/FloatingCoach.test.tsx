@@ -142,7 +142,7 @@ describe("FloatingCoach", () => {
   });
 
   it("wraps Tab forward from the last dialog control without reaching background content", () => {
-    render(<AppShell screen="discover" me={null} busy={false}
+    render(<AppShell screen="today" me={null} busy={false} rewardBalance={0}
       onNavigate={() => {}} onSwitchUser={() => {}}>
       <button type="button">Background action</button>
     </AppShell>);
@@ -157,7 +157,7 @@ describe("FloatingCoach", () => {
   });
 
   it("wraps Shift+Tab backward from the first dialog control", () => {
-    render(<AppShell screen="discover" me={null} busy={false}
+    render(<AppShell screen="today" me={null} busy={false} rewardBalance={0}
       onNavigate={() => {}} onSwitchUser={() => {}}>
       <button type="button">Background action</button>
     </AppShell>);
@@ -314,7 +314,7 @@ describe("FloatingCoach", () => {
 });
 
 it("mounts FloatingCoach once globally through AppShell", () => {
-  render(<AppShell screen="discover" me={null} busy={false}
+  render(<AppShell screen="today" me={null} busy={false} rewardBalance={0}
     onNavigate={() => {}} onSwitchUser={() => {}}><div>Workspace</div></AppShell>);
 
   expect(screen.getAllByRole("button", { name: "Open daily coach" })).toHaveLength(1);

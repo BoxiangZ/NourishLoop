@@ -4,16 +4,14 @@ import type { ReactNode } from "react";
 import type { MeRead } from "@nourishloop/api-client/schema";
 import FloatingCoach from "./FloatingCoach";
 
-export type Screen = "discover" | "workouts" | "for-you" | "history" | "community" | "rewards" | "profile";
+export type Screen = "today" | "food" | "workouts" | "history" | "community" | "rewards" | "profile";
 
-const items: { id: Screen; label: string; icon: string }[] = [
-  { id: "discover", label: "Discover", icon: "search" },
-  { id: "workouts", label: "Workouts", icon: "workouts" },
-  { id: "for-you", label: "For you", icon: "spark" },
-  { id: "history", label: "History", icon: "history" },
+const primaryItems: { id: Screen; label: string; icon: string }[] = [
+  { id: "today", label: "Today", icon: "spark" },
+  { id: "food", label: "Food", icon: "search" },
+  { id: "workouts", label: "Move", icon: "workouts" },
+  { id: "history", label: "Progress", icon: "history" },
   { id: "community", label: "Community", icon: "community" },
-  { id: "rewards", label: "Rewards", icon: "rewards" },
-  { id: "profile", label: "Profile", icon: "profile" },
 ];
 
 function Icon({ name }: { name: string }) {
@@ -34,14 +32,15 @@ type Props = {
   screen: Screen;
   me: MeRead | null;
   busy: boolean;
+  rewardBalance: number;
   onNavigate: (screen: Screen) => void;
   onSwitchUser: (id: string) => void;
   children: ReactNode;
 };
 
-export default function AppShell({ screen, me, busy, onNavigate, onSwitchUser, children }: Props) {
+export default function AppShell({ screen, me, busy, rewardBalance, onNavigate, onSwitchUser, children }: Props) {
   const initials = me?.profile.display_name.trim().slice(0, 1).toUpperCase() || "N";
-  const navButton = (item: typeof items[number], compact = false) =>
+  const navButton = (item: typeof primaryItems[number], compact = false) =>
     <button key={item.id} type="button" onClick={() => onNavigate(item.id)}
       className={compact ? "nl-bottom-item" : "nl-nav-item"}
       data-active={screen === item.id} aria-current={screen === item.id ? "page" : undefined}
@@ -51,19 +50,17 @@ export default function AppShell({ screen, me, busy, onNavigate, onSwitchUser, c
 
   return <div className="nl-app">
     <aside className="nl-sidebar">
-      <button className="nl-brand" onClick={() => onNavigate("discover")}>Nourish<span>Loop</span><i /></button>
+      <button className="nl-brand" onClick={() => onNavigate("today")}>Nourish<span>Loop</span><i /></button>
       <p className="nl-side-label">YOUR SPACE</p>
-      <nav aria-label="Main navigation" className="nl-side-nav">{items.map(item => navButton(item))}</nav>
-      <div className="nl-side-note"><span className="nl-side-note-icon">✦</span>
-        <strong>Small choices add up.</strong>
-        <p>Explore, decide, then keep a record of what you actually chose.</p>
-      </div>
-      <p className="nl-side-foot">NourishLoop · Campus food companion</p>
+      <nav aria-label="Main navigation" className="nl-side-nav">{primaryItems.map(item => navButton(item))}</nav>
     </aside>
     <div className="nl-workspace">
       <header className="nl-topbar">
-        <button className="nl-mobile-brand" onClick={() => onNavigate("discover")}>Nourish<span>Loop</span></button>
+        <button className="nl-mobile-brand" onClick={() => onNavigate("today")}>Nourish<span>Loop</span></button>
         <div className="nl-topbar-spacer" />
+        <button className="nl-reward-store" onClick={() => onNavigate("rewards")} aria-label="Open rewards store">
+          {rewardBalance.toLocaleString()} pts · Store
+        </button>
         {me && ["demo-student", "demo-peer"].includes(me.id) &&
           <label className="nl-demo-switch">Demo account
             <select aria-label="Demo account" value={me.id} disabled={busy}
@@ -78,7 +75,7 @@ export default function AppShell({ screen, me, busy, onNavigate, onSwitchUser, c
     </div>
     <FloatingCoach />
     <nav className="nl-bottom-nav" aria-label="Mobile navigation">
-      {items.filter(item => item.id !== "profile" && item.id !== "workouts").map(item => navButton(item, true))}
+      {primaryItems.map(item => navButton(item, true))}
     </nav>
   </div>;
 }

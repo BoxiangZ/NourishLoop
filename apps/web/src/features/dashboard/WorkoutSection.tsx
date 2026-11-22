@@ -93,7 +93,9 @@ export default function WorkoutSection({ onCompleted }: { onCompleted: () => Pro
       <h1>Find your next session<span className="nl-orange-dot">.</span></h1>
       <p>Explore individual movements, then build a plan around your current stage and available equipment.</p></div>
     <div className="nl-workout-layout">
-      <section className="nl-profile-card nl-workout-context"><span className="nl-eyebrow">YOUR TRAINING CONTEXT</span>
+      <details className="nl-profile-card nl-workout-context nl-progressive">
+        <summary>Training context</summary>
+        <span className="nl-eyebrow">YOUR TRAINING CONTEXT</span>
         <h2>Start where you are</h2><p>Choose the stage you can train comfortably at. The plan changes with your context and recent sessions.</p>
         {profile && <>
           <label className="nl-field-label">Current stage
@@ -116,7 +118,7 @@ export default function WorkoutSection({ onCompleted }: { onCompleted: () => Pro
           <button className="nl-button nl-button-soft" disabled={busy || !profile.equipment.length}
             onClick={() => void saveProfile()}>Save training context</button>
         </>}
-      </section>
+      </details>
       <section className="nl-workout-suggestion"><span className="nl-eyebrow">FOR YOU / TODAY</span>
         <h2>Make a session that fits</h2>
         <div className="nl-filter-row" aria-label="Workout focus">{FOCI.map(item =>
@@ -146,20 +148,26 @@ export default function WorkoutSection({ onCompleted }: { onCompleted: () => Pro
       <button className="nl-button nl-button-primary" disabled={busy || completedPlanId === plan.id}
         onClick={() => void completeWorkout()}>{completedPlanId === plan.id ? "Session recorded" : "I completed this session"}</button>
     </section>}
-    <div className="nl-section-heading"><div><span className="nl-eyebrow">EXERCISE LIBRARY</span>
-      <h2>{focus[0].toUpperCase() + focus.slice(1)} movements</h2></div></div>
-    <div className="nl-exercise-grid">{exercises.map(item => <article className="nl-exercise-card" key={item.id}>
-      <span className="nl-eyebrow">{item.difficulty} · {item.equipment}</span><h3>{item.name}</h3>
-      <p>{item.instructions}</p><a href={item.source_url} target="_blank" rel="noreferrer">How to do it · ACE ↗</a>
-    </article>)}</div>
-    {!exercises.length && <div className="nl-empty">No movements in this category yet.</div>}
-    <Pager page={page} hasNext={hasNext} onChange={setPage} label="exercises" />
-    <div className="nl-section-heading"><div><span className="nl-eyebrow">YOUR RECORD</span><h2>Completed workouts</h2></div></div>
-    {sessions.length ? <div className="nl-history-list">{sessions.map(session => <article className="nl-history-row" key={session.id}>
-      <span className="nl-history-icon">↗</span><div><strong>{session.focus} · {session.stage}</strong>
-        <small>{session.exercise_names.join(" · ")}</small></div><span className="nl-history-kcal">{session.duration_min} min</span>
-    </article>)}</div> : <div className="nl-empty">Completed sessions will appear here after you confirm one.</div>}
-    <Pager page={historyPage} hasNext={historyHasNext} onChange={setHistoryPage} label="workout history" />
+    <details className="nl-progressive">
+      <summary>Exercise library</summary>
+      <div className="nl-section-heading"><div><span className="nl-eyebrow">EXERCISE LIBRARY</span>
+        <h2>{focus[0].toUpperCase() + focus.slice(1)} movements</h2></div></div>
+      <div className="nl-exercise-grid">{exercises.map(item => <article className="nl-exercise-card" key={item.id}>
+        <span className="nl-eyebrow">{item.difficulty} · {item.equipment}</span><h3>{item.name}</h3>
+        <p>{item.instructions}</p><a href={item.source_url} target="_blank" rel="noreferrer">How to do it · ACE ↗</a>
+      </article>)}</div>
+      {!exercises.length && <div className="nl-empty">No movements in this category yet.</div>}
+      <Pager page={page} hasNext={hasNext} onChange={setPage} label="exercises" />
+    </details>
+    <details className="nl-progressive">
+      <summary>Completed workouts</summary>
+      <div className="nl-section-heading"><div><span className="nl-eyebrow">YOUR RECORD</span><h2>Completed workouts</h2></div></div>
+      {sessions.length ? <div className="nl-history-list">{sessions.map(session => <article className="nl-history-row" key={session.id}>
+        <span className="nl-history-icon">↗</span><div><strong>{session.focus} · {session.stage}</strong>
+          <small>{session.exercise_names.join(" · ")}</small></div><span className="nl-history-kcal">{session.duration_min} min</span>
+      </article>)}</div> : <div className="nl-empty">Completed sessions will appear here after you confirm one.</div>}
+      <Pager page={historyPage} hasNext={historyHasNext} onChange={setHistoryPage} label="workout history" />
+    </details>
     <p className="nl-reward-note">For general fitness only. If you have pain, injury or a medical restriction, adapt the plan with a qualified professional.</p>
   </>;
 }

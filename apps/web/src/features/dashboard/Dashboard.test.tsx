@@ -41,6 +41,14 @@ function mainNav() {
   return within(screen.getByRole("navigation", { name: "Main navigation" }));
 }
 
+function foodMode() {
+  return within(screen.getByRole("tablist", { name: "Food mode" }));
+}
+
+function openBrowseDetails() {
+  fireEvent.click(screen.getByText("Browse all meals and places"));
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   window.history.replaceState({}, "", "/");
@@ -142,13 +150,28 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("NourishLoop app pages", () => {
-  it("shows the daily coach report only after navigating to History", async () => {
+  it("defaults to the Today focus and remaps legacy food URLs", async () => {
+    render(<Dashboard />);
+    expect(await screen.findByText("No meals are logged yet today.")).toBeTruthy();
+
+    cleanup();
+    window.history.replaceState({}, "", "/?page=discover");
+    render(<Dashboard />);
+    expect(await screen.findByText("Find your lunch")).toBeTruthy();
+
+    cleanup();
+    window.history.replaceState({}, "", "/?page=for-you");
+    render(<Dashboard />);
+    expect(await screen.findByText("A good option for right now")).toBeTruthy();
+  });
+
+  it("shows the daily coach report only after navigating to Progress", async () => {
     render(<Dashboard />);
 
     expect(screen.queryByRole("button", { name: "Generate daily coach report" })).toBeNull();
-    fireEvent.click(mainNav().getByRole("button", { name: "History" }));
+    fireEvent.click(mainNav().getByRole("button", { name: "Progress" }));
     expect(await screen.findByRole("button", { name: "Generate daily coach report" })).toBeTruthy();
-    fireEvent.click(mainNav().getByRole("button", { name: "Discover" }));
+    fireEvent.click(mainNav().getByRole("button", { name: "Food" }));
     expect(screen.queryByRole("button", { name: "Generate daily coach report" })).toBeNull();
   });
 
@@ -164,7 +187,7 @@ describe("NourishLoop app pages", () => {
       },
     }]);
     render(<Dashboard />);
-    fireEvent.click(mainNav().getByRole("button", { name: "History" }));
+    fireEvent.click(mainNav().getByRole("button", { name: "Progress" }));
     fireEvent.click(await screen.findByRole("tab", { name: "Photo meals" }));
     expect(await screen.findByText("AI ≈ 470 kcal")).toBeTruthy();
     expect(screen.getByText(/Protein 18 g · Carbs 60 g · Fat 16 g/)).toBeTruthy();
@@ -181,7 +204,7 @@ describe("NourishLoop app pages", () => {
         portion_basis: "visual_estimate" }],
     }]);
     render(<Dashboard />);
-    fireEvent.click(mainNav().getByRole("button", { name: "History" }));
+    fireEvent.click(mainNav().getByRole("button", { name: "Progress" }));
     fireEvent.click(await screen.findByRole("tab", { name: "Photo meals" }));
     expect(await screen.findByText("Partial · 98 kcal")).toBeTruthy();
     expect(screen.getByText(/Not counted: Sauce/)).toBeTruthy();
@@ -195,6 +218,8 @@ describe("NourishLoop app pages", () => {
           ...meal, id: `meal-${index + 1}`, name: index ? `Meal ${index + 1}` : meal.name,
         })));
     render(<Dashboard />);
+    fireEvent.click(mainNav().getByRole("button", { name: "Food" }));
+    openBrowseDetails();
     expect(await screen.findByText("Chickpea salad")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Next food page" }));
     await waitFor(() => expect(apiMock.menuItems).toHaveBeenCalledWith(expect.objectContaining({ offset: 4 })));
@@ -208,6 +233,8 @@ describe("NourishLoop app pages", () => {
 
   it("separates planning, confirmation and reward redemption", async () => {
     render(<Dashboard />);
+    fireEvent.click(mainNav().getByRole("button", { name: "Food" }));
+    openBrowseDetails();
     expect(await screen.findByText("Chickpea salad")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Plan this meal/ }));
     expect(await screen.findByRole("button", { name: "I ate this meal" })).toBeTruthy();
@@ -216,7 +243,7 @@ describe("NourishLoop app pages", () => {
     await waitFor(() => expect(apiMock.logMeal).toHaveBeenCalledWith({
       decision_id: "decision-1", servings: 1,
     }));
-    fireEvent.click(mainNav().getByRole("button", { name: "Rewards" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open rewards store" }));
     expect(await screen.findByText("5")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Redeem 5 credits" }));
     await waitFor(() => expect(apiMock.redeemReward).toHaveBeenCalledWith("starter_badge"));
@@ -225,8 +252,9 @@ describe("NourishLoop app pages", () => {
 
   it("shows an asynchronous suggestion and shares a confirmed meal", async () => {
     render(<Dashboard />);
-    expect(await screen.findByText("Chickpea salad")).toBeTruthy();
-    fireEvent.click(mainNav().getByRole("button", { name: "For you" }));
+    fireEvent.click(mainNav().getByRole("button", { name: "Food" }));
+    fireEvent.click(foodMode().getByRole("tab", { name: "For you" }));
+    await waitFor(() => expect((screen.getByRole("button", { name: "Find my lunch" }) as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(screen.getByRole("button", { name: "Find my lunch" }));
     expect(await screen.findByText("Fits your approximate meal budget.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Plan this meal/ }));
@@ -252,7 +280,6 @@ describe("NourishLoop app pages", () => {
       created_at: "2026-10-24T12:45:00Z", meal: { menu_item: meal,
         nutrition: meal.nutrition }, like_count: 0, liked_by_me: false, comments: [] }];
     render(<Dashboard />);
-    expect(await screen.findByText("Chickpea salad")).toBeTruthy();
     fireEvent.click(mainNav().getByRole("button", { name: "Community" }));
     expect(await screen.findByText("Loved this lunch")).toBeTruthy();
     expect(await screen.findByText("A linked campus discussion")).toBeTruthy();
@@ -276,8 +303,8 @@ describe("NourishLoop app pages", () => {
         })),
     }));
     render(<Dashboard />);
-    expect(await screen.findByText("Chickpea salad")).toBeTruthy();
-    fireEvent.click(mainNav().getByRole("button", { name: "Rewards" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open rewards store" }));
+    await waitFor(() => expect((screen.getByRole("button", { name: "Next credit history page" }) as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(screen.getByRole("button", { name: "Next credit history page" }));
     await waitFor(() => expect(apiMock.rewardOverview).toHaveBeenCalledWith(6, 5));
     expect(await screen.findByText("Shared a meal")).toBeTruthy();
@@ -292,6 +319,7 @@ describe("NourishLoop app pages", () => {
       title: "Student discussion", summary: "A linked public opinion.", source_platform: "Reddit",
       source_url: "https://www.reddit.com/r/HKUST/comments/example/", source_checked_at: "2026-10-28" }]);
     render(<Dashboard />);
+    fireEvent.click(mainNav().getByRole("button", { name: "Food" }));
     const tabs = within(screen.getByRole("tablist", { name: "Discover category" }));
     fireEvent.click(tabs.getByRole("tab", { name: "Real places" }));
     expect(await screen.findByText("Can.teen II")).toBeTruthy();
@@ -303,8 +331,9 @@ describe("NourishLoop app pages", () => {
 
   it("builds and records a stage-aware workout from the exercise library", async () => {
     render(<Dashboard />);
-    const tabs = within(screen.getByRole("tablist", { name: "Discover category" }));
-    fireEvent.click(tabs.getByRole("tab", { name: "Workouts" }));
+    fireEvent.click(mainNav().getByRole("button", { name: "Move" }));
+    fireEvent.click(screen.getByText("Training context"));
+    fireEvent.click(screen.getByText("Exercise library"));
     expect(await screen.findByText("Seated row")).toBeTruthy();
     fireEvent.change(screen.getByLabelText("Workout stage"), { target: { value: "intermediate" } });
     fireEvent.click(screen.getByRole("button", { name: "Save training context" }));
