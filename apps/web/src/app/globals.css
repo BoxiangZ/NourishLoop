@@ -256,6 +256,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .nl-reward-store{border:1px solid #d4e3d7;background:#fff;color:var(--green);border-radius:999px;padding:9px 13px;font-size:12px;font-weight:800;white-space:nowrap}
 .nl-today-focus .nl-today-card{background:white;border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 6px 20px #1e513509;margin-top:8px}
 .nl-today-headline{font-size:clamp(20px,3vw,28px);line-height:1.25;letter-spacing:-.8px;margin:0 0 18px;font-weight:850;max-width:720px}
+.nl-today-loading{font-size:18px;line-height:1.45;margin:0;color:#6f8476}
 .nl-today-actions{display:flex;flex-wrap:wrap;gap:10px}
 .nl-today-note{font-size:11px;color:#86988a;line-height:1.5;margin:18px 0 0}
 .nl-progressive{margin:18px 0;border:1px solid var(--line);border-radius:15px;background:white}

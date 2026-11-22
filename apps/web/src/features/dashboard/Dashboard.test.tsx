@@ -320,13 +320,161 @@ describe("NourishLoop app pages", () => {
     expect(await screen.findByText("2 confirmed meals and 0 completed workouts for this day.")).toBeTruthy();
 
     fireEvent.click(mainNav().getByRole("button", { name: "Today" }));
-    expect(screen.getByText("No meals are logged yet today.")).toBeTruthy();
+    expect(screen.getByText("Checking today’s food and movement…")).toBeTruthy();
+    expect(screen.queryByText("No meals are logged yet today.")).toBeNull();
     expect(screen.queryByText("Meals are logged; movement is still open.")).toBeNull();
 
     await act(async () => {
       resolveCurrent?.(currentSummary);
       await Promise.resolve();
     });
+    expect(await screen.findByText("No meals are logged yet today.")).toBeTruthy();
+  });
+
+  it("clears a selected Progress summary when popstate returns to Today", async () => {
+    const todayHK = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+    let selectedKey = "";
+    let resolveToday: ((value: DailySummary) => void) | undefined;
+    const todaySummary: DailySummary = { date: todayHK, timezone: "Asia/Hong_Kong", meal_count: 0,
+      totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 } };
+
+    apiMock.summary.mockImplementation((date?: string) => {
+      if (date) {
+        selectedKey = date;
+        return Promise.resolve({ date, timezone: "Asia/Hong_Kong", meal_count: 1,
+          totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 } });
+      }
+      if (selectedKey) return new Promise(resolve => { resolveToday = resolve; });
+      return Promise.resolve(todaySummary);
+    });
+    apiMock.workoutSessions.mockImplementation(async () => selectedKey ? [{
+      id: "past", plan_id: "plan-1", focus: "back", stage: "beginner", duration_min: 60,
+      exercise_names: ["Seated row"], completed_at: `${selectedKey}T02:00:00Z`,
+    }] : []);
+
+    render(<Dashboard />);
+    expect(await screen.findByText("No meals are logged yet today.")).toBeTruthy();
+    fireEvent.click(mainNav().getByRole("button", { name: "Progress" }));
+    expect(await screen.findByText("0 confirmed meals and 0 completed workouts today.")).toBeTruthy();
+
+    const selectedButton = pickNonCurrentSummaryButton();
+    fireEvent.click(selectedButton);
+    expect(await screen.findByText("1 confirmed meal and 1 completed workout for this day.")).toBeTruthy();
+
+    await act(async () => {
+      window.history.pushState({}, "", "/");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(screen.getByText("Checking today’s food and movement…")).toBeTruthy();
+    expect(screen.queryByText("1 confirmed meal and 1 completed workout for this day.")).toBeNull();
+
+    await act(async () => {
+      resolveToday?.(todaySummary);
+      await Promise.resolve();
+    });
+    expect(await screen.findByText("No meals are logged yet today.")).toBeTruthy();
+  });
+
+  it("ignores an in-flight Progress action that finishes after switching to Today", async () => {
+    const todayHK = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+    let selectedKey = "";
+    let resolveLog: ((value: unknown) => void) | undefined;
+    let resolveToday: ((value: DailySummary) => void) | undefined;
+    const todaySummary: DailySummary = { date: todayHK, timezone: "Asia/Hong_Kong", meal_count: 0,
+      totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 } };
+
+    plans = [{ id: "decision-1", status: "planned", created_at: "2026-10-24T12:00:00Z", menu_item: meal }];
+    apiMock.summary.mockImplementation((date?: string) => {
+      if (date) {
+        selectedKey = date;
+        return Promise.resolve({ date, timezone: "Asia/Hong_Kong", meal_count: 2,
+          totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 } });
+      }
+      if (selectedKey) return new Promise(resolve => { resolveToday = resolve; });
+      return Promise.resolve(todaySummary);
+    });
+    apiMock.workoutSessions.mockResolvedValue([]);
+    apiMock.logMeal.mockReturnValue(new Promise(resolve => { resolveLog = resolve; }));
+
+    render(<Dashboard />);
+    expect(await screen.findByText("No meals are logged yet today.")).toBeTruthy();
+    fireEvent.click(mainNav().getByRole("button", { name: "Progress" }));
+    expect(await screen.findByRole("button", { name: "I ate this meal" })).toBeTruthy();
+    expect(await screen.findByText("0 confirmed meals and 0 completed workouts today.")).toBeTruthy();
+
+    const selectedButton = pickNonCurrentSummaryButton();
+    fireEvent.click(selectedButton);
+    expect(await screen.findByText("2 confirmed meals and 0 completed workouts for this day.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "I ate this meal" }));
+
+    fireEvent.click(mainNav().getByRole("button", { name: "Today" }));
+    expect(screen.getByText("Checking today’s food and movement…")).toBeTruthy();
+
+    await act(async () => {
+      resolveLog?.({ id: "log-1", decision_id: "decision-1", servings: 1,
+        consumed_at: "2026-10-24T12:30:00Z", nutrition: todaySummary.totals, menu_item: meal });
+      await Promise.resolve();
+    });
+    expect(screen.getByText("Checking today’s food and movement…")).toBeTruthy();
+    expect(screen.queryByText("Meals are logged; movement is still open.")).toBeNull();
+
+    await act(async () => {
+      resolveToday?.(todaySummary);
+      await Promise.resolve();
+    });
+    expect(await screen.findByText("No meals are logged yet today.")).toBeTruthy();
+  });
+
+  it("keeps only the latest Today response when an older Today response resolves later", async () => {
+    const todayHK = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+    let resolveFirst: ((value: DailySummary) => void) | undefined;
+    let summaryCalls = 0;
+    const firstSummary: DailySummary = { date: todayHK, timezone: "Asia/Hong_Kong", meal_count: 0,
+      totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 } };
+    const secondSummary: DailySummary = { date: todayHK, timezone: "Asia/Hong_Kong", meal_count: 2,
+      totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 } };
+
+    apiMock.summary.mockImplementation(async () => {
+      summaryCalls += 1;
+      if (summaryCalls === 1) return new Promise(resolve => { resolveFirst = resolve; });
+      return secondSummary;
+    });
+    apiMock.workoutSessions.mockResolvedValue([]);
+
+    render(<Dashboard />);
+    expect(await screen.findByLabelText("Demo account")).toBeTruthy();
+    await waitFor(() => expect(apiMock.summary).toHaveBeenCalledTimes(1));
+
+    fireEvent.change(screen.getByLabelText("Demo account"), { target: { value: "demo-peer" } });
+    expect(await screen.findByText("Meals are logged; movement is still open.")).toBeTruthy();
+    await waitFor(() => expect(apiMock.summary).toHaveBeenCalledTimes(2));
+
+    await act(async () => {
+      resolveFirst?.(firstSummary);
+      await Promise.resolve();
+    });
+    expect(screen.getByText("Meals are logged; movement is still open.")).toBeTruthy();
+    expect(screen.queryByText("No meals are logged yet today.")).toBeNull();
+  });
+
+  it("shows a loading state instead of a zero meal claim before current-day data arrives", async () => {
+    const todayHK = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+    let resolveToday: ((value: DailySummary) => void) | undefined;
+    const todaySummary: DailySummary = { date: todayHK, timezone: "Asia/Hong_Kong", meal_count: 0,
+      totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 } };
+
+    apiMock.summary.mockReturnValue(new Promise(resolve => { resolveToday = resolve; }));
+    apiMock.workoutSessions.mockResolvedValue([]);
+
+    render(<Dashboard />);
+    expect(screen.getByText("Checking today’s food and movement…")).toBeTruthy();
+    expect(screen.queryByText("No meals are logged yet today.")).toBeNull();
+
+    await act(async () => {
+      resolveToday?.(todaySummary);
+      await Promise.resolve();
+    });
+    expect(await screen.findByText("No meals are logged yet today.")).toBeTruthy();
   });
 
   it("shows the daily coach report only after navigating to Progress", async () => {

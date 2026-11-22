@@ -88,37 +88,48 @@ export default function Dashboard() {
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [workoutSessions, setWorkoutSessions] = useState<WorkoutSessionRead[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [todayLoading, setTodayLoading] = useState(true);
   const [jobStatus, setJobStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const activeScreenRef = useRef<Screen>("today");
   const dailyRequestId = useRef(0);
 
-  const navigate = useCallback((next: Screen) => {
+  const applyScreen = useCallback((next: Screen) => {
+    activeScreenRef.current = next;
+    dailyRequestId.current += 1;
     setScreen(next);
-    const url = new URL(window.location.href);
-    if (next === "food") setFoodMode("explore");
     if (next === "today") {
       setSummary(null);
       setWorkoutSessions([]);
-      url.searchParams.delete("page");
+      setTodayLoading(true);
+    } else {
+      setTodayLoading(false);
     }
+  }, []);
+
+  const navigate = useCallback((next: Screen) => {
+    applyScreen(next);
+    const url = new URL(window.location.href);
+    if (next === "food") setFoodMode("explore");
+    if (next === "today") url.searchParams.delete("page");
     else if (next === "food") url.searchParams.set("page", "discover");
     else url.searchParams.set("page", next);
     window.history.pushState({ page: next }, "", url);
     window.scrollTo({ top: 0, behavior: "instant" });
-  }, []);
+  }, [applyScreen]);
 
   useEffect(() => {
     const applyRoute = () => {
       const route = routeFromUrl();
-      setScreen(route.screen);
+      applyScreen(route.screen);
       setFoodMode(route.foodMode);
     };
     applyRoute();
     const onPop = applyRoute;
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
-  }, []);
+  }, [applyScreen]);
 
   const refresh = useCallback(async () => {
     const tag = filter === "vegan" || filter === "high_protein" ? filter : undefined;
@@ -149,19 +160,23 @@ export default function Dashboard() {
   useEffect(() => { refresh().catch((cause: Error) => setError(cause.message)); }, [refresh]);
 
   const loadDaily = useCallback(async () => {
+    if (activeScreenRef.current !== screen) return;
     if (screen !== "today" && screen !== "history") return;
     const requestId = ++dailyRequestId.current;
+    if (screen === "today") setTodayLoading(true);
     try {
       const [nextSummary, nextSessions] = await Promise.all([
         api.summary(screen === "today" ? undefined : selectedDate ?? undefined),
         api.workoutSessions(100, 0),
       ]);
-      if (requestId !== dailyRequestId.current) return;
+      if (requestId !== dailyRequestId.current || activeScreenRef.current !== screen) return;
       setSummary(nextSummary);
       setWorkoutSessions(nextSessions);
+      if (screen === "today") setTodayLoading(false);
     } catch (cause) {
-      if (requestId !== dailyRequestId.current) return;
+      if (requestId !== dailyRequestId.current || activeScreenRef.current !== screen) return;
       setError(cause instanceof Error ? cause.message : "Something went wrong");
+      if (screen === "today") setTodayLoading(false);
     }
   }, [screen, selectedDate]);
 
@@ -233,7 +248,8 @@ export default function Dashboard() {
     {error && <div role="alert" className="nl-alert">{error}</div>}
 
     {screen === "today" && <TodaySection mealCount={summary?.meal_count ?? 0}
-      workoutMinutes={todayWorkoutMinutes} onNavigate={navigate} onAction={navigate} />}
+      workoutMinutes={todayWorkoutMinutes} loading={todayLoading} hasSummary={summary !== null}
+      onNavigate={navigate} onAction={navigate} />}
 
     {screen === "food" && <>
       <div className="nl-discover-tabs" role="tablist" aria-label="Food mode">

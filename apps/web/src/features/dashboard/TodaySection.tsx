@@ -6,11 +6,15 @@ import { todayFocus } from "./todayFocus";
 type Props = {
   mealCount: number;
   workoutMinutes: number;
+  loading: boolean;
+  hasSummary: boolean;
   onNavigate: (screen: Screen) => void;
   onAction: (screen: Screen) => void;
 };
 
-export default function TodaySection({ mealCount, workoutMinutes, onNavigate, onAction }: Props) {
+export default function TodaySection({
+  mealCount, workoutMinutes, loading, hasSummary, onNavigate, onAction,
+}: Props) {
   const focus = todayFocus({ mealCount, workoutMinutes });
   const actionLabel = focus.action === "workouts" ? "Log a workout" : focus.action === "history"
     ? "Review today" : "Find a meal";
@@ -20,13 +24,17 @@ export default function TodaySection({ mealCount, workoutMinutes, onNavigate, on
       <h1>Your day, at a glance<span className="nl-orange-dot">.</span></h1>
       <p>One factual check-in for food and movement. No calorie or nutrition claims today.</p></div>
     <div className="nl-today-card">
-      <p className="nl-today-headline">{focus.headline}</p>
-      <div className="nl-today-actions">
-        <button className="nl-button nl-button-primary" onClick={() => onAction(focus.action)}>{actionLabel}</button>
-        <button className="nl-button nl-button-soft" onClick={() => onNavigate("food")}>Food</button>
-        <button className="nl-button nl-button-soft" onClick={() => onNavigate("workouts")}>Move</button>
-      </div>
-      <p className="nl-today-note">Demo data is illustrative and nutrition labels remain estimates.</p>
+      {loading ? <p className="nl-today-loading" role="status">Checking today’s food and movement…</p>
+        : !hasSummary ? <p className="nl-today-loading" role="status">Today’s check-in is unavailable right now.</p>
+        : <>
+          <p className="nl-today-headline">{focus.headline}</p>
+          <div className="nl-today-actions">
+            <button className="nl-button nl-button-primary" onClick={() => onAction(focus.action)}>{actionLabel}</button>
+            <button className="nl-button nl-button-soft" onClick={() => onNavigate("food")}>Food</button>
+            <button className="nl-button nl-button-soft" onClick={() => onNavigate("workouts")}>Move</button>
+          </div>
+          <p className="nl-today-note">Demo data is illustrative and nutrition labels remain estimates.</p>
+        </>}
     </div>
   </section>;
 }
