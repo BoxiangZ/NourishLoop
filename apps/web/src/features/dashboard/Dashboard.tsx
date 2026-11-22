@@ -9,6 +9,7 @@ import type {
 } from "@nourishloop/api-client/schema";
 import AppShell, { type Screen } from "./AppShell";
 import CommunitySection from "./CommunitySection";
+import DailyCoachReport from "./DailyCoachReport";
 import FoodCard from "./FoodCard";
 import Pager from "./Pager";
 import PlacesSection from "./PlacesSection";
@@ -258,6 +259,7 @@ export default function Dashboard() {
           <div><strong>{summary?.totals.protein_g ?? 0}g</strong><span>estimated protein</span></div></div>
         <p className="nl-summary-foot">Totals include recorded menu estimates and photo meals with confirmed USDA matches and grams. Unestimated meals add no nutrition values.</p>
       </section>
+      <DailyCoachReport key={me?.id} />
       <div className="nl-section-heading"><div><span className="nl-eyebrow">YOUR RECORD</span><h2>Saved choices</h2></div></div>
       <div className="nl-segmented" role="tablist" aria-label="History type">
         <button role="tab" aria-selected={historyMode === "decisions"} onClick={() => setHistoryMode("decisions")}>Decisions</button>

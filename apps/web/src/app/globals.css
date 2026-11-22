@@ -117,6 +117,24 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .nl-summary-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-top:1px solid var(--line);padding-top:18px}
 .nl-summary-stats div{display:grid;gap:3px}.nl-summary-stats strong{font-size:24px}.nl-summary-stats span{font-size:11px;color:#819486}
 .nl-summary-foot{font-size:10px;color:#86988a;line-height:1.5;margin:13px 0 0}
+.nl-daily-report{border:1px solid #d8e5d8;border-radius:20px;background:linear-gradient(145deg,#f6faf3,#eaf3e9);padding:24px;margin:18px 0 28px;box-shadow:0 6px 20px #1e513508}
+.nl-daily-report-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.nl-daily-report-heading h2{font-size:22px;line-height:1.25;letter-spacing:-.6px;margin:7px 0 0}
+.nl-daily-report-heading .nl-button{flex:0 0 auto;white-space:nowrap}
+.nl-daily-report-intro{color:#617b69;font-size:12px;line-height:1.55;margin:10px 0 0;max-width:590px}
+.nl-daily-report-status{display:flex;align-items:center;gap:13px;margin-top:18px}
+.nl-daily-report-status p{color:#68816f;font-size:12px;margin:0}
+.nl-daily-report .nl-alert{margin:18px 0 0}
+.nl-daily-report-insights{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:20px}
+.nl-daily-report-insights article{background:#ffffffb8;border:1px solid #d8e5d8;border-radius:14px;padding:16px}
+.nl-daily-report-insights article>span{display:block;color:#75917d;font-size:10px;font-weight:850;letter-spacing:1.3px;text-transform:uppercase}
+.nl-daily-report-insights p{color:#385a47;font-size:13px;line-height:1.55;margin:7px 0 0}
+.nl-daily-report-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:20px}
+.nl-daily-report-sections h3{color:var(--deep);font-size:13px;margin:0 0 9px}
+.nl-daily-report-sections ul{display:grid;gap:7px;list-style:none;margin:0;padding:0}
+.nl-daily-report-sections li{position:relative;color:#526d5d;font-size:12px;line-height:1.5;padding-left:16px}
+.nl-daily-report-sections li:before{content:"✦";position:absolute;left:0;top:0;color:#c17a45;font-size:10px}
+.nl-daily-report-note{color:#879a8b;font-size:10px;line-height:1.5;margin:18px 0 0}
 .nl-segmented{display:flex;background:#eaf0e9;border-radius:11px;padding:4px;margin-bottom:12px}
 .nl-segmented button{border:0;flex:1;background:transparent;color:#798b7e;border-radius:8px;padding:10px;font-size:12px;font-weight:800}
 .nl-segmented button[aria-selected=true]{background:white;color:var(--green);box-shadow:0 2px 6px #17392f12}
@@ -200,6 +218,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   .nl-page-intro h1{font-size:37px;letter-spacing:-1.8px}.nl-page-intro p{font-size:14px}
   .nl-food-grid{grid-template-columns:1fr}.nl-food-card-featured{grid-column:span 1;display:block}.nl-food-card-featured .nl-meal-art{min-height:180px}
   .nl-recommend-action{align-items:start;flex-direction:column}.nl-summary-card{padding:17px}
+  .nl-daily-report{padding:19px}.nl-daily-report-heading{align-items:start;flex-direction:column;gap:14px}
+  .nl-daily-report-insights,.nl-daily-report-sections{grid-template-columns:1fr}
   .nl-bottom-nav{height:68px;position:fixed;z-index:30;bottom:0;left:0;right:0;background:#ffffffed;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding-bottom:env(safe-area-inset-bottom)}
   .nl-bottom-item{min-width:0;flex:1;border:0;background:none;color:#91a597;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:9px;font-weight:750}
   .nl-bottom-item[data-active=true]{color:var(--green)}.nl-bottom-item svg{width:20px;height:20px}

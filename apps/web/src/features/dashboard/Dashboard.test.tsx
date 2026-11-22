@@ -15,7 +15,7 @@ const apiMock = vi.hoisted(() => ({
   rewardOverview: vi.fn(), redeemReward: vi.fn(), sharedMealLogIds: vi.fn(),
   externalNotes: vi.fn(), exercises: vi.fn(), workoutProfile: vi.fn(),
   updateWorkoutProfile: vi.fn(), recommendWorkout: vi.fn(), completeWorkout: vi.fn(),
-  workoutSessions: vi.fn(),
+  workoutSessions: vi.fn(), dailyCoachReport: vi.fn(),
 }));
 vi.mock("@nourishloop/api-client", () => ({ api: apiMock }));
 
@@ -78,6 +78,13 @@ beforeEach(() => {
   apiMock.summary.mockImplementation(async () => summary);
   apiMock.mealLogs.mockImplementation(async () => logs);
   apiMock.photoMeals.mockResolvedValue([]);
+  apiMock.dailyCoachReport.mockResolvedValue({
+    headline: "A steady day.",
+    nutrition_insight: "Two meals are recorded.",
+    activity_insight: "One workout is completed.",
+    next_actions: ["Choose a balanced dinner."],
+    limitations: ["Nutrition values are estimates."],
+  });
   apiMock.communityPosts.mockImplementation(async () => posts.map(post => ({
     ...post, is_mine: post.author_id ? post.author_id === demoUserId : post.is_mine,
   })));
@@ -135,6 +142,16 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("NourishLoop app pages", () => {
+  it("shows the daily coach report only after navigating to History", async () => {
+    render(<Dashboard />);
+
+    expect(screen.queryByRole("button", { name: "Generate daily coach report" })).toBeNull();
+    fireEvent.click(mainNav().getByRole("button", { name: "History" }));
+    expect(await screen.findByRole("button", { name: "Generate daily coach report" })).toBeTruthy();
+    fireEvent.click(mainNav().getByRole("button", { name: "Discover" }));
+    expect(screen.queryByRole("button", { name: "Generate daily coach report" })).toBeNull();
+  });
+
   it("shows saved AI calories and macros in photo History when USDA has no match", async () => {
     apiMock.photoMeals.mockResolvedValue([{ id: "photo-ai",
       foods: [{ name: "Rice and tofu" }], notes: "", model: "vision-model",
