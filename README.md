@@ -8,8 +8,8 @@ This repository adapts the MAIE 6000C starter. The active app is the modular Fas
 
 | Directory | Purpose |
 |---|---|
-| `apps/api` | Versioned FastAPI API, sourced place directory, workouts, worker, Community, habits and demo rewards |
-| `apps/web` | Mobile-first Next.js interface with Discover, Workouts, For you, History, Community, Rewards and Profile screens |
+| `apps/api` | Versioned FastAPI API, DeepSeek assistant, sourced place directory, workouts, worker, Community, habits and demo rewards |
+| `apps/web` | Mobile-first Next.js interface with Today, Food, Move, Progress and Community destinations, plus Rewards and Profile utilities |
 | `packages/api-client` | OpenAPI snapshot, generated TypeScript schema types, fetch client |
 | `alembic` | Historical starter migration plus NourishLoop product migrations |
 | `scripts` | API type generation and idempotent fictional demo seed |
@@ -54,6 +54,27 @@ pnpm dev
 
 Set `NEXT_PUBLIC_API_URL=http://localhost:8000` if using a different API origin. For ports and other settings, see [.env.example](.env.example). The demo identity is only accepted when `APP_ENV=development` and `DEMO_AUTH_ENABLED=true`; production auth is not implemented, so private routes return 503 outside demo mode.
 
+## Floating DeepSeek coach
+
+The floating coach and the report in **Progress** need a non-empty server-side `DEEPSEEK_API_KEY`; without it, both assistant endpoints return 503. The settings are independent of OpenRouter:
+
+| Setting | Default | Purpose |
+|---|---|---|
+| `DEEPSEEK_API_KEY` | unset | Required API credential; keep it in the untracked local `.env` |
+| `DEEPSEEK_BASE_URL` | `https://api.deepseek.com` | Chat Completions base URL |
+| `DEEPSEEK_MODEL` | `deepseek-chat` | Model used for both short answers and reports |
+| `DEEPSEEK_TIMEOUT_SECONDS` | `25` | Per-action upstream timeout |
+
+When running the API directly from the repository root, the settings above can be placed in `.env` before starting `uvicorn`. The checked-in `compose.yaml` currently forwards OpenRouter and USDA settings but not `DEEPSEEK_*`, so the Compose API returns 503 for coach actions even if the host shell exports a key.
+
+The bottom-right **Coach** ring opens a textured blurred overlay containing one current question and at most one answer. It sends no prior question, answer, or conversation history. Closing it, asking another question, or refreshing the page clears the visible exchange. Optional browser speech recognition fills the text field when the browser exposes `SpeechRecognition` or `webkitSpeechRecognition`; the text input and send button remain available when speech is unsupported, denied, stopped, or fails.
+
+Each **Send question** or **Generate daily coach report** action makes at most one DeepSeek request. There is no automatic backend or frontend retry; a failed action can be retried explicitly by the user. Answers and reports are validated, rendered as text rather than HTML, and never persisted in PostgreSQL, browser storage, or cookies. Refreshing, navigating away, or remounting removes the report. No migration or assistant history table exists.
+
+**Progress** owns full report generation and display. The assistant receives only the current question plus a read-only Hong Kong-local context allowlist: goal and calorie target; dietary preferences and allergies; recorded daily nutrition totals and meal count; confirmed menu meals (name, servings, consumed time, nutrition snapshot); saved photo-review rows (food names, notes, review/nutrition status, optional nutrition snapshot, unresolved foods); completed workouts (focus, stage, duration, exercise names, completion time); and workout profile (stage, equipment, days per week). A saved pending, processing, or failed photo row is sent with its status but is not counted as a consumed meal or in daily nutrition; only `not_requested` and `completed` rows contribute those totals. The assistant receives no image bytes or image paths, raw photo-review attempt log, user/display identity, secrets, Community content, recommendation/deepseek job history, merchant payments, or prior chat.
+
+Both endpoints require the existing development-only demo identity. They return 503 when the key is missing or demo authentication is unavailable, 504 on a DeepSeek timeout, and 502 when the upstream provider or returned content is unusable. DeepSeek does not rank meals, select workouts, create stored nutrition, award rewards, or alter Community behavior. OpenRouter explanation and photo-recognition paths are unchanged.
+
 ## Optional Week 4 AI service
 
 Put the course keys in a local `.env` file as `HKG_API_KEY` and `GEMINI_API_KEY`; `.env` is ignored by Git. Model and address settings are in [.env.example](.env.example). Start the separate AI service with `docker compose --profile week4-ai up --build ai`, then open `http://localhost:8100/docs`. `POST /diet-plans/draft` writes review-required guidance around a **caller-supplied** target, `POST /meals/interpret-notes` extracts candidates from text, and `POST /meals/recognize` accepts a small base64 image plus optional notes and returns a review-required image draft. None of these endpoints stores a plan or meal or calculates nutrition. The optional historical worker handles starter case triage; the Week 4 plan/meal persistence workflow is not connected yet. See [adapter details](docs/architecture/week04-hkgai-adapter.md).
@@ -71,6 +92,8 @@ pnpm build
 make smoke  # after the stack is running
 ```
 
+If `pnpm` is unavailable, run `./node_modules/.bin/tsc --noEmit`, `./node_modules/.bin/eslint .`, `./node_modules/.bin/vitest run`, and `./node_modules/.bin/next build` from `apps/web`.
+
 Run type generation after changing a Pydantic request or response schema and commit both `packages/api-client/src/openapi.json` and `schema.ts`. The API contract is the source of truth. The generated schema is imported by the browser client in `packages/api-client/src/client.ts`.
 
 ## Troubleshooting
@@ -82,8 +105,12 @@ Run type generation after changing a Pydantic request or response schema and com
 
 ## Current scope
 
-The current UI and API implement paginated food and real-place discovery, one-click photo recognition with an immediate USDA nutrition estimate or a clearly labelled AI visual fallback, asynchronous meal recommendations, plan/confirmation tracking, stage-aware workout plans and session logs, paginated History and Community, posts/comments/likes/report review, daily and weekly habits, an auditable demo credit ledger, badge redemption, and editable demo profile/goals. Public Reddit discussions appear only as attributed paraphrases with source links. OpenRouter can optionally reword grounded meal explanations and workout coaching notes; exercise selection, sets and meal ranking remain rule based. Instant photo records store no image. Background reviews keep a metadata-free, resized photo temporarily until success or deletion; their AI visual estimate is shown separately and never enters daily totals. Complete source-backed estimates use matched USDA nutrient densities and visually estimated or user supplied edible grams, with an optional correction panel and a source/quantity snapshot. A bundled USDA SR Legacy index supports nutrition lookup when the public API is rate limited. If some sources or portions are unresolved, the app shows only a clearly labelled partial total for matched foods and excludes that partial total from History's daily nutrition. Photo records remain separate from menu meals and Community posts. Production authentication, verified restaurant menus/nutrition, production moderation, and commercial features remain future work. Recommendations never use merchant payments. See the [Week 7 checkpoint](submissions/week07/README.md), [current architecture](docs/architecture/overview.md), [operations](docs/operations.md), and [roadmap](docs/product/roadmap.md).
+The current UI and API implement five primary destinations: **Today**, **Food**, **Move**, **Progress** and **Community**. The top bar shows the current demo rewards balance with a **Store** action, while the avatar opens **Profile**; neither utility occupies a primary navigation row. Today selects only a factual no-food, no-workout, food-only, movement-only, or complete check-in state. Food consolidates Explore, For you, Meals and Real places, and the instant/background photo modes. Progress contains the dated summary and the full daily coach report.
+
+The product also implements paginated food and real-place discovery, one-click photo recognition with an immediate USDA nutrition estimate or a clearly labelled AI visual fallback, asynchronous meal recommendations, plan/confirmation tracking, stage-aware workout plans and session logs, paginated Decision/Menu meal/Photo meal records, Community posts/comments/likes/report review, daily and weekly habits, an auditable demo credit ledger, badge redemption, and editable demo profile/goals. Public Reddit discussions appear only as attributed paraphrases with source links. OpenRouter can optionally reword grounded meal explanations and workout coaching notes; exercise selection, sets and meal ranking remain rule based. The separate DeepSeek assistant only explains the current allowlisted health facts and writes transient suggestions.
+
+Instant photo records store no image. Background reviews keep a metadata-free, resized photo temporarily until success or deletion; their AI visual estimate is shown separately and never enters daily totals. Complete source-backed estimates use matched USDA nutrient densities and visually estimated or user supplied edible grams, with an optional correction panel and a source/quantity snapshot. A bundled USDA SR Legacy index supports nutrition lookup when the public API is rate limited. If some sources or portions are unresolved, the app shows only a clearly labelled partial total for matched foods and excludes that partial total from the daily nutrition shown in Progress. Photo records remain separate from menu meals and Community posts. Production authentication, verified restaurant menus/nutrition, production moderation, and commercial features remain future work. Recommendations never use merchant payments. See the [Week 7 checkpoint](submissions/week07/README.md), [current architecture](docs/architecture/overview.md), [operations](docs/operations.md), and [roadmap](docs/product/roadmap.md).
 
 ## W07 submission materials
 
-The [milestone evidence](submissions/week07/README.md) links the [demonstration PPT](submissions/week07/NourishLoop_W07_Midterm_Demo.pptx), raw screenshots/logs, final validation and [AI use disclosure](submissions/week07/AI_USE.md). Start with [system architecture](docs/architecture.md) for the current design and [operations](docs/operations.md) for the reproducible demo. The historical W04 proposal is archived separately. The PPT reports current validation and checkpoint status as of 30 October 2026 while preserving the actual 29 October runtime screenshots.
+The [milestone evidence](submissions/week07/README.md) links the [demonstration PPT](submissions/week07/NourishLoop_W07_Midterm_Demo.pptx), raw screenshots/logs, final validation and [AI use disclosure](submissions/week07/AI_USE.md). Start with the [active architecture overview](docs/architecture/overview.md) and [operations](docs/operations.md) for the reproducible demo. The historical W04 proposal remains archived separately, and the root `docs/architecture.md` is preserved course history rather than the current architecture. The PPT reports validation and checkpoint status as of 30 October 2026 while preserving the actual 29 October runtime screenshots.

@@ -1,16 +1,20 @@
 # Current NourishLoop architecture
 
-NourishLoop is a modular FastAPI monolith with a separate worker, PostgreSQL, and a mobile-first Next.js browser app. The catalog food loop is discovery → recommendation → planned decision → confirmed meal log → optional Community share. A second food path is photo capture/upload → Recognize action → automatic vision and USDA estimate → immediate result → optional correction → optional private photo meal record. A separate workout loop is exercise discovery → stage-aware plan → confirmed session. The browser presents Discover, Workouts, For you, History, Community, Rewards and Profile as separate URL-addressable views. The historical Week 4 diet-plan/photo architecture remains in [`../legacy/week04-architecture.md`](../legacy/week04-architecture.md) as a course artifact; its more extensive nutrition/plan workflow is not the implemented flow.
+NourishLoop is a modular FastAPI monolith with a separate worker, PostgreSQL, and a mobile-first Next.js browser app. The catalog food loop is discovery → recommendation → planned decision → confirmed meal log → optional Community share. A second food path is photo capture/upload → Recognize action → automatic vision and USDA estimate → immediate result → optional correction → optional private photo meal record. A separate workout loop is exercise discovery → stage-aware plan → confirmed session. The browser presents **Today**, **Food**, **Move**, **Progress** and **Community** as primary URL-addressable destinations. **Rewards** is opened from the top-bar points/store control, while the top-bar avatar opens **Profile**.
+
+Today is a factual daily check-in, not a dashboard of inferred health claims. It distinguishes no food or movement records, food without movement, movement without food, and both recorded. Food consolidates Explore, For you, Meals, Real places and the two photo modes. Progressive disclosures keep secondary detail collapsed, and Progress combines the dated record with the full coach report.
 
 ```mermaid
 flowchart LR
   Web[Next.js browser] -->|JSON /api/v1| API[FastAPI]
+  Web -->|ask or report| API
   API -->|persist pending job| DB[(PostgreSQL)]
   DB -->|claim with row lock| Worker[Recommendation worker]
   Worker --> Rules[Pure ranking rules]
   Worker -->|optional first explanation| OR[OpenRouter]
   Worker -->|persist run and completed job| DB
   API -->|photo analysis only| OR
+  API -->|read-only allowlisted facts| DS[DeepSeek Chat]
   API -->|first choice| USDA_LOCAL[Bundled USDA SR Legacy index]
   API -->|fallback food search| USDA[USDA FoodData Central]
   API -->|poll job result| Web
@@ -24,6 +28,30 @@ flowchart LR
 ```
 
 The API authenticates the local demo user, validates requests, and delegates workflows to domain services. The recommendation job records input and provider choice. The worker claims jobs via `FOR UPDATE SKIP LOCKED`, calculates rankings from profile/goals and the catalog, optionally asks OpenRouter to reword only the first deterministic explanation, then commits the recommendation run and completed job together. Provider failure uses baseline text. The browser polls job state and displays persisted results. Scoring excludes catalog allergens and strict dietary preferences before ranking. It does not use model output or payment data.
+
+## Floating coach and daily report
+
+The active `assistant` module owns a separate DeepSeek Chat Completions provider. `POST /assistant/ask` builds a fresh read-only context, sends the current question and one grounded request, validates a short plain-text answer, and returns it. `POST /assistant/daily-report` uses the same context boundary with JSON output mode and validates the structured report. Each HTTP action causes at most one DeepSeek request. The provider and frontend do not retry automatically; any retry is a separate explicit user action.
+
+The bottom-right **Coach** ring opens a focused, blurred overlay with one current question and at most one answer. It does not carry a conversation transcript or prior exchange into another question, and asking another question replaces the visible exchange. Browser speech recognition may fill the input when available; the ordinary text field remains the fallback. Closing the overlay or refreshing the page clears the exchange.
+
+**Progress** owns the full report UI. The report is held only in React component state and disappears on navigation, unmount, or refresh. Generated questions, answers, and reports are not written to PostgreSQL or browser storage, and this feature adds no table or migration. OpenRouter's existing explanation and photo-recognition integrations are unchanged.
+
+The context builder reads only the authenticated demo user's records for the current Hong Kong-local day:
+
+| Allowlisted context | Included fields |
+|---|---|
+| Profile and goal | Goal, optional daily calorie target, dietary preferences, allergies |
+| Daily summary | Recorded nutrition totals and confirmed meal count |
+| Confirmed menu meals | Food name, servings, consumed time, stored nutrition snapshot |
+| Saved photo-review rows | Food names, user notes, review status, nutrition status, optional nutrition snapshot, unresolved foods |
+| Completed workouts | Focus, stage, duration, exercise names, completion time |
+| Workout profile | Declared stage, equipment, target days per week |
+| Current ask | The current question for `/ask`; none for `/daily-report` |
+
+Confirmed menu logs and completed workouts are treated as consumed activity. The context also serializes every saved photo-review row for the day with its `review_status`, but only `not_requested` and `completed` photo rows contribute to meal count and nutrition; pending, processing, and failed rows remain status context and are not counted as consumed. Planned decisions, recommendations, unsaved/current recognitions, images and image paths, photo-review attempt logs/errors, user IDs and display identity, Community content, merchant/payment data, secrets, provider job history, and prior conversation are excluded. The prompt treats the question and serialized facts as untrusted data, forbids invented records or medical claims, and asks the model to state absent records. Output is rendered as text, never raw HTML.
+
+Missing or empty DeepSeek configuration and unavailable demo identity return 503. A DeepSeek timeout returns 504. Other upstream failures, unusable response envelopes, empty/invalid answers, and invalid report JSON return 502 through fixed safe messages. Malformed local requests return 422. DeepSeek is not used for recommendation ranking, workout selection, stored nutrition, rewards, or Community behavior.
 
 A recommendation is a suggestion. `POST /decisions` stores a planned action; it does not change intake. `POST /meal-logs` confirms the meal and stores an immutable nutrition snapshot used by the daily summary. Community post creation requires an owned confirmed meal log and a user-entered caption. Feed data does not change nutrition totals or recommendation scores. Removing a post leaves the meal log intact.
 

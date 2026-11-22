@@ -7,6 +7,8 @@ Current product routes are under `/api/v1`; OpenAPI is at `/openapi.json`. Run `
 | GET | `/api/v1/health` | Database readiness |
 | GET, PATCH | `/api/v1/me`, `/api/v1/me/profile` | Demo user and profile |
 | GET, PUT | `/api/v1/me/goals` | Goal |
+| POST | `/api/v1/assistant/ask` | One short, grounded DeepSeek answer to the current question; no persistence |
+| POST | `/api/v1/assistant/daily-report` | One structured DeepSeek report from the current allowlisted daily context; no persistence |
 | GET | `/api/v1/venues`, `/api/v1/menu-items` | Sourced venue directory (`scope`, `q`, `limit`, `offset`) and separate fictional meal catalog (`q`, `tag`, `max_price_hkd`, `limit`, `offset`) |
 | GET | `/api/v1/external-notes` | Attributed paraphrases of public discussions by `scope` |
 | GET | `/api/v1/exercises` | Sourced exercise library by muscle group/equipment with `limit`, `offset` |
@@ -41,6 +43,36 @@ Current product routes are under `/api/v1`; OpenAPI is at `/openapi.json`. Run `
 
 Demo private routes resolve identity on the server. In development with demo auth enabled, `X-Demo-User-Id` can select only the seeded moderator or peer; it is a local impersonation mechanism. Job reads and post removal check ownership. Community post creation checks that its meal log belongs to the current user; a meal can have one post. The feed shows a shared meal, illustrative nutrition snapshot, caption, and demo display name.
 
+### Assistant endpoints
+
+`POST /api/v1/assistant/ask` trims and validates a question, then sends that question with a fresh read-only health context to DeepSeek:
+
+```json
+{ "question": "How should I plan dinner?" }
+```
+
+```json
+{ "answer": "Choose a balanced dinner that leaves room for protein, vegetables, and a comfortable portion." }
+```
+
+The question must contain 1-500 characters after trimming and the returned answer must contain 1-600 characters. Blank or oversized input returns 422. Each successful action makes at most one DeepSeek request.
+
+`POST /api/v1/assistant/daily-report` has no request body. It returns one validated report with a headline, nutrition and activity insights, and at most three next actions and three limitations:
+
+```json
+{
+  "headline": "A steady day.",
+  "nutrition_insight": "One confirmed meal is recorded.",
+  "activity_insight": "One completed workout is recorded.",
+  "next_actions": ["Choose a balanced dinner."],
+  "limitations": ["Photo nutrition is approximate."]
+}
+```
+
+The context allowlist is: goal and calorie target; dietary preferences and allergies; recorded nutrition totals and meal count; confirmed menu meals with name, servings, consumed time and nutrition snapshot; saved photo-review rows with food names, notes, review/nutrition status, optional snapshot and unresolved foods; completed workouts with focus, stage, duration, exercise names and time; and workout stage/equipment/days per week. A pending, processing, or failed photo row is sent with status but is excluded from the confirmed meal count and nutrition; only `not_requested` and `completed` rows contribute those totals. The context excludes image bytes or paths, photo-review logs/errors, identity and display fields, Community content, payments, secrets, recommendation/provider history, and prior questions/answers.
+
+Both endpoints use the same current-user dependency. Missing/blank `DEEPSEEK_API_KEY` or unavailable demo identity returns 503; a DeepSeek timeout returns 504; an upstream failure or invalid/empty generated content returns 502. Errors use fixed messages and the standard `{"error":{"code":"http_502","message":"..."}}` envelope. The frontend and backend do not retry automatically. Questions, answers, reports, and context are not persisted. DeepSeek is independent of OpenRouter and does not influence recommendation ranking, stored nutrition, workouts, rewards, or Community; OpenRouter's existing explanation and photo-recognition contracts remain unchanged.
+
 Background photo reviews use the existing `PhotoMealRecord` table. `review_status` moves through `pending`, `processing`, and `completed` or `failed`; `review_attempts` and a private append-only attempt log record worker activity. The result exposes AI visual nutrition separately from USDA matched nutrition. Only a complete USDA match enters daily macro totals; pending and failed reviews do not count as meals or earn habit credit. The temporary image is deleted on success or explicit removal. Failed reviews retain it for retry. The existing instant recognition route and its manual correction panel remain available.
 
 Community likes are idempotent per user/post. Comments require a visible post; the author or demo moderator can delete them. Reports require a different author, allow one report per reporter/post, and are resolved by a moderator as dismissed or removed. Reported content is not hidden automatically. The seeded Demo Student has moderator role; the peer does not.
@@ -59,4 +91,4 @@ POST /api/v1/meal-logs {"decision_id":"...","servings":1}
 POST /api/v1/community/posts {"meal_log_id":"...","caption":"Lunch today"}
 ```
 
-Errors use `{"error":{"code":"http_404","message":"..."}}` for HTTP errors and `validation_error` for malformed inputs. Unavailable demo auth returns 503, moderator-only access returns 403, missing or foreign objects return 404, duplicate confirmation/sharing/reporting or insufficient credits returns 409, and invalid fields return 422. List endpoints have bounded limits.
+Errors use `{"error":{"code":"http_404","message":"..."}}` for HTTP errors and `validation_error` for malformed inputs. Unavailable demo auth and assistant configuration return 503, assistant timeouts return 504, assistant upstream/invalid-content failures return 502, moderator-only access returns 403, missing or foreign objects return 404, duplicate confirmation/sharing/reporting or insufficient credits returns 409, and invalid fields return 422. List endpoints have bounded limits.
