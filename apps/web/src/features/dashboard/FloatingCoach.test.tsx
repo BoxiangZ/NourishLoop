@@ -141,6 +141,51 @@ describe("FloatingCoach", () => {
     expect(document.activeElement).toBe(opener);
   });
 
+  it("wraps Tab forward from the last dialog control without reaching background content", () => {
+    render(<AppShell screen="discover" me={null} busy={false}
+      onNavigate={() => {}} onSwitchUser={() => {}}>
+      <button type="button">Background action</button>
+    </AppShell>);
+
+    openCoach();
+    const input = screen.getByLabelText("Ask the daily coach");
+    const close = screen.getByRole("button", { name: "Close daily coach" });
+    fireEvent.keyDown(input, { key: "Tab" });
+
+    expect(document.activeElement).toBe(close);
+    expect(document.activeElement).not.toBe(screen.getByRole("button", { name: "Background action" }));
+  });
+
+  it("wraps Shift+Tab backward from the first dialog control", () => {
+    render(<AppShell screen="discover" me={null} busy={false}
+      onNavigate={() => {}} onSwitchUser={() => {}}>
+      <button type="button">Background action</button>
+    </AppShell>);
+
+    openCoach();
+    const input = screen.getByLabelText("Ask the daily coach");
+    const close = screen.getByRole("button", { name: "Close daily coach" });
+    close.focus();
+    fireEvent.keyDown(close, { key: "Tab", shiftKey: true });
+
+    expect(document.activeElement).toBe(input);
+    expect(document.activeElement).not.toBe(screen.getByRole("button", { name: "Background action" }));
+  });
+
+  it("moves focus to Ask another question when the focused form is replaced by an answer", async () => {
+    apiMock.askAssistant.mockResolvedValue({ answer: "Take a short walk after lunch." });
+    render(<FloatingCoach />);
+
+    openCoach();
+    fireEvent.change(screen.getByLabelText("Ask the daily coach"), {
+      target: { value: "What should I do after lunch?" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Send question" }));
+
+    const another = await screen.findByRole("button", { name: "Ask another question" });
+    expect(document.activeElement).toBe(another);
+  });
+
   it("closes when the blurred backdrop is clicked", () => {
     render(<FloatingCoach />);
 

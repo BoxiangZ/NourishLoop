@@ -5,6 +5,14 @@ import { api } from "@nourishloop/api-client";
 
 const GREETING = "Ask me about today’s meals or movement.";
 const VOICE_UNAVAILABLE = "Voice input is unavailable. You can type your question instead.";
+const FOCUSABLE_SELECTOR = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "[tabindex]:not([tabindex='-1'])",
+].join(",");
 
 type SpeechRecognitionResultEvent = {
   results: ArrayLike<ArrayLike<{ transcript: string }>>;
@@ -41,7 +49,9 @@ export default function FloatingCoach() {
   const [speechSupported, setSpeechSupported] = useState(false);
   const [listening, setListening] = useState(false);
   const ringRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const anotherRef = useRef<HTMLButtonElement>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const exchangeIdRef = useRef(0);
   const hasOpenedRef = useRef(false);
@@ -74,7 +84,8 @@ export default function FloatingCoach() {
   useEffect(() => {
     if (open) {
       hasOpenedRef.current = true;
-      inputRef.current?.focus();
+      if (answer) anotherRef.current?.focus();
+      else inputRef.current?.focus();
     }
     else if (hasOpenedRef.current) ringRef.current?.focus();
   }, [open, answer]);
@@ -82,7 +93,31 @@ export default function FloatingCoach() {
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeCoach();
+      if (event.key === "Escape") {
+        closeCoach();
+        return;
+      }
+      if (event.key !== "Tab" || !dialogRef.current) return;
+
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      );
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) {
+        event.preventDefault();
+        return;
+      }
+
+      const active = document.activeElement;
+      const outsideDialog = !dialogRef.current.contains(active);
+      if (event.shiftKey && (active === first || outsideDialog)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || outsideDialog)) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -114,7 +149,6 @@ export default function FloatingCoach() {
 
   function askAnother() {
     resetExchange();
-    window.requestAnimationFrame(() => inputRef.current?.focus());
   }
 
   function startVoiceQuestion() {
@@ -172,7 +206,7 @@ export default function FloatingCoach() {
 
     {open && <div className="nl-coach-blur" data-testid="coach-backdrop"
       onClick={event => { if (event.target === event.currentTarget) closeCoach(); }}>
-      <section className="nl-coach-dialogue" role="dialog" aria-modal="true"
+      <section ref={dialogRef} className="nl-coach-dialogue" role="dialog" aria-modal="true"
         aria-labelledby="nl-coach-title">
         <div className="nl-coach-heading">
           <div>
@@ -199,7 +233,7 @@ export default function FloatingCoach() {
         {error && <p className="nl-coach-error" role="alert">{error}</p>}
         {voiceMessage && <p className="nl-coach-voice-message" role="status">{voiceMessage}</p>}
 
-        {answer ? <button type="button" className="nl-button nl-button-soft nl-coach-another"
+        {answer ? <button ref={anotherRef} type="button" className="nl-button nl-button-soft nl-coach-another"
           onClick={askAnother}>Ask another question</button> :
           <form className="nl-coach-form" onSubmit={ask}>
             <label htmlFor="nl-coach-question">Ask the daily coach</label>
