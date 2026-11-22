@@ -5,6 +5,7 @@ import logging
 
 import httpx
 import pytest
+from pydantic import ValidationError
 
 from apps.api.core.config import Settings
 from apps.api.modules.assistant.provider import (
@@ -45,6 +46,12 @@ def test_deepseek_settings_use_required_defaults():
     assert settings.deepseek_base_url == "https://api.deepseek.com"
     assert settings.deepseek_model == "deepseek-chat"
     assert settings.deepseek_timeout_seconds == 25.0
+
+
+@pytest.mark.parametrize("timeout_seconds", ["", 0, -1, 121])
+def test_invalid_deepseek_timeout_is_rejected_by_settings(timeout_seconds):
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, deepseek_timeout_seconds=timeout_seconds)
 
 
 def test_answer_uses_one_deepseek_chat_request():
@@ -204,6 +211,32 @@ def test_missing_key_does_not_make_request():
     with pytest.raises(AssistantConfigurationError):
         DeepSeekChatProvider(
             Settings(_env_file=None), transport=httpx.MockTransport(handler)
+        ).answer("Question", context())
+
+    assert calls == 0
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"deepseek_api_key": "   "},
+        {"deepseek_api_key": "test-key", "deepseek_base_url": "   "},
+        {"deepseek_api_key": "test-key", "deepseek_model": "   "},
+    ],
+    ids=["blank-key", "blank-base-url", "blank-model"],
+)
+def test_blank_deepseek_configuration_is_rejected_without_request(overrides):
+    calls = 0
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        raise AssertionError("network should not be used")
+
+    with pytest.raises(AssistantConfigurationError):
+        DeepSeekChatProvider(
+            Settings(_env_file=None, **overrides),
+            transport=httpx.MockTransport(handler),
         ).answer("Question", context())
 
     assert calls == 0

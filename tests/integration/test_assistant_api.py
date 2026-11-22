@@ -3,8 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+import httpx
 import pytest
 
+from apps.api.core.config import Settings
 from apps.api.core.database import Base
 from apps.api.main import app
 from apps.api.modules.assistant.provider import (
@@ -12,6 +14,7 @@ from apps.api.modules.assistant.provider import (
     AssistantResponseError,
     AssistantTimeoutError,
     AssistantUnavailableError,
+    DeepSeekChatProvider,
 )
 from apps.api.modules.assistant.router import assistant_provider
 from apps.api.modules.assistant.schemas import DailyCoachReport
@@ -150,6 +153,50 @@ class RaisingProvider:
     def report(self, context):
         self.calls += 1
         raise self.error
+
+
+@pytest.mark.parametrize(
+    "settings_overrides",
+    [
+        {"deepseek_api_key": None},
+        {"deepseek_api_key": "   "},
+        {"deepseek_api_key": "test-key", "deepseek_base_url": "   "},
+        {"deepseek_api_key": "test-key", "deepseek_model": "   "},
+    ],
+    ids=["missing-key", "blank-key", "blank-base-url", "blank-model"],
+)
+@pytest.mark.parametrize("endpoint", ["/api/v1/assistant/ask", "/api/v1/assistant/daily-report"])
+def test_blank_deepseek_configuration_returns_safe_503_without_request(
+    nl_client, endpoint, settings_overrides
+):
+    calls = 0
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        raise AssertionError("network should not be used")
+
+    provider = DeepSeekChatProvider(
+        Settings(_env_file=None, **settings_overrides),
+        transport=httpx.MockTransport(handler),
+    )
+    app.dependency_overrides[assistant_provider] = lambda: provider
+    try:
+        response = nl_client.post(
+            endpoint,
+            json={"question": "What should I eat?"} if endpoint.endswith("/ask") else None,
+        )
+    finally:
+        app.dependency_overrides.pop(assistant_provider, None)
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "error": {
+            "code": "http_503",
+            "message": "Daily coach is not configured",
+        }
+    }
+    assert calls == 0
 
 
 @pytest.mark.parametrize(

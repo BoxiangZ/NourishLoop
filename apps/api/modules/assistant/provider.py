@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from typing import Protocol
+from urllib.parse import urlsplit
 
 import httpx
 from pydantic import ValidationError
@@ -100,9 +101,9 @@ class DeepSeekChatProvider:
         temperature: float,
         response_format: dict[str, str] | None = None,
     ) -> str:
-        api_key = self._api_key()
+        api_key, base_url, model = self._configuration()
         payload: dict[str, object] = {
-            "model": self.settings.deepseek_model,
+            "model": model,
             "max_tokens": max_tokens,
             "temperature": temperature,
             "messages": [
@@ -119,7 +120,7 @@ class DeepSeekChatProvider:
         ) as client:
             try:
                 response = client.post(
-                    (f"{self.settings.deepseek_base_url.rstrip('/')}/chat/completions"),
+                    f"{base_url}/chat/completions",
                     headers={
                         "Authorization": f"Bearer {api_key}",
                         "Content-Type": "application/json",
@@ -145,11 +146,28 @@ class DeepSeekChatProvider:
             raise AssistantResponseError("DeepSeek returned no textual answer")
         return reply
 
-    def _api_key(self) -> str:
+    def _configuration(self) -> tuple[str, str, str]:
         secret = self.settings.deepseek_api_key
         if secret is None:
             raise AssistantConfigurationError("DeepSeek key is not configured")
         api_key = secret.get_secret_value()
         if not api_key.strip():
             raise AssistantConfigurationError("DeepSeek key is not configured")
-        return api_key
+
+        base_url = self.settings.deepseek_base_url.strip().rstrip("/")
+        try:
+            parsed_url = urlsplit(base_url)
+        except ValueError:
+            raise AssistantConfigurationError("DeepSeek base URL is not configured") from None
+        if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
+            raise AssistantConfigurationError("DeepSeek base URL is not configured")
+
+        model = self.settings.deepseek_model.strip()
+        if not model:
+            raise AssistantConfigurationError("DeepSeek model is not configured")
+
+        timeout_seconds = self.settings.deepseek_timeout_seconds
+        if not 0 < timeout_seconds <= 120:
+            raise AssistantConfigurationError("DeepSeek timeout is invalid")
+
+        return api_key.strip(), base_url, model
