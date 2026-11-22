@@ -214,6 +214,36 @@ describe("NourishLoop app pages", () => {
     expect(await screen.findByText("1 confirmed meal and 1 completed workout for this day.")).toBeTruthy();
   });
 
+  it("loads current-day data when navigating from a selected Progress date to Today", async () => {
+    const todayHK = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+    const anchor = new Date(`${todayHK}T12:00:00Z`);
+    const selected = new Date(anchor);
+    selected.setUTCDate(anchor.getUTCDate() + 1);
+    const selectedKey = selected.toISOString().slice(0, 10);
+
+    apiMock.summary.mockImplementation(async (date?: string) => ({
+      date: date ?? todayHK,
+      timezone: "Asia/Hong_Kong",
+      meal_count: date ? 1 : 0,
+      totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+    }));
+    apiMock.workoutSessions.mockResolvedValue([
+      { id: "past", plan_id: "plan-1", focus: "back", stage: "beginner", duration_min: 60,
+        exercise_names: ["Seated row"], completed_at: `${selectedKey}T02:00:00Z` },
+      { id: "today", plan_id: "plan-1", focus: "back", stage: "beginner", duration_min: 30,
+        exercise_names: ["Seated row"], completed_at: new Date().toISOString() },
+    ]);
+
+    render(<Dashboard />);
+    fireEvent.click(mainNav().getByRole("button", { name: "Progress" }));
+    fireEvent.click(await screen.findByRole("button", { name: `Show summary for ${selectedKey}` }));
+    expect(await screen.findByText("1 confirmed meal and 1 completed workout for this day.")).toBeTruthy();
+
+    fireEvent.click(mainNav().getByRole("button", { name: "Today" }));
+    expect(await screen.findByText("Movement is logged; your next meal is still open.")).toBeTruthy();
+    expect(apiMock.summary).toHaveBeenLastCalledWith(undefined);
+  });
+
   it("shows the daily coach report only after navigating to Progress", async () => {
     render(<Dashboard />);
 

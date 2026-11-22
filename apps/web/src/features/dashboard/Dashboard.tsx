@@ -146,7 +146,7 @@ export default function Dashboard() {
   const loadDaily = useCallback(async () => {
     if (screen !== "today" && screen !== "history") return;
     const [nextSummary, nextSessions] = await Promise.all([
-      api.summary(selectedDate ?? undefined),
+      api.summary(screen === "today" ? undefined : selectedDate ?? undefined),
       api.workoutSessions(100, 0),
     ]);
     setSummary(nextSummary);
