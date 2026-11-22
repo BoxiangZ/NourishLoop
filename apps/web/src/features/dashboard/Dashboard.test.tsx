@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { DailySummary, DecisionRead, MenuItemRead } from "@nourishloop/api-client/schema";
 import Dashboard from "./Dashboard";
 
@@ -47,6 +47,17 @@ function foodMode() {
 
 function openBrowseDetails() {
   fireEvent.click(screen.getByText("Browse all meals and places"));
+}
+
+function pickNonCurrentSummaryButton() {
+  const button = screen.getAllByRole("button", { name: /Show summary for/ })
+    .find(item => item.getAttribute("data-active") !== "true");
+  if (!button) throw new Error("No non-current summary button found");
+  return button;
+}
+
+function summaryDateFromButton(button: HTMLElement) {
+  return button.getAttribute("aria-label")?.replace("Show summary for ", "") ?? "";
 }
 
 beforeEach(() => {
@@ -189,10 +200,7 @@ describe("NourishLoop app pages", () => {
 
   it("uses the selected summary date for Progress workout counts", async () => {
     const todayHK = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
-    const anchor = new Date(`${todayHK}T12:00:00Z`);
-    const selected = new Date(anchor);
-    selected.setUTCDate(anchor.getUTCDate() + 1);
-    const selectedKey = selected.toISOString().slice(0, 10);
+    let selectedKey = "";
 
     apiMock.summary.mockImplementation(async (date?: string) => ({
       date: date ?? todayHK,
@@ -200,7 +208,7 @@ describe("NourishLoop app pages", () => {
       meal_count: 1,
       totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
     }));
-    apiMock.workoutSessions.mockResolvedValue([
+    apiMock.workoutSessions.mockImplementation(async () => [
       { id: "old", plan_id: "plan-1", focus: "back", stage: "beginner", duration_min: 30,
         exercise_names: ["Seated row"], completed_at: `${selectedKey}T02:00:00Z` },
       { id: "now", plan_id: "plan-1", focus: "back", stage: "beginner", duration_min: 60,
@@ -208,18 +216,19 @@ describe("NourishLoop app pages", () => {
     ]);
 
     render(<Dashboard />);
+    await waitFor(() => expect(apiMock.summary).toHaveBeenCalledTimes(1));
+    await act(async () => { await Promise.resolve(); });
     fireEvent.click(mainNav().getByRole("button", { name: "Progress" }));
     expect(await screen.findByText("1 confirmed meal and 1 completed workout today.")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: `Show summary for ${selectedKey}` }));
+    const selectedButton = pickNonCurrentSummaryButton();
+    selectedKey = summaryDateFromButton(selectedButton);
+    fireEvent.click(selectedButton);
     expect(await screen.findByText("1 confirmed meal and 1 completed workout for this day.")).toBeTruthy();
   });
 
   it("loads current-day data when navigating from a selected Progress date to Today", async () => {
     const todayHK = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
-    const anchor = new Date(`${todayHK}T12:00:00Z`);
-    const selected = new Date(anchor);
-    selected.setUTCDate(anchor.getUTCDate() + 1);
-    const selectedKey = selected.toISOString().slice(0, 10);
+    let selectedKey = "";
 
     apiMock.summary.mockImplementation(async (date?: string) => ({
       date: date ?? todayHK,
@@ -227,7 +236,7 @@ describe("NourishLoop app pages", () => {
       meal_count: date ? 1 : 0,
       totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
     }));
-    apiMock.workoutSessions.mockResolvedValue([
+    apiMock.workoutSessions.mockImplementation(async () => [
       { id: "past", plan_id: "plan-1", focus: "back", stage: "beginner", duration_min: 60,
         exercise_names: ["Seated row"], completed_at: `${selectedKey}T02:00:00Z` },
       { id: "today", plan_id: "plan-1", focus: "back", stage: "beginner", duration_min: 30,
@@ -236,12 +245,88 @@ describe("NourishLoop app pages", () => {
 
     render(<Dashboard />);
     fireEvent.click(mainNav().getByRole("button", { name: "Progress" }));
-    fireEvent.click(await screen.findByRole("button", { name: `Show summary for ${selectedKey}` }));
+    expect(await screen.findByText("0 confirmed meals and 0 completed workouts today.")).toBeTruthy();
+    const selectedButton = pickNonCurrentSummaryButton();
+    selectedKey = summaryDateFromButton(selectedButton);
+    fireEvent.click(selectedButton);
     expect(await screen.findByText("1 confirmed meal and 1 completed workout for this day.")).toBeTruthy();
 
     fireEvent.click(mainNav().getByRole("button", { name: "Today" }));
     expect(await screen.findByText("Movement is logged; your next meal is still open.")).toBeTruthy();
     expect(apiMock.summary).toHaveBeenLastCalledWith(undefined);
+  });
+
+  it("does not let a pending Progress response overwrite Today", async () => {
+    const todayHK = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+    let selectedKey = "";
+    let resolvePast: ((value: DailySummary) => void) | undefined;
+
+    apiMock.summary.mockImplementation((date?: string) => {
+      if (date) {
+        selectedKey = date;
+        return new Promise(resolve => { resolvePast = resolve; });
+      }
+      return Promise.resolve({ date: todayHK, timezone: "Asia/Hong_Kong", meal_count: 0,
+        totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 } });
+    });
+    apiMock.workoutSessions.mockResolvedValue([]);
+
+    render(<Dashboard />);
+    await waitFor(() => expect(apiMock.summary).toHaveBeenCalledTimes(1));
+    await act(async () => { await Promise.resolve(); });
+    fireEvent.click(mainNav().getByRole("button", { name: "Progress" }));
+    expect(await screen.findByText("0 confirmed meals and 0 completed workouts today.")).toBeTruthy();
+    const selectedButton = pickNonCurrentSummaryButton();
+    selectedKey = summaryDateFromButton(selectedButton);
+    fireEvent.click(selectedButton);
+    await waitFor(() => expect(apiMock.summary).toHaveBeenCalledWith(selectedKey));
+
+    fireEvent.click(mainNav().getByRole("button", { name: "Today" }));
+    expect(await screen.findByText("No meals are logged yet today.")).toBeTruthy();
+
+    await act(async () => {
+      resolvePast?.({ date: selectedKey, timezone: "Asia/Hong_Kong", meal_count: 2,
+        totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 } });
+      await Promise.resolve();
+    });
+    expect(screen.queryByText("Meals are logged; movement is still open.")).toBeNull();
+  });
+
+  it("clears past-day Today state while current-day data is loading", async () => {
+    const todayHK = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+    let resolveCurrent: ((value: DailySummary) => void) | undefined;
+    let currentCallCount = 0;
+    const currentSummary: DailySummary = { date: todayHK, timezone: "Asia/Hong_Kong", meal_count: 0,
+      totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 } };
+
+    apiMock.summary.mockImplementation((date?: string) => {
+      if (date) {
+        return Promise.resolve({ date, timezone: "Asia/Hong_Kong", meal_count: 2,
+          totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 } });
+      }
+      currentCallCount += 1;
+      if (currentCallCount === 1) return Promise.resolve(currentSummary);
+      return new Promise(resolve => { resolveCurrent = resolve; });
+    });
+    apiMock.workoutSessions.mockResolvedValue([]);
+
+    render(<Dashboard />);
+    await waitFor(() => expect(apiMock.summary).toHaveBeenCalledTimes(1));
+    await act(async () => { await Promise.resolve(); });
+    fireEvent.click(mainNav().getByRole("button", { name: "Progress" }));
+    expect(await screen.findByText("0 confirmed meals and 0 completed workouts today.")).toBeTruthy();
+    const selectedButton = pickNonCurrentSummaryButton();
+    fireEvent.click(selectedButton);
+    expect(await screen.findByText("2 confirmed meals and 0 completed workouts for this day.")).toBeTruthy();
+
+    fireEvent.click(mainNav().getByRole("button", { name: "Today" }));
+    expect(screen.getByText("No meals are logged yet today.")).toBeTruthy();
+    expect(screen.queryByText("Meals are logged; movement is still open.")).toBeNull();
+
+    await act(async () => {
+      resolveCurrent?.(currentSummary);
+      await Promise.resolve();
+    });
   });
 
   it("shows the daily coach report only after navigating to Progress", async () => {

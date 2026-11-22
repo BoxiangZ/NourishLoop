@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@nourishloop/api-client";
 import type {
   CommunityPostRead, CommunityReportRead, DailySummary, DecisionRead, MeRead,
@@ -91,12 +91,17 @@ export default function Dashboard() {
   const [jobStatus, setJobStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dailyRequestId = useRef(0);
 
   const navigate = useCallback((next: Screen) => {
     setScreen(next);
     const url = new URL(window.location.href);
     if (next === "food") setFoodMode("explore");
-    if (next === "today") url.searchParams.delete("page");
+    if (next === "today") {
+      setSummary(null);
+      setWorkoutSessions([]);
+      url.searchParams.delete("page");
+    }
     else if (next === "food") url.searchParams.set("page", "discover");
     else url.searchParams.set("page", next);
     window.history.pushState({ page: next }, "", url);
@@ -145,15 +150,22 @@ export default function Dashboard() {
 
   const loadDaily = useCallback(async () => {
     if (screen !== "today" && screen !== "history") return;
-    const [nextSummary, nextSessions] = await Promise.all([
-      api.summary(screen === "today" ? undefined : selectedDate ?? undefined),
-      api.workoutSessions(100, 0),
-    ]);
-    setSummary(nextSummary);
-    setWorkoutSessions(nextSessions);
+    const requestId = ++dailyRequestId.current;
+    try {
+      const [nextSummary, nextSessions] = await Promise.all([
+        api.summary(screen === "today" ? undefined : selectedDate ?? undefined),
+        api.workoutSessions(100, 0),
+      ]);
+      if (requestId !== dailyRequestId.current) return;
+      setSummary(nextSummary);
+      setWorkoutSessions(nextSessions);
+    } catch (cause) {
+      if (requestId !== dailyRequestId.current) return;
+      setError(cause instanceof Error ? cause.message : "Something went wrong");
+    }
   }, [screen, selectedDate]);
 
-  useEffect(() => { loadDaily().catch((cause: Error) => setError(cause.message)); }, [loadDaily]);
+  useEffect(() => { void loadDaily(); }, [loadDaily]);
 
   useEffect(() => {
     if (screen !== "history" || historyMode !== "photos" ||
