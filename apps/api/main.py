@@ -25,7 +25,7 @@ from apps.api.modules.workouts.router import router as workouts_router
 app = FastAPI(
     title="NourishLoop API",
     version="0.1.0",
-    responses={status: {"model": ErrorResponse} for status in (404, 409, 422, 503)},
+    responses={status: {"model": ErrorResponse} for status in (404, 409, 422, 502, 503, 504)},
 )
 app.add_middleware(
     CORSMiddleware,

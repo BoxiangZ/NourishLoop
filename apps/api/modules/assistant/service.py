@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import HTTPException
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from apps.api.modules.assistant.context import build_today_context
@@ -43,7 +44,10 @@ def ask_assistant(
         answer = provider.answer(question, context)
     except PROVIDER_ERRORS as error:
         raise _provider_http_error(error) from error
-    return AssistantAnswerRead(answer=answer)
+    try:
+        return AssistantAnswerRead(answer=answer)
+    except ValidationError:
+        raise HTTPException(502, "Daily coach returned an invalid response") from None
 
 
 def create_daily_report(

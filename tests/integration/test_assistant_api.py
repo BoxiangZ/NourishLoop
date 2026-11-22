@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 import pytest
 
 from apps.api.core.database import Base
@@ -22,7 +25,7 @@ class FakeProvider:
     def answer(self, question, context):
         self.answer_calls += 1
         assert question == "What should I eat?"
-        assert context.date.isoformat() == "2026-11-23"
+        assert context.date == datetime.now(ZoneInfo("Asia/Hong_Kong")).date()
         return "Choose a balanced meal."
 
     def report(self, context):
@@ -64,6 +67,58 @@ def test_ask_rejects_blank_and_oversized_questions(nl_client):
     assert blank_response.status_code == 422
     assert oversized_response.status_code == 422
     assert provider.answer_calls == 0
+
+
+class OverlongAnswerProvider:
+    def __init__(self):
+        self.calls = 0
+
+    def answer(self, question, context):
+        self.calls += 1
+        return "x" * 601
+
+    def report(self, context):
+        raise AssertionError("report should not be called")
+
+
+def test_overlong_provider_answer_maps_to_invalid_response(nl_client):
+    provider = OverlongAnswerProvider()
+    app.dependency_overrides[assistant_provider] = lambda: provider
+    try:
+        response = nl_client.post("/api/v1/assistant/ask", json={"question": "What should I eat?"})
+    finally:
+        app.dependency_overrides.pop(assistant_provider, None)
+
+    assert response.status_code == 502
+    assert response.json() == {
+        "error": {
+            "code": "http_502",
+            "message": "Daily coach returned an invalid response",
+        }
+    }
+    assert provider.calls == 1
+
+
+@pytest.mark.parametrize(
+    "endpoint",
+    ["/api/v1/assistant/ask", "/api/v1/assistant/daily-report"],
+)
+def test_assistant_routes_document_gateway_errors(endpoint):
+    responses = app.openapi()["paths"][endpoint]["post"]["responses"]
+
+    for status in ("502", "504"):
+        assert responses[status]["content"]["application/json"]["schema"] == {
+            "$ref": "#/components/schemas/ErrorResponse"
+        }
+
+
+def test_app_wide_errors_document_gateway_failures():
+    responses = app.openapi()["paths"]["/api/v1/health"]["get"]["responses"]
+
+    for status in ("502", "504"):
+        assert responses[status]["content"]["application/json"]["schema"] == {
+            "$ref": "#/components/schemas/ErrorResponse"
+        }
 
 
 def test_daily_report_returns_structured_content_without_persistence(nl_client):

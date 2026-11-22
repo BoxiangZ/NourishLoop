@@ -81,6 +81,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -90,6 +100,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -160,6 +180,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -169,6 +199,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -239,6 +279,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -248,6 +298,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -328,6 +388,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -337,6 +407,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -407,6 +487,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -416,6 +506,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       },
@@ -494,6 +594,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -503,6 +613,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -600,6 +720,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -609,6 +739,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -724,6 +864,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -733,6 +883,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -802,6 +962,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -811,6 +981,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -874,6 +1054,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -883,6 +1073,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -1031,6 +1231,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -1040,6 +1250,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -1103,6 +1323,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -1112,6 +1342,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -1192,6 +1432,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -1201,6 +1451,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -1281,6 +1541,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -1290,6 +1560,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -1369,6 +1649,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -1378,6 +1668,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -1460,6 +1760,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -1469,6 +1779,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -1549,6 +1869,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -1558,6 +1888,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -1637,6 +1977,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -1646,6 +1996,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       },
@@ -1716,6 +2076,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -1725,6 +2095,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -1804,6 +2184,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -1813,6 +2203,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -1893,6 +2293,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -1902,6 +2312,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -1982,6 +2402,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -1991,6 +2421,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -2071,6 +2511,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -2080,6 +2530,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -2160,6 +2620,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -2169,6 +2639,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -2266,6 +2746,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -2275,6 +2765,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -2355,6 +2855,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -2364,6 +2874,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -2461,6 +2981,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -2470,6 +3000,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -2550,6 +3090,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -2559,6 +3109,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -2656,6 +3216,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -2665,6 +3235,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -2752,6 +3332,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -2761,6 +3351,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -2841,6 +3441,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -2850,6 +3460,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       },
@@ -2945,6 +3565,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -2954,6 +3584,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -3028,6 +3668,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -3037,6 +3687,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -3109,6 +3769,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -3118,6 +3788,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -3207,6 +3887,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -3216,6 +3906,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -3288,6 +3988,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -3297,6 +4007,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -3376,6 +4096,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -3385,6 +4115,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       },
@@ -3462,6 +4202,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -3471,6 +4221,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -3560,6 +4320,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -3569,6 +4339,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -3643,6 +4423,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -3652,6 +4442,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -3741,6 +4541,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -3750,6 +4560,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -3843,6 +4663,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -3852,6 +4682,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -3931,6 +4771,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -3940,6 +4790,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -4083,6 +4943,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -4092,6 +4962,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -4162,6 +5042,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -4171,6 +5061,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       },
@@ -4249,6 +5149,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -4258,6 +5168,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -4338,6 +5258,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -4347,6 +5277,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -4427,6 +5367,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -4436,6 +5386,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -4533,6 +5493,16 @@
             },
             "description": "Unprocessable Entity"
           },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -4542,6 +5512,16 @@
               }
             },
             "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
           }
         }
       }
@@ -4589,8 +5569,28 @@
               }
             }
           },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "503": {
             "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
             "content": {
               "application/json": {
                 "schema": {
@@ -4645,8 +5645,28 @@
               }
             }
           },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "503": {
             "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
             "content": {
               "application/json": {
                 "schema": {

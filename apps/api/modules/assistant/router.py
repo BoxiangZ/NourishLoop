@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from apps.api.core.auth import current_user
 from apps.api.core.config import get_settings
 from apps.api.core.database import get_db
+from apps.api.core.schemas import ErrorResponse
 from apps.api.modules.assistant.provider import AssistantLLMProvider, DeepSeekChatProvider
 from apps.api.modules.assistant.schemas import (
     AssistantAnswerRead,
@@ -16,13 +17,17 @@ from apps.api.modules.assistant.service import ask_assistant, create_daily_repor
 from apps.api.modules.identity.models import User
 
 router = APIRouter(prefix="/api/v1/assistant", tags=["assistant"])
+GATEWAY_ERROR_RESPONSES = {
+    502: {"model": ErrorResponse},
+    504: {"model": ErrorResponse},
+}
 
 
 def assistant_provider() -> AssistantLLMProvider:
     return DeepSeekChatProvider(get_settings())
 
 
-@router.post("/ask", response_model=AssistantAnswerRead)
+@router.post("/ask", response_model=AssistantAnswerRead, responses=GATEWAY_ERROR_RESPONSES)
 def ask(
     payload: AssistantAskRequest,
     user: User = Depends(current_user),
@@ -32,7 +37,11 @@ def ask(
     return ask_assistant(db, user, payload.question, provider)
 
 
-@router.post("/daily-report", response_model=DailyCoachReport)
+@router.post(
+    "/daily-report",
+    response_model=DailyCoachReport,
+    responses=GATEWAY_ERROR_RESPONSES,
+)
 def daily_report(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
