@@ -200,6 +200,48 @@ def test_blank_deepseek_configuration_returns_safe_503_without_request(
 
 
 @pytest.mark.parametrize(
+    "base_url",
+    [
+        "https://api.deepseek.com:bad",
+        "https://api.deepseek.com:70000",
+    ],
+    ids=["nonnumeric-port", "out-of-range-port"],
+)
+@pytest.mark.parametrize("endpoint", ["/api/v1/assistant/ask", "/api/v1/assistant/daily-report"])
+def test_malformed_deepseek_base_url_port_returns_safe_503_without_request(
+    nl_client, endpoint, base_url
+):
+    calls = 0
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        raise AssertionError("network should not be used")
+
+    provider = DeepSeekChatProvider(
+        Settings(_env_file=None, deepseek_api_key="test-key", deepseek_base_url=base_url),
+        transport=httpx.MockTransport(handler),
+    )
+    app.dependency_overrides[assistant_provider] = lambda: provider
+    try:
+        response = nl_client.post(
+            endpoint,
+            json={"question": "What should I eat?"} if endpoint.endswith("/ask") else None,
+        )
+    finally:
+        app.dependency_overrides.pop(assistant_provider, None)
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "error": {
+            "code": "http_503",
+            "message": "Daily coach is not configured",
+        }
+    }
+    assert calls == 0
+
+
+@pytest.mark.parametrize(
     ("error", "status_code", "message"),
     [
         (

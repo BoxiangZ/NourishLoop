@@ -49,12 +49,12 @@ export default function AppShell({ screen, me, busy, rewardBalance, onNavigate, 
     </button>;
 
   return <div className="nl-app">
-    <aside className="nl-sidebar">
+    <aside className="nl-sidebar" data-coach-background>
       <button className="nl-brand" onClick={() => onNavigate("today")}>Nourish<span>Loop</span><i /></button>
       <p className="nl-side-label">YOUR SPACE</p>
       <nav aria-label="Main navigation" className="nl-side-nav">{primaryItems.map(item => navButton(item))}</nav>
     </aside>
-    <div className="nl-workspace">
+    <div className="nl-workspace" data-coach-background>
       <header className="nl-topbar">
         <button className="nl-mobile-brand" onClick={() => onNavigate("today")}>Nourish<span>Loop</span></button>
         <div className="nl-topbar-spacer" />
@@ -74,7 +74,7 @@ export default function AppShell({ screen, me, busy, rewardBalance, onNavigate, 
       <main className="nl-main" id="main-content">{children}</main>
     </div>
     <FloatingCoach />
-    <nav className="nl-bottom-nav" aria-label="Mobile navigation">
+    <nav className="nl-bottom-nav" aria-label="Mobile navigation" data-coach-background>
       {primaryItems.map(item => navButton(item, true))}
     </nav>
   </div>;

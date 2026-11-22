@@ -92,6 +92,30 @@ export default function FloatingCoach() {
 
   useEffect(() => {
     if (!open) return;
+    const regions = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-coach-background]"),
+    );
+    const previous = regions.map(element => ({
+      element,
+      inert: element.getAttribute("inert"),
+      ariaHidden: element.getAttribute("aria-hidden"),
+    }));
+    regions.forEach(element => {
+      element.setAttribute("inert", "true");
+      element.setAttribute("aria-hidden", "true");
+    });
+    return () => {
+      previous.forEach(({ element, inert, ariaHidden }) => {
+        if (inert === null) element.removeAttribute("inert");
+        else element.setAttribute("inert", inert);
+        if (ariaHidden === null) element.removeAttribute("aria-hidden");
+        else element.setAttribute("aria-hidden", ariaHidden);
+      });
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         closeCoach();

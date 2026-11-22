@@ -176,6 +176,18 @@ describe("NourishLoop app pages", () => {
     expect(await screen.findByText("A good option for right now")).toBeTruthy();
   });
 
+  it.each([
+    ["/?page=history", "Your choices, in one place"],
+    ["/?page=rewards", "Small steps, real momentum"],
+    ["/?page=profile", "Make it yours"],
+    ["/?page=workouts", "Find your next session"],
+    ["/?page=community", "Good food, better together"],
+  ])("renders the legacy %s route", async (path, heading) => {
+    window.history.replaceState({}, "", path);
+    render(<Dashboard />);
+    expect(await screen.findByText(heading)).toBeTruthy();
+  });
+
   it("refreshes Today when switching demo users", async () => {
     apiMock.summary.mockImplementation(async () => ({
       date: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" }),
@@ -189,6 +201,72 @@ describe("NourishLoop app pages", () => {
     expect(await screen.findByText("No meals are logged yet today.")).toBeTruthy();
     fireEvent.change(screen.getByLabelText("Demo account"), { target: { value: "demo-peer" } });
     expect(await screen.findByText("Meals are logged; movement is still open.")).toBeTruthy();
+  });
+
+  it("clears the previous user's Today summary before the demo switch refresh resolves", async () => {
+    const todayHK = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+    let resolveMe: ((value: unknown) => void) | undefined;
+    const peerMe = {
+      id: "demo-peer", is_moderator: false,
+      profile: { user_id: "demo-peer", display_name: "Community Peer",
+        dietary_preferences: [], allergies: [] },
+      goal: { user_id: "demo-peer", goal: "eat_healthier", daily_calorie_target: 1900 },
+    };
+
+    apiMock.summary.mockImplementation(async () => ({
+      date: todayHK,
+      timezone: "Asia/Hong_Kong",
+      meal_count: demoUserId === "demo-peer" ? 2 : 0,
+      totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+    }));
+    apiMock.workoutSessions.mockResolvedValue([]);
+
+    render(<Dashboard />);
+    expect(await screen.findByText("No meals are logged yet today.")).toBeTruthy();
+    apiMock.me.mockReturnValue(new Promise(resolve => { resolveMe = resolve; }));
+
+    fireEvent.change(screen.getByLabelText("Demo account"), { target: { value: "demo-peer" } });
+    expect(screen.getByText("Checking today’s food and movement…")).toBeTruthy();
+    expect(screen.queryByText("No meals are logged yet today.")).toBeNull();
+    expect(screen.queryByText("Meals are logged; movement is still open.")).toBeNull();
+
+    await act(async () => {
+      resolveMe?.(peerMe);
+      await Promise.resolve();
+    });
+    expect(await screen.findByText("Meals are logged; movement is still open.")).toBeTruthy();
+  });
+
+  it("clears the previous user's Progress summary before the demo switch refresh resolves", async () => {
+    const todayHK = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+    let resolveMe: ((value: unknown) => void) | undefined;
+    const peerMe = {
+      id: "demo-peer", is_moderator: false,
+      profile: { user_id: "demo-peer", display_name: "Community Peer",
+        dietary_preferences: [], allergies: [] },
+      goal: { user_id: "demo-peer", goal: "eat_healthier", daily_calorie_target: 1900 },
+    };
+
+    apiMock.summary.mockImplementation(async () => ({
+      date: todayHK,
+      timezone: "Asia/Hong_Kong",
+      meal_count: 1,
+      totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+    }));
+    apiMock.workoutSessions.mockResolvedValue([]);
+    render(<Dashboard />);
+    fireEvent.click(mainNav().getByRole("button", { name: "Progress" }));
+    expect(await screen.findByText("1 confirmed meal and 0 completed workouts today.")).toBeTruthy();
+
+    apiMock.me.mockReturnValue(new Promise(resolve => { resolveMe = resolve; }));
+    fireEvent.change(screen.getByLabelText("Demo account"), { target: { value: "demo-peer" } });
+    expect(screen.queryByText("1 confirmed meal and 0 completed workouts today.")).toBeNull();
+    expect(screen.getByText("0 confirmed meals and 0 completed workouts today.")).toBeTruthy();
+
+    await act(async () => {
+      resolveMe?.(peerMe);
+      await Promise.resolve();
+    });
   });
 
   it("loads summary and workout sessions once on Today", async () => {

@@ -1,9 +1,14 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
+from uuid import uuid4
+
+from sqlalchemy import select
 
 from apps.api.modules.assistant.context import build_today_context
 from apps.api.modules.assistant.schemas import AssistantAskRequest, DailyCoachReport
+from apps.api.modules.catalog.models import MenuItem, Venue
 from apps.api.modules.identity.models import User
-from apps.api.modules.workouts.models import WorkoutProfile
+from apps.api.modules.tracking.models import Decision, MealLog, PhotoMealRecord
+from apps.api.modules.workouts.models import Exercise, WorkoutPlan, WorkoutProfile, WorkoutSession
 
 
 def test_ask_request_trims_question_and_rejects_blank_values():
@@ -34,31 +39,29 @@ def test_report_contract_rejects_more_than_three_actions():
 
 def test_context_includes_only_confirmed_today_food_and_completed_workouts(nl_stack):
     client, session_factory = nl_stack
+    fixed_day = date(2026, 11, 23)
     menu_item = client.get("/api/v1/menu-items").json()[0]
-    decision = client.post(
-        "/api/v1/decisions", json={"menu_item_id": menu_item["id"]}
-    ).json()
-    client.post(
-        "/api/v1/meal-logs", json={"decision_id": decision["id"], "servings": 1}
-    )
-    client.post(
-        "/api/v1/decisions", json={"menu_item_id": menu_item["id"]}
-    )
+    decision = client.post("/api/v1/decisions", json={"menu_item_id": menu_item["id"]}).json()
+    client.post("/api/v1/meal-logs", json={"decision_id": decision["id"], "servings": 1})
+    client.post("/api/v1/decisions", json={"menu_item_id": menu_item["id"]})
 
     workout = client.post(
         "/api/v1/workouts/recommend", json={"focus": "back", "minutes": 30}
     ).json()
-    client.post(
+    workout_session = client.post(
         "/api/v1/workouts/sessions",
         json={"plan_id": workout["id"], "duration_min": 30},
-    )
-    client.post(
-        "/api/v1/workouts/recommend", json={"focus": "legs", "minutes": 30}
-    )
+    ).json()
+    client.post("/api/v1/workouts/recommend", json={"focus": "legs", "minutes": 30})
 
     with session_factory() as db:
         user = db.get(User, "demo-student")
-        context = build_today_context(db, user)
+        logged = db.execute(select(MealLog).where(MealLog.user_id == user.id)).scalar_one()
+        logged.consumed_at = datetime(2026, 11, 23, 4, 0, tzinfo=timezone.utc)
+        session_row = db.get(WorkoutSession, workout_session["id"])
+        session_row.completed_at = datetime(2026, 11, 23, 5, 0, tzinfo=timezone.utc)
+        db.commit()
+        context = build_today_context(db, user, day=fixed_day)
 
     assert context.meal_count == 1
     assert len(context.menu_meals) == 1
@@ -73,9 +76,7 @@ def test_context_uses_hong_kong_day_boundaries(nl_stack):
     from apps.api.modules.tracking.models import MealLog
 
     menu_item = client.get("/api/v1/menu-items").json()[0]
-    decision = client.post(
-        "/api/v1/decisions", json={"menu_item_id": menu_item["id"]}
-    ).json()
+    decision = client.post("/api/v1/decisions", json={"menu_item_id": menu_item["id"]}).json()
     logged = client.post(
         "/api/v1/meal-logs", json={"decision_id": decision["id"], "servings": 1}
     ).json()
@@ -92,6 +93,7 @@ def test_context_uses_hong_kong_day_boundaries(nl_stack):
 
 def test_context_includes_saved_photo_meal_without_private_fields(nl_stack):
     client, session_factory = nl_stack
+    fixed_day = date(2026, 11, 23)
     saved = client.post(
         "/api/v1/photo-meals",
         json={
@@ -116,7 +118,13 @@ def test_context_includes_saved_photo_meal_without_private_fields(nl_stack):
     assert saved.status_code == 201
 
     with session_factory() as db:
-        context = build_today_context(db, db.get(User, "demo-student"))
+        user = db.get(User, "demo-student")
+        photo = db.execute(
+            select(PhotoMealRecord).where(PhotoMealRecord.user_id == user.id)
+        ).scalar_one()
+        photo.consumed_at = datetime(2026, 11, 23, 4, 0, tzinfo=timezone.utc)
+        db.commit()
+        context = build_today_context(db, user, day=fixed_day)
 
     assert context.meal_count == 1
     assert len(context.photo_meals) == 1
@@ -127,6 +135,249 @@ def test_context_includes_saved_photo_meal_without_private_fields(nl_stack):
     assert "display_name" not in serialized
     assert "Demo Student" not in serialized
     assert "vision-test" not in serialized
+
+
+def test_context_hides_nutrition_for_non_completed_photo_reviews(nl_stack):
+    _, session_factory = nl_stack
+    fixed_day = date(2026, 11, 23)
+
+    with session_factory() as db:
+        user = db.get(User, "demo-student")
+        for status in ("pending", "processing", "failed", "not_requested"):
+            db.add(
+                PhotoMealRecord(
+                    user_id=user.id,
+                    foods=[{"name": f"{status} food"}],
+                    notes=f"{status} note",
+                    model="test-model",
+                    consumed_at=datetime(2026, 11, 23, 4, 0, tzinfo=timezone.utc),
+                    nutrition_snapshot={
+                        "calories_kcal": 999,
+                        "protein_g": 9,
+                        "carbs_g": 9,
+                        "fat_g": 9,
+                    },
+                    nutrition_status="complete",
+                    unresolved_foods=[],
+                    review_status=status,
+                )
+            )
+        db.add(
+            PhotoMealRecord(
+                user_id=user.id,
+                foods=[{"name": "confirmed food"}],
+                notes="confirmed note",
+                model="test-model",
+                consumed_at=datetime(2026, 11, 23, 5, 0, tzinfo=timezone.utc),
+                nutrition_snapshot={
+                    "calories_kcal": 400,
+                    "protein_g": 20,
+                    "carbs_g": 40,
+                    "fat_g": 10,
+                },
+                nutrition_status="complete",
+                unresolved_foods=[],
+                review_status="completed",
+            )
+        )
+        db.commit()
+
+        context = build_today_context(db, user, day=fixed_day)
+
+    status_only = [photo for photo in context.photo_meals if photo.review_status != "completed"]
+    confirmed = [photo for photo in context.photo_meals if photo.review_status == "completed"]
+    assert len(status_only) == 4
+    assert all(photo.nutrition is None for photo in status_only)
+    assert all(photo.nutrition_status == "none" for photo in status_only)
+    assert len(confirmed) == 1
+    assert confirmed[0].nutrition is not None
+
+
+def test_context_scopes_meal_photo_and_workout_records_to_current_user(nl_stack):
+    _, session_factory = nl_stack
+    fixed_day = date(2026, 11, 23)
+    consumed_at = datetime(2026, 11, 23, 4, 0, tzinfo=timezone.utc)
+
+    with session_factory() as db:
+        venue_id = db.scalar(select(Venue.id).limit(1))
+        exercise = db.scalar(select(Exercise).limit(1))
+        peer_exercise = Exercise(
+            id=f"peer-exercise-{uuid4().hex}",
+            name="PEER_EXERCISE",
+            muscle_group="back",
+            equipment="machine",
+            difficulty="beginner",
+            instructions="",
+            source_url="https://example.org/peer-exercise",
+        )
+        current_user = db.get(User, "demo-student")
+        peer_user = db.get(User, "demo-peer")
+
+        current_item = MenuItem(
+            id=f"current-item-{uuid4().hex}",
+            venue_id=venue_id,
+            name="CURRENT_PRIVATE_MEAL",
+            description="",
+            category="meal",
+            tags=[],
+            allergen_tags=[],
+            available=True,
+            source_label="fictional demo data",
+        )
+        peer_item = MenuItem(
+            id=f"peer-item-{uuid4().hex}",
+            venue_id=venue_id,
+            name="PEER_PRIVATE_MEAL",
+            description="",
+            category="meal",
+            tags=[],
+            allergen_tags=[],
+            available=True,
+            source_label="fictional demo data",
+        )
+        db.add_all([current_item, peer_item, peer_exercise])
+        db.flush()
+
+        current_decision = Decision(
+            id=f"current-decision-{uuid4().hex}",
+            user_id=current_user.id,
+            menu_item_id=current_item.id,
+            status="confirmed",
+        )
+        peer_decision = Decision(
+            id=f"peer-decision-{uuid4().hex}",
+            user_id=peer_user.id,
+            menu_item_id=peer_item.id,
+            status="confirmed",
+        )
+        db.add_all([current_decision, peer_decision])
+        db.flush()
+
+        db.add_all(
+            [
+                MealLog(
+                    id=f"current-log-{uuid4().hex}",
+                    decision_id=current_decision.id,
+                    user_id=current_user.id,
+                    menu_item_id=current_item.id,
+                    servings=1,
+                    consumed_at=consumed_at,
+                    nutrition_snapshot={
+                        "calories_kcal": 1,
+                        "protein_g": 1,
+                        "carbs_g": 1,
+                        "fat_g": 1,
+                    },
+                ),
+                MealLog(
+                    id=f"peer-log-{uuid4().hex}",
+                    decision_id=peer_decision.id,
+                    user_id=peer_user.id,
+                    menu_item_id=peer_item.id,
+                    servings=1,
+                    consumed_at=consumed_at,
+                    nutrition_snapshot={
+                        "calories_kcal": 2,
+                        "protein_g": 2,
+                        "carbs_g": 2,
+                        "fat_g": 2,
+                    },
+                ),
+                PhotoMealRecord(
+                    id=f"current-photo-{uuid4().hex}",
+                    user_id=current_user.id,
+                    foods=[{"name": "CURRENT_PHOTO_FOOD"}],
+                    notes="CURRENT_PHOTO_NOTE",
+                    model="test-model",
+                    consumed_at=consumed_at,
+                    nutrition_snapshot={
+                        "calories_kcal": 1,
+                        "protein_g": 1,
+                        "carbs_g": 1,
+                        "fat_g": 1,
+                    },
+                    nutrition_status="complete",
+                    unresolved_foods=[],
+                    review_status="completed",
+                ),
+                PhotoMealRecord(
+                    id=f"peer-photo-{uuid4().hex}",
+                    user_id=peer_user.id,
+                    foods=[{"name": "PEER_PHOTO_FOOD"}],
+                    notes="PEER_PHOTO_NOTE",
+                    model="test-model",
+                    consumed_at=consumed_at,
+                    nutrition_snapshot={
+                        "calories_kcal": 2,
+                        "protein_g": 2,
+                        "carbs_g": 2,
+                        "fat_g": 2,
+                    },
+                    nutrition_status="complete",
+                    unresolved_foods=[],
+                    review_status="completed",
+                ),
+            ]
+        )
+
+        current_plan = WorkoutPlan(
+            id=f"current-plan-{uuid4().hex}",
+            user_id=current_user.id,
+            requested_focus="back",
+            focus="back",
+            stage="beginner",
+            minutes=30,
+            prescription=[{"exercise_id": exercise.id, "sets": 1, "reps": "1", "rest_seconds": 60}],
+            explanation="",
+            explanation_source="rules",
+        )
+        peer_plan = WorkoutPlan(
+            id=f"peer-plan-{uuid4().hex}",
+            user_id=peer_user.id,
+            requested_focus="legs",
+            focus="legs",
+            stage="beginner",
+            minutes=77,
+            prescription=[
+                {"exercise_id": peer_exercise.id, "sets": 1, "reps": "1", "rest_seconds": 60}
+            ],
+            explanation="",
+            explanation_source="rules",
+        )
+        db.add_all([current_plan, peer_plan])
+        db.flush()
+        db.add_all(
+            [
+                WorkoutSession(
+                    id=f"current-session-{uuid4().hex}",
+                    user_id=current_user.id,
+                    plan_id=current_plan.id,
+                    duration_min=30,
+                    completed_at=consumed_at,
+                ),
+                WorkoutSession(
+                    id=f"peer-session-{uuid4().hex}",
+                    user_id=peer_user.id,
+                    plan_id=peer_plan.id,
+                    duration_min=77,
+                    completed_at=consumed_at,
+                ),
+            ]
+        )
+        db.commit()
+
+        context = build_today_context(db, current_user, day=fixed_day)
+
+    serialized = context.model_dump_json()
+    assert "CURRENT_PRIVATE_MEAL" in serialized
+    assert "CURRENT_PHOTO_NOTE" in serialized
+    assert "CURRENT_PHOTO_FOOD" in serialized
+    assert "PEER_EXERCISE" not in serialized
+    assert "PEER_PRIVATE_MEAL" not in serialized
+    assert "PEER_PHOTO_NOTE" not in serialized
+    assert "PEER_PHOTO_FOOD" not in serialized
+    assert '"focus":"legs"' not in serialized
+    assert '"duration_min":77' not in serialized
 
 
 def test_context_does_not_create_a_missing_workout_profile(nl_stack):

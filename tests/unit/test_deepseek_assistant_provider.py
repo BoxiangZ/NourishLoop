@@ -119,6 +119,11 @@ def test_prompts_treat_health_data_as_untrusted_facts():
     assert "invent nutrition" in system_prompt
     assert "workouts" in system_prompt
     assert "medical outcomes" in system_prompt
+    assert "status-only" in system_prompt
+    assert "pending" in system_prompt
+    assert "processing" in system_prompt
+    assert "failed" in system_prompt
+    assert "not_requested" in system_prompt
 
 
 def test_report_validates_json_without_retry():
@@ -236,6 +241,31 @@ def test_blank_deepseek_configuration_is_rejected_without_request(overrides):
     with pytest.raises(AssistantConfigurationError):
         DeepSeekChatProvider(
             Settings(_env_file=None, **overrides),
+            transport=httpx.MockTransport(handler),
+        ).answer("Question", context())
+
+    assert calls == 0
+
+
+@pytest.mark.parametrize(
+    "base_url",
+    [
+        "https://api.deepseek.com:bad",
+        "https://api.deepseek.com:70000",
+    ],
+    ids=["nonnumeric-port", "out-of-range-port"],
+)
+def test_malformed_deepseek_base_url_port_is_rejected_without_request(base_url):
+    calls = 0
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        raise AssertionError("network should not be used")
+
+    with pytest.raises(AssistantConfigurationError):
+        DeepSeekChatProvider(
+            Settings(_env_file=None, deepseek_api_key="test-key", deepseek_base_url=base_url),
             transport=httpx.MockTransport(handler),
         ).answer("Question", context())
 

@@ -198,6 +198,11 @@ export default function Dashboard() {
 
   async function switchDemoUser(id: string) {
     if (busy || id === me?.id) return;
+    if (screen === "today" || screen === "history") {
+      setSummary(null);
+      setWorkoutSessions([]);
+      setTodayLoading(true);
+    }
     await act(async () => {
       api.setDemoUserId(id); setRun(null); setJobStatus("");
       setHistoryPage(0); setLogPage(0); setCommunityPage(0); setLedgerPage(0);

@@ -44,9 +44,7 @@ def _photo_food_names(foods: list) -> list[str]:
     ]
 
 
-def build_today_context(
-    db: Session, user: User, day: date | None = None
-) -> AssistantContext:
+def build_today_context(db: Session, user: User, day: date | None = None) -> AssistantContext:
     local_day, start, end = _day_bounds(day)
     goal = get_goal(db, user)
     profile = get_profile(db, user)
@@ -85,10 +83,10 @@ def build_today_context(
             food_names=_photo_food_names(row.foods),
             notes=row.notes,
             review_status=row.review_status,
-            nutrition_status=row.nutrition_status,
+            nutrition_status=(row.nutrition_status if row.review_status == "completed" else "none"),
             nutrition=(
                 NutritionContext(**row.nutrition_snapshot)
-                if row.nutrition_snapshot
+                if row.review_status == "completed" and row.nutrition_snapshot
                 else None
             ),
             unresolved_foods=row.unresolved_foods or [],

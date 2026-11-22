@@ -153,7 +153,9 @@ describe("FloatingCoach", () => {
     fireEvent.keyDown(input, { key: "Tab" });
 
     expect(document.activeElement).toBe(close);
-    expect(document.activeElement).not.toBe(screen.getByRole("button", { name: "Background action" }));
+    expect(document.activeElement).not.toBe(
+      screen.getByRole("button", { name: "Background action", hidden: true }),
+    );
   });
 
   it("wraps Shift+Tab backward from the first dialog control", () => {
@@ -169,7 +171,46 @@ describe("FloatingCoach", () => {
     fireEvent.keyDown(close, { key: "Tab", shiftKey: true });
 
     expect(document.activeElement).toBe(input);
-    expect(document.activeElement).not.toBe(screen.getByRole("button", { name: "Background action" }));
+    expect(document.activeElement).not.toBe(
+      screen.getByRole("button", { name: "Background action", hidden: true }),
+    );
+  });
+
+  it("makes background app regions inert and aria-hidden while open and restores them on close", () => {
+    render(<AppShell screen="today" me={null} busy={false} rewardBalance={0}
+      onNavigate={() => {}} onSwitchUser={() => {}}>
+      <button type="button">Background action</button>
+    </AppShell>);
+    const mainNav = document.querySelector<HTMLElement>('nav[aria-label="Main navigation"]');
+    const mainNavRegion = mainNav?.closest<HTMLElement>(".nl-sidebar");
+    const workspace = document.querySelector<HTMLElement>(".nl-workspace");
+    const sidebar = document.querySelector<HTMLElement>(".nl-sidebar");
+    const bottomNav = document.querySelector<HTMLElement>('nav[aria-label="Mobile navigation"]');
+
+    expect(mainNavRegion?.getAttribute("inert")).toBeNull();
+    expect(workspace?.getAttribute("inert")).toBeNull();
+    expect(sidebar?.getAttribute("inert")).toBeNull();
+    expect(bottomNav?.getAttribute("inert")).toBeNull();
+
+    openCoach();
+    expect(mainNavRegion?.getAttribute("inert")).toBe("true");
+    expect(mainNavRegion?.getAttribute("aria-hidden")).toBe("true");
+    expect(workspace?.getAttribute("inert")).toBe("true");
+    expect(workspace?.getAttribute("aria-hidden")).toBe("true");
+    expect(sidebar?.getAttribute("inert")).toBe("true");
+    expect(sidebar?.getAttribute("aria-hidden")).toBe("true");
+    expect(bottomNav?.getAttribute("inert")).toBe("true");
+    expect(bottomNav?.getAttribute("aria-hidden")).toBe("true");
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(mainNavRegion?.getAttribute("inert")).toBeNull();
+    expect(mainNavRegion?.getAttribute("aria-hidden")).toBeNull();
+    expect(workspace?.getAttribute("inert")).toBeNull();
+    expect(workspace?.getAttribute("aria-hidden")).toBeNull();
+    expect(sidebar?.getAttribute("inert")).toBeNull();
+    expect(sidebar?.getAttribute("aria-hidden")).toBeNull();
+    expect(bottomNav?.getAttribute("inert")).toBeNull();
+    expect(bottomNav?.getAttribute("aria-hidden")).toBeNull();
   });
 
   it("moves focus to Ask another question when the focused form is replaced by an answer", async () => {
