@@ -222,3 +222,6 @@ __marimo__/
 
 # Local photo review runtime data
 uploads/
+
+# Local visual brainstorming artifacts
+.superpowers/
