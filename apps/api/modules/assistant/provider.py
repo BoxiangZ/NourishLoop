@@ -88,8 +88,8 @@ class DeepSeekChatProvider:
         )
         try:
             return DailyCoachReport.model_validate(json.loads(response))
-        except (json.JSONDecodeError, ValidationError) as exc:
-            raise AssistantResponseError("DeepSeek returned an invalid report") from exc
+        except (json.JSONDecodeError, ValidationError):
+            raise AssistantResponseError("DeepSeek returned an invalid report") from None
 
     def _complete(
         self,
@@ -139,8 +139,8 @@ class DeepSeekChatProvider:
         try:
             body = response.json()
             reply = body["choices"][0]["message"]["content"]
-        except (ValueError, KeyError, IndexError, TypeError) as exc:
-            raise AssistantUnavailableError("DeepSeek returned an unusable response") from exc
+        except (ValueError, KeyError, IndexError, TypeError):
+            raise AssistantUnavailableError("DeepSeek returned an unusable response") from None
         if not isinstance(reply, str):
             raise AssistantResponseError("DeepSeek returned no textual answer")
         return reply

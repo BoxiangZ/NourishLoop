@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 
 import httpx
 import pytest
@@ -252,6 +253,38 @@ def test_report_schema_failure_is_a_response_error():
         ).report(context())
 
 
+@pytest.mark.parametrize(
+    "raw_report",
+    [
+        '{"headline": "RAW_REPORT_SECRET"',
+        '{"headline": "RAW_REPORT_SECRET"}',
+    ],
+    ids=["malformed-json", "schema-invalid"],
+)
+def test_report_failure_does_not_log_raw_content(caplog, raw_report):
+    caplog.set_level(logging.ERROR)
+    provider = DeepSeekChatProvider(
+        Settings(_env_file=None, deepseek_api_key="test-key"),
+        transport=httpx.MockTransport(
+            lambda _request: httpx.Response(
+                200, json={"choices": [{"message": {"content": raw_report}}]}
+            )
+        ),
+    )
+
+    try:
+        provider.report(context())
+    except AssistantResponseError as error:
+        logging.getLogger(__name__).exception("report failed")
+        caught = error
+    else:
+        pytest.fail("invalid report should be rejected")
+
+    assert caught.__cause__ is None
+    assert caught.__suppress_context__ is True
+    assert "RAW_REPORT_SECRET" not in caplog.text
+
+
 def test_timeout_is_wrapped_without_retry():
     calls = 0
 
@@ -308,6 +341,32 @@ def test_unparseable_response_json_is_unavailable():
         DeepSeekChatProvider(
             Settings(_env_file=None, deepseek_api_key="test-key"), transport=transport
         ).answer("Question", context())
+
+
+def test_unparseable_response_does_not_log_raw_content(caplog):
+    caplog.set_level(logging.ERROR)
+    provider = DeepSeekChatProvider(
+        Settings(_env_file=None, deepseek_api_key="test-key"),
+        transport=httpx.MockTransport(
+            lambda _request: httpx.Response(
+                200,
+                content=b'{"RAW_RESPONSE_SECRET"',
+                headers={"content-type": "application/json"},
+            )
+        ),
+    )
+
+    try:
+        provider.answer("Question", context())
+    except AssistantUnavailableError as error:
+        logging.getLogger(__name__).exception("provider failed")
+        caught = error
+    else:
+        pytest.fail("invalid response should be rejected")
+
+    assert caught.__cause__ is None
+    assert caught.__suppress_context__ is True
+    assert "RAW_RESPONSE_SECRET" not in caplog.text
 
 
 def test_provider_does_not_log_sensitive_content(caplog):
