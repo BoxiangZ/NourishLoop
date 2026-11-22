@@ -1,6 +1,8 @@
 import type {
+  AssistantAnswerRead,
   CommunityCommentCreate, CommunityCommentRead, CommunityPostCreate, CommunityPostRead,
   CommunityReportCreate, CommunityReportRead, CommunityReportResolve, DailySummary,
+  DailyCoachReport,
   DecisionCreate, DecisionRead, ExerciseRead, ExternalNoteRead, GoalRead, GoalUpdate,
   MeRead, MealLogCreate, MealLogRead, MenuItemRead, ProfileRead,
   PhotoAnalysisRead, PhotoAnalysisRequest, PhotoMealCreate, PhotoMealRead,
@@ -62,6 +64,10 @@ async function uploadPhotoReview(file: File, notes: string): Promise<PhotoMealRe
 export const api = {
   setDemoUserId: (id: string) => { demoUserId = id; },
   me: () => request<MeRead>("/me"),
+  askAssistant: (question: string) =>
+    request<AssistantAnswerRead>("/assistant/ask", json("POST", { question })),
+  dailyCoachReport: () =>
+    request<DailyCoachReport>("/assistant/daily-report", { method: "POST" }),
   updateProfile: (body: ProfileUpdate) => request<ProfileRead>("/me/profile", json("PATCH", body)),
   goals: () => request<GoalRead>("/me/goals"),
   updateGoals: (body: GoalUpdate) => request<GoalRead>("/me/goals", json("PUT", body)),

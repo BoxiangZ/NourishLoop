@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { MeRead } from "@nourishloop/api-client/schema";
+import FloatingCoach from "./FloatingCoach";
 
 export type Screen = "discover" | "workouts" | "for-you" | "history" | "community" | "rewards" | "profile";
 
@@ -75,6 +76,7 @@ export default function AppShell({ screen, me, busy, onNavigate, onSwitchUser, c
       </header>
       <main className="nl-main" id="main-content">{children}</main>
     </div>
+    <FloatingCoach />
     <nav className="nl-bottom-nav" aria-label="Mobile navigation">
       {items.filter(item => item.id !== "profile" && item.id !== "workouts").map(item => navButton(item, true))}
     </nav>
