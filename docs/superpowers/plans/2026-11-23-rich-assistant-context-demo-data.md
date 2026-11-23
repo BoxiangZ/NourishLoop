@@ -663,9 +663,11 @@ Use `award_event(db, user_id, "confirm_meal", "meal_log", log.id, consumed_at)` 
 meal logs, the equivalent `photo_meal` source for the photo record, and
 `complete_workout`/`workout_session` for completed sessions.
 
-Before inserting today's plans:
+Before inserting today's decisions and workout plans, remove stale seeded planned items:
 
 ```python
+from sqlalchemy import delete, exists, select
+
 db.execute(
     delete(Decision).where(
         Decision.user_id == user_id,
@@ -673,9 +675,22 @@ db.execute(
         Decision.id.like("demo-plan-%"),
     )
 )
+db.execute(
+    delete(WorkoutPlan).where(
+        WorkoutPlan.user_id == user_id,
+        WorkoutPlan.id.like("demo-wplan-%"),
+        ~exists(
+            select(WorkoutSession.id).where(
+                WorkoutSession.plan_id == WorkoutPlan.id
+            )
+        ),
+    )
+)
 ```
 
-Then insert today's plan decisions with `created_at` set to today at 07:00 and 07:05 HK.
+The workout cleanup must preserve completed seeded plans and all non-seeded user plans.
+Then insert today's plan decisions with `created_at` set to today at 07:00 and 07:05 HK,
+followed by today's seeded workout plans.
 
 The function performs one final `db.commit()`.
 

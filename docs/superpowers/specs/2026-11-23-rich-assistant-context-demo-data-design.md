@@ -249,7 +249,11 @@ Scenario data for `demo-student`:
 Cleanup:
 
 - Remove prior still-planned seeded demo decisions before creating the current-day plans.
+- Remove prior unfinished seeded workout plans before creating the current-day workout
+  plans. Limit this cleanup to `demo-student` rows with the `demo-wplan-` prefix that have
+  no completed `WorkoutSession`.
 - Preserve any seeded decision that the user confirmed and keep its meal log.
+- Preserve completed seeded workout plans and their sessions.
 - Do not delete non-seeded user data.
 
 ## Error Handling and Privacy

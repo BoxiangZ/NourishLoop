@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, exists, select
 from sqlalchemy.orm import Session
 
 from apps.api.core.config import get_settings
@@ -221,6 +221,17 @@ def seed_demo_activity(db: Session, now: datetime | None = None) -> None:
             Decision.user_id == DEMO_USER_ID,
             Decision.status == "planned",
             Decision.id.like("demo-plan-%"),
+        )
+    )
+    db.execute(
+        delete(WorkoutPlan).where(
+            WorkoutPlan.user_id == DEMO_USER_ID,
+            WorkoutPlan.id.like("demo-wplan-%"),
+            ~exists(
+                select(WorkoutSession.id).where(
+                    WorkoutSession.plan_id == WorkoutPlan.id
+                )
+            ),
         )
     )
     db.flush()

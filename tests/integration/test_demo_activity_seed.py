@@ -10,7 +10,7 @@ from apps.api.core.config import Settings
 from apps.api.modules.catalog.models import MenuItem, NutritionFact
 from apps.api.modules.rewards.models import CreditTransaction, HabitEvent
 from apps.api.modules.tracking.models import Decision, MealLog, PhotoMealRecord
-from apps.api.modules.workouts.models import WorkoutPlan, WorkoutSession
+from apps.api.modules.workouts.models import Exercise, WorkoutPlan, WorkoutSession
 
 
 HK = ZoneInfo("Asia/Hong_Kong")
@@ -240,6 +240,114 @@ def test_demo_activity_is_idempotent_on_the_same_hong_kong_day(nl_stack):
         "habit_events": 11,
         "credit_transactions": 11,
     }
+
+
+def test_demo_activity_replaces_stale_unfinished_seeded_workout_plan(nl_stack):
+    from apps.api.demo_activity import seed_demo_activity
+
+    _, session_factory = nl_stack
+    next_day = NOW + timedelta(days=1)
+    with session_factory() as db:
+        seed_demo_activity(db, now=NOW)
+        prior_log_ids = set(
+            db.scalars(select(MealLog.id).where(MealLog.id.like("demo-meal-%"))).all()
+        )
+        prior_photo_ids = set(
+            db.scalars(
+                select(PhotoMealRecord.id).where(
+                    PhotoMealRecord.id.like("demo-photo-%")
+                )
+            ).all()
+        )
+        prior_session_ids = set(
+            db.scalars(
+                select(WorkoutSession.id).where(
+                    WorkoutSession.id.like("demo-wsess-%")
+                )
+            ).all()
+        )
+        prior_completed_plan_ids = set(
+            db.scalars(
+                select(WorkoutPlan.id)
+                .join(WorkoutSession, WorkoutSession.plan_id == WorkoutPlan.id)
+                .where(WorkoutPlan.id.like("demo-wplan-%"))
+            ).all()
+        )
+        exercise_id = db.scalar(select(Exercise.id).limit(1))
+        db.add(
+            WorkoutPlan(
+                id="user-owned-wplan",
+                user_id="demo-student",
+                requested_focus="legs",
+                focus="legs",
+                stage="beginner",
+                minutes=20,
+                prescription=[
+                    {
+                        "exercise_id": exercise_id,
+                        "sets": 1,
+                        "reps": "8",
+                        "rest_seconds": 60,
+                    }
+                ],
+                explanation="User-owned plan",
+                explanation_source="rules",
+            )
+        )
+        db.commit()
+
+    with session_factory() as db:
+        seed_demo_activity(db, now=next_day)
+        assert prior_log_ids <= set(
+            db.scalars(select(MealLog.id).where(MealLog.id.like("demo-meal-%"))).all()
+        )
+        assert prior_photo_ids <= set(
+            db.scalars(
+                select(PhotoMealRecord.id).where(
+                    PhotoMealRecord.id.like("demo-photo-%")
+                )
+            ).all()
+        )
+        assert prior_session_ids <= set(
+            db.scalars(
+                select(WorkoutSession.id).where(
+                    WorkoutSession.id.like("demo-wsess-%")
+                )
+            ).all()
+        )
+        assert prior_completed_plan_ids <= set(
+            db.scalars(
+                select(WorkoutPlan.id)
+                .join(WorkoutSession, WorkoutSession.plan_id == WorkoutPlan.id)
+                .where(WorkoutPlan.id.like("demo-wplan-%"))
+            ).all()
+        )
+        assert db.get(WorkoutPlan, "user-owned-wplan") is not None
+
+        unfinished_seeded = db.scalars(
+            select(WorkoutPlan)
+            .outerjoin(WorkoutSession, WorkoutSession.plan_id == WorkoutPlan.id)
+            .where(
+                WorkoutPlan.user_id == "demo-student",
+                WorkoutPlan.id.like("demo-wplan-%"),
+                WorkoutSession.id.is_(None),
+            )
+        ).all()
+        assert [
+            (
+                plan.id,
+                plan.focus,
+                _hong_kong_datetime(plan.created_at).date(),
+            )
+            for plan in unfinished_seeded
+        ] == [("demo-wplan-20261124-a", "legs", date(2026, 11, 24))]
+
+        for model in (Decision, MealLog, PhotoMealRecord, WorkoutPlan, WorkoutSession):
+            assert db.scalar(
+                select(func.count())
+                .select_from(model)
+                .where(model.user_id == "demo-peer")
+            ) == 0
 
 
 def test_demo_activity_deletes_only_stale_planned_seed_decisions(nl_stack):
