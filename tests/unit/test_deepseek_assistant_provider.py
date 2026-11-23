@@ -441,6 +441,32 @@ def test_answer_accepts_terminal_punctuation_before_a_closing_quote():
     assert result == 'Try the Chickpea salad."'
 
 
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "午餐可以选鸡肉谷物碗。",
+        "午餐可以选鸡肉谷物碗！",
+        "午餐可以选鸡肉谷物碗？",
+        "午餐可以选鸡肉谷物碗。”",
+        "午餐可以选鸡肉谷物碗！」",
+        "午餐可以选鸡肉谷物碗？」",
+    ],
+)
+def test_answer_accepts_multilingual_terminal_sentence_boundaries(answer):
+    transport = httpx.MockTransport(
+        lambda _request: httpx.Response(
+            200,
+            json={"choices": [{"message": {"content": answer}}]},
+        )
+    )
+
+    result = DeepSeekChatProvider(
+        Settings(_env_file=None, deepseek_api_key="test-key"), transport=transport
+    ).answer("今天午餐吃什么？", context())
+
+    assert result == answer
+
+
 def test_answer_naming_an_ineligible_menu_item_is_rejected_without_retry():
     calls = 0
     ineligible_context = context().model_copy(

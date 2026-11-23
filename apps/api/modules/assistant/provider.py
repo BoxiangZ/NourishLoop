@@ -42,8 +42,8 @@ class AssistantLLMProvider(Protocol):
 ANSWER_MAX_TOKENS = 1200
 REPORT_MAX_TOKENS = 2400
 INCOMPLETE_FINISH_REASONS = frozenset({"length", "content_filter"})
-TERMINAL_SENTENCE_BOUNDARIES = frozenset({".", "!", "?"})
-CLOSING_QUOTES = "\"'”’"
+TERMINAL_SENTENCE_BOUNDARIES = frozenset({".", "!", "?", "。", "！", "？"})
+CLOSING_QUOTES = "\"'”’」』】）"
 
 
 def _ends_with_complete_sentence(answer: str) -> bool:
