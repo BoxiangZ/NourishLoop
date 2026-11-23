@@ -31,25 +31,34 @@ The API authenticates the local demo user, validates requests, and delegates wor
 
 ## Floating coach and daily report
 
-The active `assistant` module owns a separate DeepSeek Chat Completions provider. `POST /assistant/ask` builds a fresh read-only context, sends the current question and one grounded request, validates a short plain-text answer, and returns it. `POST /assistant/daily-report` uses the same context boundary with JSON output mode and validates the structured report. Each HTTP action causes at most one DeepSeek request. The provider and frontend do not retry automatically; any retry is a separate explicit user action. Application logs do not include questions, health context, generated answers or reports, raw provider bodies, Authorization headers, or API keys.
+The active `assistant` module owns a separate DeepSeek Chat Completions provider. `POST /assistant/ask` builds a fresh read-only context, sends the current question and one grounded request, validates a nonblank plain-text answer of up to 1000 characters, and returns it. The prompt has four sections: role, data authority, recommendation priorities, and response style. It asks for two to four natural conversational sentences without headings, bullets, tables, labels, or Markdown, but sentence count and formatting are not runtime-validated. `POST /assistant/daily-report` uses the same context boundary with JSON output mode and validates the structured report. Each HTTP action causes at most one DeepSeek request. The provider and frontend do not retry automatically; any retry is a separate explicit user action. Application logs do not include questions, health context, generated answers or reports, raw provider bodies, Authorization headers, or API keys.
 
 The bottom-right **Coach** ring opens a focused, blurred overlay with one current question and at most one answer. It does not carry a conversation transcript or prior exchange into another question, and asking another question replaces the visible exchange. Browser speech recognition may fill the input when available; the ordinary text field remains the fallback. Closing the overlay or refreshing the page clears the exchange.
 
 **Progress** owns the full report UI. The report is held only in React component state and disappears on navigation, unmount, or refresh. Generated questions, answers, and reports are not written to PostgreSQL or browser storage, and this feature adds no table or migration. OpenRouter's existing explanation and photo-recognition integrations are unchanged.
 
-The context builder reads only the authenticated demo user's records for the current Hong Kong-local day:
+The context builder separates current Hong Kong-local-day activity from broader planning and catalog facts:
 
 | Allowlisted context | Included fields |
 |---|---|
 | Profile and goal | Goal, optional daily calorie target, dietary preferences, allergies |
-| Daily summary | Recorded nutrition totals and confirmed meal count |
-| Confirmed menu meals | Food name, servings, consumed time, stored nutrition snapshot |
-| Saved photo-review rows | Food names, user notes, review status, nutrition status, optional nutrition snapshot, unresolved foods |
-| Completed workouts | Focus, stage, duration, exercise names, completion time |
+| Current daily summary | Current-day nutrition totals and confirmed meal count |
+| Confirmed menu meals | Current-day food name, servings, consumed time, stored nutrition snapshot |
+| Saved photo-review rows | Current-day food names, user notes, review status, nutrition status, optional nutrition snapshot, unresolved foods |
+| Completed workouts | Current-day focus, stage, duration, exercise names, completion time |
+| Planned meals | Up to five recent `planned` decisions with item, venue, price, tags, allergens, nutrition, and creation time |
+| Unfinished workout plans | Up to three persisted plans without a completed session, including focus, stage, duration, exercises, and creation time |
+| Menu catalog | Up to 100 fictional recordable items with description, category, price, tags, allergens, estimated nutrition, provenance, server-computed `eligible`, and `ineligibility_reasons` |
+| Venue directory | Up to 100 venue names, campus areas, scopes, demo status, and optional source URLs; no menu facts |
+| Derived intake | Remaining calories after confirmed intake, plus planned calories and protein |
 | Workout profile | Declared stage, equipment, target days per week |
 | Current ask | The current question for `/ask`; none for `/daily-report` |
 
-Confirmed menu logs and completed workouts are treated as consumed activity. The context also serializes every saved photo-review row for the day with its `review_status`. Pending, processing, and failed rows are status-only with no row nutrition and are not counted as consumed. `not_requested` and `completed` rows count toward the confirmed meal count; their `complete` nutrition snapshots contribute to aggregate nutrition, while `partial` snapshots remain per-row matched-food estimates and are not aggregate intake. Planned decisions, recommendations, unsaved/current recognitions, images and image paths, photo-review attempt logs/errors, user IDs and display identity, Community content, merchant/payment data, secrets, provider job history, and prior conversation are excluded. The prompt treats the question and serialized facts as untrusted data, forbids invented records or medical claims, and asks the model to state absent records. Output is rendered as text, never raw HTML.
+Confirmed menu logs and completed workouts are consumed activity. Planned meal decisions are suggestions until a separate `POST /meal-logs` confirmation; unfinished workout plans are likewise not completed sessions. Planned calories and protein are exposed separately and do not alter the daily nutrition totals or remaining-calorie calculation. The context also serializes every saved photo-review row for the day with its `review_status`. Pending, processing, and failed rows are status-only with no row nutrition and are not counted as consumed. `not_requested` and `completed` rows count toward the confirmed meal count; their `complete` nutrition snapshots contribute to aggregate nutrition, while `partial` snapshots remain per-row matched-food estimates and are not aggregate intake.
+
+The pure `menu_eligibility` helper normalizes tags, allergens, dietary preferences, and user allergies. An allergen intersection or a strict vegan/vegetarian mismatch marks an item ineligible; soft preferences do not remove it. The prompt treats the question and serialized facts as untrusted data, uses only the server-marked menu catalog for food recommendations, prohibits suggesting an ineligible item, forbids invented records or medical claims, and asks the model to state absent records. Output is rendered as text, never raw HTML.
+
+Real venue rows are place-only. The directory supplies identity, area, scope, and source metadata, while the separate fictional menu catalog supplies recordable dishes and estimates. The prompt must not assign a real venue an invented dish, price, allergen, or nutrition value. Unsaved/current recognitions, images and image paths, photo-review attempt logs/errors, user IDs and display identity, Community content, merchant/payment data, secrets, provider job history, and prior conversation remain excluded.
 
 Missing or blank key, base URL, or model configuration and unavailable demo identity return 503. Settings validation rejects a blank, non-positive, or oversized timeout before startup, while the provider also rechecks the required values before an HTTP request. A DeepSeek timeout returns 504. Other upstream failures, unusable response envelopes, empty/invalid answers, and invalid report JSON return 502 through fixed safe messages. Malformed local requests return 422. DeepSeek is not used for recommendation ranking, workout selection, stored nutrition, rewards, or Community behavior.
 

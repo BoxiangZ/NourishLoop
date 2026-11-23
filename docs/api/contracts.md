@@ -7,7 +7,7 @@ Current product routes are under `/api/v1`; OpenAPI is at `/openapi.json`. Run `
 | GET | `/api/v1/health` | Database readiness |
 | GET, PATCH | `/api/v1/me`, `/api/v1/me/profile` | Demo user and profile |
 | GET, PUT | `/api/v1/me/goals` | Goal |
-| POST | `/api/v1/assistant/ask` | One short, grounded DeepSeek answer to the current question; no persistence |
+| POST | `/api/v1/assistant/ask` | One grounded, conversational DeepSeek answer to the current question; no persistence |
 | POST | `/api/v1/assistant/daily-report` | One structured DeepSeek report from the current allowlisted daily context; no persistence |
 | GET | `/api/v1/venues`, `/api/v1/menu-items` | Sourced venue directory (`scope`, `q`, `limit`, `offset`) and separate fictional meal catalog (`q`, `tag`, `max_price_hkd`, `limit`, `offset`) |
 | GET | `/api/v1/external-notes` | Attributed paraphrases of public discussions by `scope` |
@@ -55,7 +55,7 @@ Demo private routes resolve identity on the server. In development with demo aut
 { "answer": "Choose a balanced dinner that leaves room for protein, vegetables, and a comfortable portion." }
 ```
 
-The question must contain 1-500 characters after trimming and the returned answer must contain 1-600 characters. Blank or oversized input returns 422. Each successful action makes at most one DeepSeek request.
+The question must contain 1-500 characters after trimming and the returned answer must contain 1-1000 characters. Blank or oversized input returns 422. The answer prompt requests two to four natural conversational sentences with no headings, bullets, numbered lists, tables, labels, Markdown bold, or label-value formatting. The contract validates only nonblank length; sentence count and formatting are provider guidance.
 
 `POST /api/v1/assistant/daily-report` has no request body. It returns one validated report with a headline, nutrition and activity insights, and at most three next actions and three limitations:
 
@@ -69,7 +69,17 @@ The question must contain 1-500 characters after trimming and the returned answe
 }
 ```
 
-The context allowlist is: goal and calorie target; dietary preferences and allergies; recorded nutrition totals and meal count; confirmed menu meals with name, servings, consumed time and nutrition snapshot; saved photo-review rows with food names, notes, review/nutrition status, optional snapshot and unresolved foods; completed workouts with focus, stage, duration, exercise names and time; and workout stage/equipment/days per week. Pending, processing, or failed photo rows are status-only and are excluded from the confirmed meal count and nutrition. `not_requested` and `completed` photo rows count as confirmed meals; only their `complete` nutrition snapshots contribute to aggregate nutrition totals, while `partial` snapshots remain per-row matched-food facts and are not treated as aggregate intake. The context excludes image bytes or paths, photo-review logs/errors, identity and display fields, Community content, payments, secrets, recommendation/provider history, and prior questions/answers.
+The read-only context has these sections:
+
+- Profile: goal, optional daily calorie target, dietary preferences, allergies, and workout stage/equipment/days per week.
+- Current intake: Hong Kong-local-day nutrition totals and confirmed meal count; confirmed menu meals; saved photo-review rows; and completed workouts.
+- Plans and catalog: up to five recent `planned` meal decisions, up to three unfinished workout plans, up to 100 fictional recordable menu items, and up to 100 sourced venue entries.
+- Derived values: remaining calories after confirmed intake, plus planned calories and protein. Planned values are not included in current intake.
+- Current ask: the question for `/ask`; `/daily-report` has no question.
+
+Menu catalog entries include name, venue, area, description, category, price, tags, allergens, estimates, provenance, and server-computed `eligible` and `ineligibility_reasons`. Normalized allergen intersections and strict vegan/vegetarian requirements make an item ineligible; other preferences such as high protein do not remove it. The prompt uses the catalog as the sole source of menu recommendations and prohibits recommending an item marked ineligible. Venue entries contain only name, campus area, scope, demo/source status, and an optional source URL. Real venues are place-only and have no inferred dish, price, allergen, or nutrition facts.
+
+A planned meal decision is a suggestion and never counts as consumed or contributes to nutrition totals. An unfinished workout plan is not completed activity. Pending, processing, or failed photo rows are status-only and are excluded from the confirmed meal count and nutrition. `not_requested` and `completed` photo rows count as confirmed meals; only their `complete` nutrition snapshots contribute to aggregate nutrition totals, while `partial` snapshots remain per-row matched-food facts and are not treated as aggregate intake. The prompt labels seeded menu/nutrition data as fictional demo information, distinguishes estimates, and is structured into four sections: role, data authority, recommendation priorities, and response style. The context excludes image bytes or paths, photo-review logs/errors, identity and display fields, Community content, payments, secrets, recommendation/provider history, and prior questions/answers.
 
 Both endpoints use the same current-user dependency. Missing/blank `DEEPSEEK_API_KEY`, `DEEPSEEK_BASE_URL`, or `DEEPSEEK_MODEL`, or unavailable demo identity returns 503; a DeepSeek timeout returns 504; an upstream failure or invalid/empty generated content returns 502. Settings validation rejects a blank, non-positive, or oversized timeout before the API starts, and the provider rechecks all required values before an HTTP request. Errors use fixed messages and the standard `{"error":{"code":"http_502","message":"..."}}` envelope. The frontend and backend do not retry automatically. Questions, answers, reports, and context are not persisted and are not included in application logs, along with raw upstream bodies, Authorization headers, and API keys. DeepSeek is independent of OpenRouter and does not influence recommendation ranking, stored nutrition, workouts, rewards, or Community; OpenRouter's existing explanation and photo-recognition contracts remain unchanged.
 

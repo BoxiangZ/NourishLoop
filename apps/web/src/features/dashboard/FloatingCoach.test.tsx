@@ -252,6 +252,24 @@ describe("FloatingCoach", () => {
     expect(answer.querySelector("strong")).toBeNull();
   });
 
+  it("renders a long conversational answer without truncating it", async () => {
+    const answer =
+      "Protein looks like the main gap today, so I’d choose the Chicken grain bowl at " +
+      "Harbour Kitchen for HK$55 because it has about 610 kcal and 42 g protein. The " +
+      "Salmon quinoa plate at Garden Counter is another good option if you want variety, " +
+      "though its nutrition is still only an estimate.";
+    apiMock.askAssistant.mockResolvedValue({ answer });
+    render(<FloatingCoach />);
+
+    openCoach();
+    fireEvent.change(screen.getByLabelText("Ask the daily coach"), {
+      target: { value: "What should I eat for lunch?" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Send question" }));
+
+    expect(await screen.findByText(answer)).toBeTruthy();
+  });
+
   it("keeps exchanges out of browser storage and cookies", async () => {
     apiMock.askAssistant.mockResolvedValue({ answer: "A temporary answer." });
     render(<FloatingCoach />);

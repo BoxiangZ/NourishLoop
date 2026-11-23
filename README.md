@@ -12,7 +12,7 @@ This repository adapts the MAIE 6000C starter. The active app is the modular Fas
 | `apps/web` | Mobile-first Next.js interface with Today, Food, Move, Progress and Community destinations, plus Rewards and Profile utilities |
 | `packages/api-client` | OpenAPI snapshot, generated TypeScript schema types, fetch client |
 | `alembic` | Historical starter migration plus NourishLoop product migrations |
-| `scripts` | API type generation and idempotent fictional demo seed |
+| `scripts` | API type generation and idempotent fictional demo seeds |
 | `tests` | Backend unit and integration tests |
 | `services` | Preserved starter example plus optional Week 4 HKGAI text adapter |
 
@@ -26,7 +26,7 @@ Prerequisites: Docker Desktop or compatible Docker Engine with Compose. Ports 30
 docker compose up --build
 ```
 
-The API container applies Alembic migrations and loads the idempotent demo seed at startup. The worker starts after API health and processes persisted recommendation jobs and photo reviews. Open `http://localhost:3000` for the app, `http://localhost:8000/docs` for OpenAPI, and `http://localhost:8000/api/v1/health` for readiness. The first build downloads Python and Node dependencies. Stop with `docker compose down`. To delete the local demo database volume, use `docker compose down -v`.
+The API container applies Alembic migrations, loads the base demo seed, then loads seven local days of fictional activity for `demo-student` before startup. Re-running the activity seed on the same Hong Kong day is idempotent. The worker starts after API health and processes persisted recommendation jobs and photo reviews. Open `http://localhost:3000` for the app, `http://localhost:8000/docs` for OpenAPI, and `http://localhost:8000/api/v1/health` for readiness. The first build downloads Python and Node dependencies. Stop with `docker compose down`. To delete the local demo database volume, use `docker compose down -v`.
 
 ## Local development
 
@@ -41,6 +41,7 @@ export DATABASE_URL='postgresql+psycopg://postgres:postgres@localhost:5432/maie6
 export APP_ENV=development DEMO_AUTH_ENABLED=true
 alembic upgrade head
 python -m scripts.seed_nourishloop
+python -m scripts.seed_demo_activity
 uvicorn apps.api.main:app --reload --port 8000
 ```
 
@@ -62,7 +63,7 @@ The floating coach and the report in **Progress** need a non-empty server-side `
 |---|---|---|
 | `DEEPSEEK_API_KEY` | unset | Required API credential; keep it in the untracked local `.env` |
 | `DEEPSEEK_BASE_URL` | `https://api.deepseek.com` | Chat Completions base URL |
-| `DEEPSEEK_MODEL` | `deepseek-flash` | Model used for both short answers and reports |
+| `DEEPSEEK_MODEL` | `deepseek-flash` | Model used for conversational answers and reports |
 | `DEEPSEEK_TIMEOUT_SECONDS` | `25` | Per-action upstream timeout |
 
 When running the API directly from the repository root, the settings above can be placed in `.env` before starting `uvicorn`. The Compose API service also forwards all four `DEEPSEEK_*` values from `.env`, using the defaults shown above when they are absent.
@@ -71,7 +72,13 @@ The bottom-right **Coach** ring opens a textured blurred overlay containing one 
 
 Each **Send question** or **Generate daily coach report** action makes at most one DeepSeek request. There is no automatic backend or frontend retry; a failed action can be retried explicitly by the user. Answers and reports are validated, rendered as text rather than HTML, and never persisted in PostgreSQL, browser storage, or cookies. Application logs omit the question, health context, generated answer or report, raw upstream body, Authorization header, and API key. Refreshing, navigating away, or remounting removes the report. No migration or assistant history table exists.
 
-**Progress** owns full report generation and display. The assistant receives only the current question plus a read-only Hong Kong-local context allowlist: goal and calorie target; dietary preferences and allergies; recorded daily nutrition totals and meal count; confirmed menu meals (name, servings, consumed time, nutrition snapshot); saved photo-review rows (food names, notes, review/nutrition status, optional nutrition snapshot, unresolved foods); completed workouts (focus, stage, duration, exercise names, completion time); and workout profile (stage, equipment, days per week). Pending, processing, or failed photo rows are status-only and are excluded from the confirmed meal count and daily nutrition. `not_requested` and `completed` photo rows count as confirmed meals; their complete nutrition snapshots contribute to daily totals, while partial snapshots remain per-row matched-food estimates and are not treated as aggregate intake. The assistant receives no image bytes or image paths, raw photo-review attempt log, user/display identity, secrets, Community content, recommendation/deepseek job history, merchant payments, or prior chat.
+The question prompt requests two to four natural conversational sentences with no headings, bullets, tables, Markdown bold, labels, or label-value formatting. The response contract permits a nonblank plain-text answer of up to 1000 characters; the sentence count and formatting are prompt guidance rather than runtime validation.
+
+**Progress** owns full report generation and display. The assistant receives only the current question plus a read-only context allowlist. Current-day intake includes confirmed menu meals, saved photo-review rows, completed workouts, recorded nutrition totals, and confirmed meal count. Current planning includes up to five recent planned meal decisions and up to three unfinished workout plans. The context also contains the profile and goal, workout profile, up to 100 fictional recordable menu items with nutrition and provenance, up to 100 sourced venue entries, and derived remaining calories plus planned calories and protein. Pending, processing, or failed photo rows are status-only and are excluded from the confirmed meal count and daily nutrition. `not_requested` and `completed` photo rows count as confirmed meals; their complete nutrition snapshots contribute to daily totals, while partial snapshots remain per-row matched-food estimates and are not treated as aggregate intake.
+
+The server computes menu eligibility from normalized allergies, dietary preferences, tags, and allergens. Any hard allergy intersection and a strict vegan or vegetarian preference make an item ineligible; soft preferences such as `high_protein` remain eligible. The model is instructed to recommend only eligible catalog items and to include venue, price, estimated calories, and protein when available. A planned meal is a suggestion, not consumed intake, and an unfinished workout plan is not a completed workout. Real venues are place-only: the assistant may identify their supplied location data but cannot invent menu items, prices, allergens, or nutrition for them. Seeded menu data and nutrition remain fictional/illustrative, and photo nutrition remains an estimate.
+
+The assistant receives no image bytes or image paths, raw photo-review attempt log, user/display identity, secrets, Community content, recommendation/deepseek job history, merchant payments, or prior chat.
 
 Both endpoints require the existing development-only demo identity. They return 503 when the key, base URL, or model is missing or blank, or demo authentication is unavailable; 504 on a DeepSeek timeout; and 502 when the upstream provider or returned content is unusable. Settings validation rejects a blank, non-positive, or oversized timeout before the API starts. DeepSeek does not rank meals, select workouts, create stored nutrition, award rewards, or alter Community behavior. OpenRouter explanation and photo-recognition paths are unchanged.
 
