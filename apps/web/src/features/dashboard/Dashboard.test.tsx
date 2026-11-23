@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { StrictMode } from "react";
 import type { DailySummary, DecisionRead, MenuItemRead } from "@nourishloop/api-client/schema";
 import Dashboard from "./Dashboard";
 
 const apiMock = vi.hoisted(() => ({
-  setDemoUserId: vi.fn(), me: vi.fn(), updateProfile: vi.fn(), updateGoals: vi.fn(),
-  venues: vi.fn(), menuItems: vi.fn(), decisions: vi.fn(), summary: vi.fn(),
+  me: vi.fn(), updateProfile: vi.fn(), updateGoals: vi.fn(),
+  venues: vi.fn(), menuItems: vi.fn(), decisions: vi.fn(), summary: vi.fn(), planProgress: vi.fn(),
   startRecommendationJob: vi.fn(), recommendationJob: vi.fn(),
   decide: vi.fn(), logMeal: vi.fn(), mealLogs: vi.fn(),
   analyzePhoto: vi.fn(), recordPhotoMeal: vi.fn(), photoMeals: vi.fn(),
@@ -13,7 +14,8 @@ const apiMock = vi.hoisted(() => ({
   comment: vi.fn(), deleteComment: vi.fn(), likePost: vi.fn(), unlikePost: vi.fn(),
   reportPost: vi.fn(), pendingReports: vi.fn(), resolveReport: vi.fn(),
   rewardOverview: vi.fn(), redeemReward: vi.fn(), sharedMealLogIds: vi.fn(),
-  externalNotes: vi.fn(), exercises: vi.fn(), workoutProfile: vi.fn(),
+  externalNotes: vi.fn(), publishedDishes: vi.fn(), exercises: vi.fn(), gymEquipment: vi.fn(),
+  workoutProfile: vi.fn(),
   updateWorkoutProfile: vi.fn(), recommendWorkout: vi.fn(), completeWorkout: vi.fn(),
   workoutSessions: vi.fn(),
 }));
@@ -43,13 +45,12 @@ function mainNav() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  window.history.replaceState({}, "", "/");
+  window.history.replaceState({}, "", "/?page=discover");
   Object.defineProperty(window, "scrollTo", { value: vi.fn(), configurable: true });
   plans = []; logs = []; posts = []; reports = [];
   credits = 0; redeemed = false; demoUserId = "demo-student";
   summary = { date: "2026-10-24", timezone: "Asia/Hong_Kong", meal_count: 0,
     totals: { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 } };
-  apiMock.setDemoUserId.mockImplementation((id: string) => { demoUserId = id; });
   apiMock.me.mockImplementation(async () => ({
     id: demoUserId, is_moderator: demoUserId === "demo-student",
     profile: { user_id: demoUserId,
@@ -60,6 +61,8 @@ beforeEach(() => {
   apiMock.venues.mockResolvedValue([{ id: "venue-1", name: "Garden Counter (demo)",
     campus_area: "fictional", is_demo: true, scope: "demo", source_url: null, source_checked_at: null }]);
   apiMock.externalNotes.mockResolvedValue([]);
+  apiMock.publishedDishes.mockResolvedValue([]);
+  apiMock.gymEquipment.mockResolvedValue([]);
   const exercise = { id: "exercise-1", name: "Seated row", muscle_group: "back",
     equipment: "machine", difficulty: "beginner", instructions: "Pull with control.",
     source_url: "https://www.acefitness.org/resources/everyone/exercise-library/168/seated-row/" };
@@ -71,11 +74,25 @@ beforeEach(() => {
     stage: "beginner", minutes: 30, explanation: "This back session fits your beginner stage.",
     explanation_source: "rules", created_at: "2026-10-24T12:00:00Z",
     exercises: [{ exercise, sets: 2, reps: "8–12 controlled reps", rest_seconds: 90 }] });
-  apiMock.completeWorkout.mockImplementation(async () => { credits += 5; return { id: "session-1" }; });
+  apiMock.completeWorkout.mockImplementation(async () => {
+    credits += 5;
+    const session = { id: "session-1", focus: "back", stage: "beginner", duration_min: 30,
+      exercise_names: [exercise.name], completed_at: new Date().toISOString() };
+    apiMock.workoutSessions.mockResolvedValue([session]);
+    return session;
+  });
   apiMock.workoutSessions.mockResolvedValue([]);
   apiMock.menuItems.mockResolvedValue([meal]);
   apiMock.decisions.mockImplementation(async () => plans);
   apiMock.summary.mockImplementation(async () => summary);
+  apiMock.planProgress.mockImplementation(async () => ({
+    today: summary.date, planned_meal: plans.find(plan => plan.status === "planned") ?? null,
+    meal_days_target: 3, training_days_target: 2, meals_today: summary.meal_count,
+    recent_meal_count: summary.meal_count,
+    weeks: ["2026-09-28", "2026-10-05", "2026-10-12", "2026-10-19"].map((starts_on, index) => ({
+      starts_on, meal_days: index === 3 && summary.meal_count > 0 ? 1 : 0, training_days: 0,
+    })),
+  }));
   apiMock.mealLogs.mockImplementation(async () => logs);
   apiMock.photoMeals.mockResolvedValue([]);
   apiMock.communityPosts.mockImplementation(async () => posts.map(post => ({
@@ -91,12 +108,17 @@ beforeEach(() => {
     rewards: [{ id: "starter_badge", title: "Starter badge", description: "Demo badge",
       cost: 5, redeemed }], transactions: [],
   }));
-  const run = { id: "run-1", meal_slot: "lunch", scoring_version: "rules-v1",
+  const run = { id: "run-1", meal_slot: "lunch", scoring_version: "rules-v2",
     recommendations: [{ id: "recommendation-1", rank: 1, score: 0.8,
       explanation: "Fits your approximate meal budget.", confidence: "low",
       confidence_reason: "Demo estimate", menu_item: meal }] };
   apiMock.startRecommendationJob.mockResolvedValue({ id: "job-1", status: "pending", attempts: 0 });
-  apiMock.recommendationJob.mockResolvedValue({ id: "job-1", status: "completed", attempts: 1, run });
+  apiMock.recommendationJob.mockImplementation(async () => ({
+    id: "job-1", status: "completed", attempts: 1, run: { ...run, history_context: {
+      window_start: "2026-10-18", through_date: summary.date, confirmed_meals: summary.meal_count,
+      meal_days: summary.meal_count > 0 ? 1 : 0, repeated_dishes: [],
+    } },
+  }));
   apiMock.decide.mockImplementation(async () => {
     const plan: DecisionRead = { id: "decision-1", status: "planned",
       created_at: "2026-10-24T12:00:00Z", menu_item: meal };
@@ -147,7 +169,7 @@ describe("NourishLoop app pages", () => {
       },
     }]);
     render(<Dashboard />);
-    fireEvent.click(mainNav().getByRole("button", { name: "History" }));
+    fireEvent.click(mainNav().getByRole("button", { name: "Progress & history" }));
     fireEvent.click(await screen.findByRole("tab", { name: "Photo meals" }));
     expect(await screen.findByText("AI ≈ 470 kcal")).toBeTruthy();
     expect(screen.getByText(/Protein 18 g · Carbs 60 g · Fat 16 g/)).toBeTruthy();
@@ -164,7 +186,7 @@ describe("NourishLoop app pages", () => {
         portion_basis: "visual_estimate" }],
     }]);
     render(<Dashboard />);
-    fireEvent.click(mainNav().getByRole("button", { name: "History" }));
+    fireEvent.click(mainNav().getByRole("button", { name: "Progress & history" }));
     fireEvent.click(await screen.findByRole("tab", { name: "Photo meals" }));
     expect(await screen.findByText("Partial · 98 kcal")).toBeTruthy();
     expect(screen.getByText(/Not counted: Sauce/)).toBeTruthy();
@@ -207,13 +229,23 @@ describe("NourishLoop app pages", () => {
   });
 
   it("shows an asynchronous suggestion and shares a confirmed meal", async () => {
-    render(<Dashboard />);
-    expect(await screen.findByText("Chickpea salad")).toBeTruthy();
-    fireEvent.click(mainNav().getByRole("button", { name: "For you" }));
-    fireEvent.click(screen.getByRole("button", { name: "Find my lunch" }));
+    window.history.replaceState({}, "", "/");
+    render(<StrictMode><Dashboard /></StrictMode>);
     expect(await screen.findByText("Fits your approximate meal budget.")).toBeTruthy();
+    expect(screen.queryByLabelText("Demo account")).toBeNull();
+    expect(screen.getByRole("button", { name: "Open profile" })).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Four-week plan progress" })).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "View workout plan" })).toBeTruthy();
+    expect(apiMock.startRecommendationJob).toHaveBeenCalledTimes(1);
+    expect(apiMock.recommendWorkout).toHaveBeenCalledExactlyOnceWith({});
+    expect(apiMock.decide).not.toHaveBeenCalled();
+    expect(apiMock.logMeal).not.toHaveBeenCalled();
+    expect(apiMock.completeWorkout).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: /Plan this meal/ }));
     fireEvent.click(await screen.findByRole("button", { name: "I ate this meal" }));
+    expect(await screen.findByText("1 meal confirmed today.")).toBeTruthy();
+    expect(await screen.findByText("In the last 7 days, you confirmed 1 meal over 1 day.")).toBeTruthy();
+    expect(apiMock.startRecommendationJob).toHaveBeenCalledTimes(2);
     fireEvent.click(mainNav().getByRole("button", { name: "Community" }));
     fireEvent.change(await screen.findByLabelText("Confirmed meal to share"), { target: { value: "log-1" } });
     fireEvent.change(screen.getByLabelText("Community caption"), { target: { value: "Loved this lunch" } });
@@ -224,25 +256,39 @@ describe("NourishLoop app pages", () => {
     expect(await screen.findByText("Loved this lunch")).toBeTruthy();
   });
 
-  it("lets the peer report a post and the moderator remove it", async () => {
-    apiMock.externalNotes.mockImplementation(async (scope: string) => scope === "hkust" ? [{
-      id: "public-note", scope, title: "A linked campus discussion",
+  it("filters public reviews by area and links to the source", async () => {
+    apiMock.externalNotes.mockImplementation(async (scope: string) => scope !== "tai_po_tsai" ? [{
+      id: "public-note", scope: "hkust", title: "A linked campus discussion",
       summary: "A paraphrased public opinion.", source_platform: "Reddit",
       source_url: "https://www.reddit.com/r/HKUST/comments/example/", source_checked_at: "2026-10-28",
     }] : []);
+    render(<Dashboard />);
+    expect(await screen.findByText("Chickpea salad")).toBeTruthy();
+    fireEvent.click(mainNav().getByRole("button", { name: "Community" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Local reviews" }));
+    const original = await screen.findByRole("link", { name: /Read on Reddit/ });
+    expect(original.getAttribute("href")).toBe("https://www.reddit.com/r/HKUST/comments/example/");
+    expect(apiMock.externalNotes).toHaveBeenCalledWith("all", 7, 0);
+    fireEvent.click(screen.getByRole("button", { name: /Tai Po Tsai/ }));
+    expect(await screen.findByText("No public reviews added for this area yet.")).toBeTruthy();
+    expect(apiMock.externalNotes).toHaveBeenCalledWith("tai_po_tsai", 7, 0);
+  });
+
+  it("lets the peer report a post and the moderator remove it", async () => {
+    demoUserId = "demo-peer";
     posts = [{ id: "post-1", author_id: "demo-student", meal_log_id: "log-1",
       caption: "Loved this lunch", author_display_name: "Demo Student",
       created_at: "2026-10-24T12:45:00Z", meal: { menu_item: meal,
         nutrition: meal.nutrition }, like_count: 0, liked_by_me: false, comments: [] }];
-    render(<Dashboard />);
+    const { unmount } = render(<Dashboard />);
     expect(await screen.findByText("Chickpea salad")).toBeTruthy();
     fireEvent.click(mainNav().getByRole("button", { name: "Community" }));
     expect(await screen.findByText("Loved this lunch")).toBeTruthy();
-    expect(await screen.findByText("A linked campus discussion")).toBeTruthy();
-    fireEvent.change(screen.getByLabelText("Demo account"), { target: { value: "demo-peer" } });
     fireEvent.click(await screen.findByRole("button", { name: "Report post" }));
     await waitFor(() => expect(apiMock.reportPost).toHaveBeenCalledWith("post-1", { reason: "spam" }));
-    fireEvent.change(screen.getByLabelText("Demo account"), { target: { value: "demo-student" } });
+    unmount();
+    demoUserId = "demo-student";
+    render(<Dashboard />);
     expect(await screen.findByText("Reported for spam")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Remove post" }));
     await waitFor(() => expect(apiMock.resolveReport).toHaveBeenCalledWith("report-1", { action: "remove" }));
@@ -288,17 +334,60 @@ describe("NourishLoop app pages", () => {
     render(<Dashboard />);
     const tabs = within(screen.getByRole("tablist", { name: "Discover category" }));
     fireEvent.click(tabs.getByRole("tab", { name: "Workouts" }));
-    expect(await screen.findByText("Seated row")).toBeTruthy();
-    fireEvent.change(screen.getByLabelText("Workout stage"), { target: { value: "intermediate" } });
+    expect(await screen.findByText("This back session fits your beginner stage.")).toBeTruthy();
+    fireEvent.click(screen.getByText("Adjust workout"));
+    fireEvent.change(await screen.findByLabelText("Workout stage"), { target: { value: "intermediate" } });
     fireEvent.click(screen.getByRole("button", { name: "Save training context" }));
     await waitFor(() => expect(apiMock.updateWorkoutProfile).toHaveBeenCalledWith(
       expect.objectContaining({ stage: "intermediate" })));
     fireEvent.click(screen.getByRole("button", { name: "Recommend my session" }));
-    expect(await screen.findByText("This back session fits your beginner stage.")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Back to today’s suggestion" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "I completed this session" }));
     await waitFor(() => expect(apiMock.completeWorkout).toHaveBeenCalledWith({
       plan_id: "plan-1", duration_min: 30,
     }));
     expect(await screen.findByText(/Workout recorded/)).toBeTruthy();
+    fireEvent.click(mainNav().getByRole("button", { name: "My plan" }));
+    expect(await screen.findByText("You already recorded a workout today.")).toBeTruthy();
+  });
+
+  it("saves optional personal details and shared training settings in Profile", async () => {
+    apiMock.updateProfile.mockImplementation(async payload => {
+      const account = await apiMock.me();
+      const profile = { ...account.profile, ...payload };
+      apiMock.me.mockResolvedValue({ ...account, profile });
+      return profile;
+    });
+    render(<Dashboard />);
+    fireEvent.click(mainNav().getByRole("button", { name: "My plan" }));
+    expect(await screen.findByText("Chickpea salad")).toBeTruthy();
+    await waitFor(() => expect(apiMock.recommendWorkout).toHaveBeenCalledTimes(1));
+    fireEvent.click(mainNav().getByRole("button", { name: "Profile" }));
+    fireEvent.change(await screen.findByLabelText("Age (years)"), { target: { value: "23" } });
+    fireEvent.change(screen.getByLabelText("Current weight (kg)"), { target: { value: "68.4" } });
+    fireEvent.change(screen.getByLabelText("Daily activity level"), { target: { value: "moderate" } });
+    fireEvent.change(screen.getByLabelText("Maximum spend per meal (HKD)"), { target: { value: "45" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save profile" }));
+    expect(await screen.findByText("Profile saved.")).toBeTruthy();
+    expect(apiMock.updateProfile).toHaveBeenCalledWith({
+      display_name: "Demo Student", age: 23, height_cm: null, weight_kg: 68.4, target_weight_kg: null,
+      activity_level: "moderate", meal_budget_hkd: 45, dietary_preferences: [], allergies: [],
+    });
+
+    fireEvent.change(await screen.findByLabelText("Workout days per week"), { target: { value: "3" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save training settings" }));
+    expect(await screen.findByText("Training settings saved.")).toBeTruthy();
+    expect(apiMock.updateWorkoutProfile).toHaveBeenCalledWith({
+      stage: "beginner", equipment: ["machine", "bodyweight"], days_per_week: 3,
+    });
+
+    fireEvent.click(mainNav().getByRole("button", { name: "My plan" }));
+    await waitFor(() => {
+      expect(apiMock.startRecommendationJob).toHaveBeenCalledTimes(2);
+      expect(apiMock.recommendWorkout).toHaveBeenCalledTimes(2);
+    });
+    fireEvent.click(mainNav().getByRole("button", { name: "Profile" }));
+    const savedWeight = await screen.findByLabelText<HTMLInputElement>("Current weight (kg)");
+    expect(savedWeight.value).toBe("68.4");
   });
 });

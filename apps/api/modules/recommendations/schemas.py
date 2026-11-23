@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -23,11 +23,20 @@ class RecommendationRead(BaseModel):
     menu_item: MenuItemRead
 
 
+class MealHistoryContextRead(BaseModel):
+    window_start: date
+    through_date: date
+    confirmed_meals: int
+    meal_days: int
+    repeated_dishes: list[str]
+
+
 class RecommendationRunRead(BaseModel):
     id: str
     scoring_version: str
     meal_slot: str
     recommendations: list[RecommendationRead]
+    history_context: MealHistoryContextRead | None = None
 
 
 class RecommendationJobRead(BaseModel):

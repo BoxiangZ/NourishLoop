@@ -1,8 +1,15 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
+
+from apps.api.core.schemas import SourcePhotoRead
+
+FoodArea = Literal["hkust", "lohas", "tko", "hang_hau", "tai_po_tsai"]
+VenueScope = Literal[FoodArea, "demo"]
+ExternalNoteScope = Literal["all", FoodArea]
 
 
 class NutritionFoodRead(BaseModel):
@@ -25,6 +32,28 @@ class VenueRead(BaseModel):
     source_url: str | None
     source_checked_at: date | None
     model_config = ConfigDict(from_attributes=True)
+
+
+class MenuLocationRead(BaseModel):
+    id: str
+    name: str
+    scope: FoodArea
+    latitude: float
+    longitude: float
+    source_url: str
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PublishedDishRead(BaseModel):
+    id: str
+    venue: VenueRead
+    name: str
+    price_hkd: float | None
+    source_url: str
+    source_scope: Literal["branch", "brand"]
+    reference_note: str
+    source_checked_at: date
+    source_photo: SourcePhotoRead | None = None
 
 
 class ExternalNoteRead(BaseModel):

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "@nourishloop/api-client";
 import type {
-  CommunityPostRead, CommunityReportRead, ExternalNoteRead, MealLogRead,
+  CommunityPostRead, CommunityReportRead, MealLogRead,
 } from "@nourishloop/api-client/schema";
 import Pager from "./Pager";
+import LocalReviews from "./LocalReviews";
 
 type Props = {
   posts: CommunityPostRead[];
@@ -29,21 +30,21 @@ export default function CommunitySection({
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [reportReasons, setReportReasons] = useState<Record<string, "spam" | "harassment" | "misinformation" | "other">>({});
   const [reportedPostIds, setReportedPostIds] = useState<string[]>([]);
-  const [sourceNotes, setSourceNotes] = useState<ExternalNoteRead[]>([]);
+  const [mode, setMode] = useState<"posts" | "reviews">("posts");
   const unshared = mealLogs.filter(log => !sharedMealLogIds.includes(log.id));
-
-  useEffect(() => {
-    let active = true;
-    Promise.all([api.externalNotes("hkust"), api.externalNotes("lohas")])
-      .then(groups => { if (active) setSourceNotes(groups.flat()); })
-      .catch(() => { if (active) setSourceNotes([]); });
-    return () => { active = false; };
-  }, []);
 
   return <>
     <div className="nl-page-intro"><span className="nl-eyebrow">COMMUNITY / SHARE</span>
       <h1>Good food, better together<span className="nl-orange-dot">.</span></h1>
-      <p>See what others chose. Share a meal only when you want to.</p></div>
+      <p>Browse local dining experiences or share a meal you tried.</p></div>
+    <div className="nl-discover-tabs" role="tablist" aria-label="Community view">
+      <button id="community-posts-tab" role="tab" aria-selected={mode === "posts"}
+        aria-controls="community-posts" onClick={() => setMode("posts")}>Member posts</button>
+      <button id="local-reviews-tab" role="tab" aria-selected={mode === "reviews"}
+        aria-controls="local-reviews" onClick={() => setMode("reviews")}>Local reviews</button>
+    </div>
+    {mode === "reviews" ? <LocalReviews /> :
+    <section id="community-posts" role="tabpanel" aria-labelledby="community-posts-tab">
     <form className="nl-composer" onSubmit={event => {
       event.preventDefault();
       if (!shareMealId || !caption.trim()) return;
@@ -63,7 +64,7 @@ export default function CommunitySection({
             onChange={event => setCaption(event.target.value)}
             placeholder="What would you say about it?" />
           <button className="nl-button nl-button-primary" disabled={busy}>Share meal</button>
-        </div> : <p className="nl-composer-hint">Confirm a meal in History to unlock sharing.</p>}
+        </div> : <p className="nl-composer-hint">Confirm a menu meal in My plan to share it here.</p>}
       </div>
     </form>
 
@@ -130,15 +131,6 @@ export default function CommunitySection({
       </div>}
     </article>)}</div> : <div className="nl-empty">No meals shared on this page yet. Be the first to start a conversation.</div>}
     <Pager page={page} hasNext={hasNext} onChange={onPageChange} label="community" />
-    {sourceNotes.length > 0 && <section className="nl-public-discussions">
-      <div className="nl-section-heading"><div><span className="nl-eyebrow">PUBLIC DISCUSSIONS</span>
-        <h2>What people say elsewhere</h2></div></div>
-      <p className="nl-directory-note">Linked, paraphrased opinions from Reddit. These are separate from NourishLoop posts and are not verified reviews.</p>
-      <div className="nl-source-grid">{sourceNotes.map(note => <article className="nl-source-card" key={note.id}>
-        <span className="nl-eyebrow">{note.scope.toUpperCase()} · {note.source_platform}</span>
-        <h3>{note.title}</h3><p>{note.summary}</p>
-        <a href={note.source_url} target="_blank" rel="noreferrer">Read original discussion ↗</a>
-      </article>)}</div>
     </section>}
   </>;
 }

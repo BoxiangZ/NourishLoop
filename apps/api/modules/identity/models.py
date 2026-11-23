@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, JSON, String
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from apps.api.core.database import Base
@@ -24,6 +24,12 @@ class UserProfile(Base, TimestampMixin):
     display_name: Mapped[str] = mapped_column(String(80), nullable=False)
     dietary_preferences: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
     allergies: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    age: Mapped[int | None] = mapped_column(Integer)
+    height_cm: Mapped[float | None] = mapped_column(Float)
+    weight_kg: Mapped[float | None] = mapped_column(Float)
+    target_weight_kg: Mapped[float | None] = mapped_column(Float)
+    activity_level: Mapped[str | None] = mapped_column(String(16))
+    meal_budget_hkd: Mapped[float | None] = mapped_column(Float)
 
 
 class UserGoal(Base, TimestampMixin):

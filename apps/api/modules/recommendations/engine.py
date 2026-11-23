@@ -10,10 +10,11 @@ class RecommendationWeights:
     calorie_fit: float = 0.55
     protein_fit: float = 0.25
     preference_fit: float = 0.20
-    version: str = "rules-v1"
+    version: str = "rules-v2"
 
 
 WEIGHTS = RecommendationWeights()
+REPEATED_MEAL_DISCOUNT = 0.15
 
 
 @dataclass(frozen=True)
@@ -41,6 +42,7 @@ class RecommendationEngine(Protocol):
         daily_calorie_target: float | None,
         preferences: list[str],
         allergies: list[str],
+        repeated_item_ids: frozenset[str] = frozenset(),
     ) -> list[RankedCandidate]: ...
 
 
@@ -51,7 +53,10 @@ class RuleBasedRecommendationEngine:
     def config(self) -> dict:
         return asdict(self.weights)
 
-    def rank(self, candidates, goal, daily_calorie_target, preferences, allergies):
+    def rank(
+        self, candidates, goal, daily_calorie_target, preferences, allergies,
+        repeated_item_ids: frozenset[str] = frozenset(),
+    ):
         preference_set = {value.lower().strip() for value in preferences}
         allergy_set = {value.lower().strip() for value in allergies}
         ranked = []
@@ -83,6 +88,11 @@ class RuleBasedRecommendationEngine:
                 f"compared with an approximate {meal_target:.0f} kcal meal budget. "
                 "Nutrition is an estimate, not a medical recommendation."
             )
+            if candidate.item_id in repeated_item_ids:
+                score *= 1 - REPEATED_MEAL_DISCOUNT
+                explanation += " You logged this dish on multiple days in the past week."
+            elif repeated_item_ids:
+                explanation += " This adds variety to the dishes you logged repeatedly this week."
             ranked.append(RankedCandidate(candidate, round(score, 4), explanation))
         return sorted(ranked, key=lambda result: (-result.score, result.candidate.item_id))
 

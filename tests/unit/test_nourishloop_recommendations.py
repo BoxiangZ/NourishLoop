@@ -23,7 +23,7 @@ def test_rules_are_deterministic_and_exclude_hard_restrictions():
 
 def test_score_configuration_is_visible_and_has_no_commercial_signal():
     config = RuleBasedRecommendationEngine().config()
-    assert config["version"] == "rules-v1"
+    assert config["version"] == "rules-v2"
     assert round(sum(value for key, value in config.items() if key != "version"), 2) == 1
     assert "commission" not in config
 

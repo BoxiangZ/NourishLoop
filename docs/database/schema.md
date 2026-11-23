@@ -5,7 +5,7 @@ Alembic revision `20261024_0002` creates NourishLoop tables after the historical
 | Table | Key relationships and constraints | Data owner/privacy |
 |---|---|---|
 | `users` | Primary user ID | Private identity |
-| `user_profiles` | One row per user; preferences and allergies as JSON arrays | Private dietary information |
+| `user_profiles` | One row per user; preferences and allergies as JSON arrays, plus optional personal measurements, activity and meal budget | Display name on shared posts; other fields are private |
 | `user_goals` | One row per user; goal and optional daily target | Private wellness information |
 | `user_consents` | One row per user; analytics opt-in defaults false | Private consent state |
 | `venues` | Source scope, official URL and check date for real listings; separate demo venues | Catalog |
@@ -20,7 +20,9 @@ Alembic revision `20261024_0002` creates NourishLoop tables after the historical
 
 The meal log copies calculated nutrition at confirmation, so later catalog edits do not change historical totals. User deletes cascade through private history; catalog item deletion is restricted by history foreign keys. The local demo seed is repeatable and uses stable IDs. There is no automatic schema creation in the running application.
 
-Current limitations: preference/allergy strings are free-text normalized to lowercase; a controlled vocabulary and catalog audit are required for real dietary safety. Nutrition data is fictional and unverified. Additional database checks for positive numeric values and decision state should be added before public launch.
+Revision `20261122_0012` adds nullable personal details and the meal budget to existing profiles. Existing users can leave these fields blank.
+
+Current limitations: the API validates preferences and allergies against the demo vocabulary. Real dietary safety still requires a catalog audit. Nutrition data is fictional and unverified. Additional database checks for positive numeric values and decision state should be added before public launch.
 
 ## Week 7 additions
 
@@ -43,6 +45,10 @@ Habit events and credit grants commit with their confirmed meal log or voluntary
 ## Places and workouts extension
 
 Revision `20261028_0005` adds venue source fields and the `external_notes` table. It adds `exercises` (sourced action catalog), `workout_profiles` (one private stage/equipment/weekly goal per user), `workout_plans` (owned recommendation snapshot with stage, focus, prescriptions and explanation source), and `workout_sessions` (unique plan reference and completion time). A completed session creates one `complete_workout` habit event per Hong Kong day and a signed demo credit row in the same transaction. Plans alone do not award credits. Exercise and venue sources are dated or directly linked; real venues do not acquire invented nutrition facts.
+
+Revision `20261122_0010` adds `published_dishes`, which links a dated menu entry and nullable reference price to a real venue, and `gym_equipment`, which stores school-published equipment categories and locations. `exercises.equipment_detail` is nullable for older movements and supplies more precise equipment requirements where known. Menu snapshots have no nutrition or allergen fields and do not participate in the demo meal decision/log schema.
+
+Revision `20261122_0011` adds nullable `source_photo` metadata to `published_dishes` and `exercises`. Each populated record includes the remote image URL, source page, alternative text and credit.
 
 ## Photo meal records
 

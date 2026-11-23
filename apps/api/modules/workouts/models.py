@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, JSON, String, Text, UniqueConstraint
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, JSON, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from apps.api.core.database import Base
@@ -16,9 +16,21 @@ class Exercise(Base):
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     muscle_group: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
     equipment: Mapped[str] = mapped_column(String(30), nullable=False)
+    equipment_detail: Mapped[str | None] = mapped_column(String(100), nullable=True)
     difficulty: Mapped[str] = mapped_column(String(30), nullable=False)
     instructions: Mapped[str] = mapped_column(String(500), nullable=False)
     source_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    source_photo: Mapped[dict[str, str] | None] = mapped_column(JSON(none_as_null=True))
+
+
+class GymEquipment(Base, IdMixin):
+    __tablename__ = "gym_equipment"
+
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    category: Mapped[str] = mapped_column(String(20), nullable=False)
+    location: Mapped[str] = mapped_column(String(160), nullable=False)
+    source_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    source_checked_at: Mapped[date] = mapped_column(Date, nullable=False)
 
 
 class WorkoutProfile(Base, TimestampMixin):
