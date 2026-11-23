@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime, time, timedelta, timezone
-from zoneinfo import ZoneInfo
+from datetime import date, datetime, timezone
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -12,6 +11,7 @@ from apps.api.modules.catalog.service import get_menu_item
 from apps.api.modules.identity.models import User
 from apps.api.modules.recommendations.models import RecommendationItem, RecommendationRun
 from apps.api.modules.rewards.service import award_event
+from apps.api.modules.tracking.history import confirmed_menu_meals, day_bounds
 from apps.api.modules.tracking.models import Decision, MealLog
 from apps.api.modules.tracking.photo import photo_meal_stats
 from apps.api.modules.tracking.schemas import (
@@ -124,18 +124,7 @@ def list_meal_logs(db: Session, user: User, limit: int, offset: int = 0) -> list
 
 
 def daily_summary(db: Session, user: User, day: date) -> DailySummary:
-    zone = ZoneInfo("Asia/Hong_Kong")
-    start = datetime.combine(day, time.min, tzinfo=zone).astimezone(timezone.utc)
-    end = (datetime.combine(day, time.min, tzinfo=zone) + timedelta(days=1)).astimezone(
-        timezone.utc
-    )
-    logs = db.scalars(
-        select(MealLog).where(
-            MealLog.user_id == user.id,
-            MealLog.consumed_at >= start,
-            MealLog.consumed_at < end,
-        )
-    ).all()
+    logs = confirmed_menu_meals(db, user.id, *day_bounds(day, day))
     totals = NutritionTotals()
     for log in logs:
         for key, value in log.nutrition_snapshot.items():

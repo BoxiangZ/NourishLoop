@@ -23,6 +23,19 @@ class Venue(Base, IdMixin, TimestampMixin):
     source_checked_at: Mapped[date | None] = mapped_column(Date, nullable=True)
 
 
+class PublishedDish(Base, IdMixin):
+    __tablename__ = "published_dishes"
+
+    venue_id: Mapped[str] = mapped_column(ForeignKey("venues.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(160), nullable=False)
+    price_hkd: Mapped[float | None] = mapped_column(Float, nullable=True)
+    source_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    source_scope: Mapped[str] = mapped_column(String(20), nullable=False)
+    reference_note: Mapped[str] = mapped_column(String(240), nullable=False)
+    source_checked_at: Mapped[date] = mapped_column(Date, nullable=False)
+    source_photo: Mapped[dict[str, str] | None] = mapped_column(JSON(none_as_null=True))
+
+
 class ExternalNote(Base, IdMixin):
     __tablename__ = "external_notes"
 

@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from apps.api.modules.identity.models import User, UserGoal, UserProfile
-from apps.api.modules.identity.schemas import GoalUpdate, ProfileUpdate
+from apps.api.modules.identity.schemas import GoalUpdate, ProfileDetails, ProfileUpdate
 
 
 def get_profile(db: Session, user: User) -> UserProfile:
@@ -28,6 +28,11 @@ def update_profile(db: Session, user: User, payload: ProfileUpdate) -> UserProfi
         set(x.lower().strip() for x in payload.dietary_preferences)
     )
     profile.allergies = sorted(set(x.lower().strip() for x in payload.allergies))
+    supplied_details = payload.model_dump(
+        include=set(ProfileDetails.model_fields), exclude_unset=True,
+    )
+    for field, value in supplied_details.items():
+        setattr(profile, field, value)
     db.commit()
     db.refresh(profile)
     return profile

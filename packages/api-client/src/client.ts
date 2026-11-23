@@ -2,17 +2,19 @@ import type {
   AssistantAnswerRead,
   CommunityCommentCreate, CommunityCommentRead, CommunityPostCreate, CommunityPostRead,
   CommunityReportCreate, CommunityReportRead, CommunityReportResolve, DailySummary,
-  DailyCoachReport,
-  DecisionCreate, DecisionRead, ExerciseRead, ExternalNoteRead, GoalRead, GoalUpdate,
-  MeRead, MealLogCreate, MealLogRead, MenuItemRead, ProfileRead,
+  DailyCoachReport, DecisionCreate, DecisionRead, ExerciseRead, ExternalNoteRead,
+  GoalRead, GoalUpdate, GymEquipmentRead,
+  MeRead, MealLogCreate, MealLogRead, MenuItemRead, MenuLocationRead, PlanProgressRead, ProfileRead,
   PhotoAnalysisRead, PhotoAnalysisRequest, PhotoMealCreate, PhotoMealRead,
   PhotoAutoEstimateRequest, PhotoAutoEstimateRead,
   NutritionFoodRead, PhotoNutritionEstimateRead, PhotoNutritionEstimateRequest,
-  ProfileUpdate, RecommendationJobRead, RecommendationRequest, RecommendationRunRead,
+  ProfileUpdate, PublishedDishRead, RecommendationJobRead, RecommendationRequest, RecommendationRunRead,
   RedemptionRead, RewardOverviewRead, VenueRead, WorkoutPlanRead,
   WorkoutProfileRead, WorkoutProfileUpdate, WorkoutRecommendRequest,
   WorkoutSessionCreate, WorkoutSessionRead,
 } from "./schema";
+
+export type LocalFoodArea = MenuLocationRead["scope"];
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -21,6 +23,7 @@ export class ApiError extends Error {
 }
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
 let demoUserId: string | null = null;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -71,7 +74,7 @@ export const api = {
   updateProfile: (body: ProfileUpdate) => request<ProfileRead>("/me/profile", json("PATCH", body)),
   goals: () => request<GoalRead>("/me/goals"),
   updateGoals: (body: GoalUpdate) => request<GoalRead>("/me/goals", json("PUT", body)),
-  venues: (options: { limit?: number; offset?: number; scope?: "demo" | "hkust" | "lohas"; q?: string } = {}) => {
+  venues: (options: { limit?: number; offset?: number; scope?: "demo" | LocalFoodArea; q?: string } = {}) => {
     const params = new URLSearchParams();
     if (options.limit !== undefined) params.set("limit", String(options.limit));
     if (options.offset !== undefined) params.set("offset", String(options.offset));
@@ -79,8 +82,20 @@ export const api = {
     if (options.q) params.set("q", options.q);
     return request<VenueRead[]>(`/venues?${params}`);
   },
-  externalNotes: (scope: "hkust" | "lohas") =>
-    request<ExternalNoteRead[]>(`/external-notes?scope=${scope}`),
+  externalNotes: (scope: LocalFoodArea | "all", limit = 20, offset = 0) =>
+    request<ExternalNoteRead[]>(`/external-notes?scope=${scope}&limit=${limit}&offset=${offset}`),
+  menuLocations: () => request<MenuLocationRead[]>("/menu-locations"),
+  publishedDishes: (options: {
+    limit: number; offset: number; scope: LocalFoodArea; q?: string; venueId?: string; locationId?: string;
+  }) => {
+    const params = new URLSearchParams({
+      limit: String(options.limit), offset: String(options.offset), scope: options.scope,
+    });
+    if (options.q) params.set("q", options.q);
+    if (options.venueId) params.set("venue_id", options.venueId);
+    if (options.locationId) params.set("location_id", options.locationId);
+    return request<PublishedDishRead[]>(`/published-dishes?${params}`);
+  },
   menuItems: (options: {
     limit?: number; offset?: number; q?: string; tag?: string; maxPriceHkd?: number;
   } = {}) => {
@@ -123,6 +138,7 @@ export const api = {
   summary: (date?: string) => request<DailySummary>(
     `/me/daily-summary${date ? `?date=${encodeURIComponent(date)}` : ""}`
   ),
+  planProgress: () => request<PlanProgressRead>("/me/plan-progress"),
   communityPosts: (limit = 20, offset = 0) =>
     request<CommunityPostRead[]>(`/community/posts?limit=${limit}&offset=${offset}`),
   sharedMealLogIds: () => request<string[]>("/community/me/shared-meal-log-ids"),
@@ -151,10 +167,11 @@ export const api = {
     if (options.q) params.set("q", options.q);
     return request<ExerciseRead[]>(`/exercises?${params}`);
   },
+  gymEquipment: () => request<GymEquipmentRead[]>("/workouts/equipment"),
   workoutProfile: () => request<WorkoutProfileRead>("/me/workout-profile"),
   updateWorkoutProfile: (body: WorkoutProfileUpdate) =>
     request<WorkoutProfileRead>("/me/workout-profile", json("PUT", body)),
-  recommendWorkout: (body: WorkoutRecommendRequest) =>
+  recommendWorkout: (body: WorkoutRecommendRequest = {}) =>
     request<WorkoutPlanRead>("/workouts/recommend", json("POST", body)),
   completeWorkout: (body: WorkoutSessionCreate) =>
     request<WorkoutSessionRead>("/workouts/sessions", json("POST", body)),

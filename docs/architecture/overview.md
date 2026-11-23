@@ -2,7 +2,7 @@
 
 NourishLoop is a modular FastAPI monolith with a separate worker, PostgreSQL, and a mobile-first Next.js browser app. The catalog food loop is discovery → recommendation → planned decision → confirmed meal log → optional Community share. A second food path is photo capture/upload → Recognize action → automatic vision and USDA estimate → immediate result → optional correction → optional private photo meal record. A separate workout loop is exercise discovery → stage-aware plan → confirmed session. The browser presents **Today**, **Food**, **Move**, **Progress** and **Community** as primary URL-addressable destinations. **Rewards** is opened from the top-bar points/store control, while the top-bar avatar opens **Profile**.
 
-Today is a factual daily check-in, not a dashboard of inferred health claims. It distinguishes no food or movement records, food without movement, movement without food, and both recorded. Food consolidates Explore, For you, Meals, Real places and the two photo modes. Progressive disclosures keep secondary detail collapsed, and Progress combines the dated record with the full coach report.
+Today combines a factual daily check-in with an automatically suggested lunch and workout. Confirmed meals and completed workouts feed later suggestions. Food contains Explore, For you, real menu snapshots, real places and both photo modes. Progress combines four-week activity, dated summaries, the coach report and separate meal, photo and training records. The historical Week 4 architecture is preserved in [the course archive](../legacy/week04-architecture.md).
 
 ```mermaid
 flowchart LR
@@ -27,7 +27,7 @@ flowchart LR
   Workouts --> DB
 ```
 
-The API authenticates the local demo user, validates requests, and delegates workflows to domain services. The recommendation job records input and provider choice. The worker claims jobs via `FOR UPDATE SKIP LOCKED`, calculates rankings from profile/goals and the catalog, optionally asks OpenRouter to reword only the first deterministic explanation, then commits the recommendation run and completed job together. Provider failure uses baseline text. The browser polls job state and displays persisted results. Scoring excludes catalog allergens and strict dietary preferences before ranking. It does not use model output or payment data.
+The API authenticates the local demo user, validates requests, and delegates workflows to domain services. The recommendation job records input and provider choice. The worker claims jobs via `FOR UPDATE SKIP LOCKED` and ranks the catalog against the profile, goals, budget and recent confirmed meals. A seven-day history snapshot accompanies each new run. The worker optionally asks OpenRouter to reword the first deterministic explanation, then commits the run and completed job together. Provider failure uses baseline text. The pure ranking engine applies dietary filters before scoring and reduces the ranking of repeated dishes to encourage variety.
 
 ## Floating coach and daily report
 
@@ -74,4 +74,4 @@ The Workout service chooses only sourced exercises compatible with the user's de
 
 The stack uses Python 3.12, FastAPI, SQLAlchemy, Alembic, PostgreSQL 16, Next.js, React, and TypeScript. Generated browser types come from the FastAPI OpenAPI contract. The old starter case/worker and optional Week 4 AI service remain separate from the active stack.
 
-Two seeded identities can be selected in the browser, and only in development/demo mode. This switch is not production authentication. Real restaurant **locations** are present, but real menus, verified nutrition and allergens are not. There is no production account system, public-facing moderation operations, or merchant rewards. Community is suitable only for a local demo until identity, privacy controls, rate limiting, and operational moderation are implemented. Free-tier photo analysis sends content to an external provider and is suitable only for food-only demo photos without personal details.
+The browser uses the configured default identity in development/demo mode. API tests can select the seeded peer via `X-Demo-User-Id` in that mode. The public catalog keeps sourced places and dated menus separate from the fictional, recordable menu used by the recommendation engine. Sourced menu entries show reference prices when published and do not supply nutrition or allergen data. There is no production account system, public-facing moderation operations, or merchant rewards. Community is suitable only for a local demo until identity, privacy controls, rate limiting, and operational moderation are implemented. Free-tier photo analysis sends content to an external provider and is suitable only for food-only demo photos without personal details.

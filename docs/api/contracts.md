@@ -10,13 +10,17 @@ Current product routes are under `/api/v1`; OpenAPI is at `/openapi.json`. Run `
 | POST | `/api/v1/assistant/ask` | One grounded, conversational DeepSeek answer to the current question; no persistence |
 | POST | `/api/v1/assistant/daily-report` | One structured DeepSeek report from the current allowlisted daily context; no persistence |
 | GET | `/api/v1/venues`, `/api/v1/menu-items` | Sourced venue directory (`scope`, `q`, `limit`, `offset`) and separate fictional meal catalog (`q`, `tag`, `max_price_hkd`, `limit`, `offset`) |
-| GET | `/api/v1/external-notes` | Attributed paraphrases of public discussions by `scope` |
-| GET | `/api/v1/exercises` | Sourced exercise library by muscle group/equipment with `limit`, `offset` |
+| GET | `/api/v1/published-dishes` | Dated public menu entries with venue, optional reference price, source and branch/brand scope. Filters include `scope`, `q`, `venue_id`, `location_id`, `limit` and `offset`. |
+| GET | `/api/v1/menu-locations` | Public mall and other food-location landmarks associated with published menus |
+| GET | `/api/v1/external-notes` | Public dining review and discussion summaries with source links. `scope` accepts `all`, `hkust` (default), `tko`, `hang_hau`, `lohas` and `tai_po_tsai`. Pages use `limit` (1–50, default 20) and `offset` (default 0). |
+| GET | `/api/v1/exercises` | Sourced exercise library by muscle group/equipment with `limit`, `offset`. `equipment_detail` gives a more specific requirement when available. |
+| GET | `/api/v1/workouts/equipment` | Equipment categories published for HKUST’s fitness centers, with source and check date |
 | GET, PUT | `/api/v1/me/workout-profile` | Declared stage, equipment and days per week |
-| POST | `/api/v1/workouts/recommend` | Persist a stage-aware plan; optional model coaching note, rule based movement selection |
+| POST | `/api/v1/workouts/recommend` | Persist a stage-aware plan. An empty JSON object picks an eligible focus from session history with a 30-minute default. Explicit focus and minutes remain supported. |
 | POST, GET | `/api/v1/workouts/sessions`, `/api/v1/me/workout-sessions` | Confirm a completed plan and read paginated session history |
 | POST | `/api/v1/recommendations/jobs` | Persist pending job; 202 with job ID/status |
 | GET | `/api/v1/recommendations/jobs/{id}` | Own job status and completed run |
+| GET | `/api/v1/me/plan-progress` | Four Hong Kong calendar weeks of meal and training days, weekly targets, recent and current meal counts, and today's latest planned meal |
 | POST | `/api/v1/recommendations/meals` | Synchronous compatibility route |
 | POST | `/api/v1/recommendations/{id}/feedback` | Helpfulness feedback |
 | POST, GET | `/api/v1/decisions`, `/api/v1/me/decisions` | Plan/read decisions; list supports `limit` and `offset` |
@@ -42,6 +46,8 @@ Current product routes are under `/api/v1`; OpenAPI is at `/openapi.json`. Run `
 | POST | `/api/v1/rewards/{id}/redeem` | Redeem one noncommercial badge |
 
 Demo private routes resolve identity on the server. In development with demo auth enabled, `X-Demo-User-Id` can select only the seeded moderator or peer; it is a local impersonation mechanism. Job reads and post removal check ownership. Community post creation checks that its meal log belongs to the current user; a meal can have one post. The feed shows a shared meal, illustrative nutrition snapshot, caption, and demo display name.
+
+`GET /api/v1/me` returns optional `age`, `height_cm`, `weight_kg`, `target_weight_kg`, `activity_level` and `meal_budget_hkd` in `profile`. For these fields, `PATCH /api/v1/me/profile` keeps omitted values and clears fields sent as `null`. `activity_level` accepts `low`, `light`, `moderate` and `high`. A set budget filters demo meals by their listed price before ranking. Workout planning reads training stage, equipment and days per week from `/me/workout-profile`. Body measurements and general activity are stored for reference. The daily calorie target is set explicitly in Goals.
 
 ### Assistant endpoints
 
@@ -77,7 +83,7 @@ The read-only context has these sections:
 - Derived values: remaining calories after confirmed intake, plus planned calories and protein. Planned values are not included in current intake.
 - Current ask: the question for `/ask`; `/daily-report` has no question.
 
-Menu catalog entries include name, venue, area, description, category, price, tags, allergens, estimates, provenance, and server-computed `eligible` and `ineligibility_reasons`. Normalized allergen intersections and strict vegan/vegetarian requirements make an item ineligible; other preferences such as high protein do not remove it. The prompt uses the catalog as the sole source of menu recommendations and prohibits recommending an item marked ineligible. Demo menu items and their nutrition are fictional illustrative data. Venue entries contain only name, campus area, scope, `is_demo`, and an optional source URL; they may be fictional demo entries or sourced real places. Real venues are place-only and have no inferred dish, price, allergen, or nutrition facts.
+Menu catalog entries include name, venue, area, description, category, price, tags, allergens, estimates, provenance, and server-computed `eligible` and `ineligibility_reasons`. Normalized allergen intersections and strict vegan/vegetarian requirements make an item ineligible; other preferences such as high protein do not remove it. The prompt uses the catalog as the sole source of menu recommendations and prohibits recommending an item marked ineligible. Demo menu items and their nutrition are fictional illustrative data. Venue entries contain only name, campus area, scope, `is_demo`, and an optional source URL; they may be fictional demo entries or sourced real places. The assistant receives real venues as place records. Published menu snapshots are served by the catalog endpoints and are outside the assistant context.
 
 A planned meal decision is a suggestion and never counts as consumed or contributes to nutrition totals. An unfinished workout plan is not completed activity. Pending, processing, or failed photo rows are status-only and are excluded from the confirmed meal count and nutrition. `not_requested` and `completed` photo rows count as confirmed meals; only their `complete` nutrition snapshots contribute to aggregate nutrition totals, while `partial` snapshots remain per-row matched-food facts and are not treated as aggregate intake. The prompt labels seeded menu/nutrition data as fictional demo information, distinguishes estimates, and is structured into four sections: role, data authority, recommendation priorities, and response style. The context excludes image bytes or paths, photo-review logs/errors, identity and display fields, Community content, payments, secrets, recommendation/provider history, and prior questions/answers.
 
@@ -87,7 +93,15 @@ Background photo reviews use the existing `PhotoMealRecord` table. `review_statu
 
 Community likes are idempotent per user/post. Comments require a visible post; the author or demo moderator can delete them. Reports require a different author, allow one report per reporter/post, and are resolved by a moderator as dismissed or removed. Reported content is not hidden automatically. The seeded Demo Student has moderator role; the peer does not.
 
-Reward credits are granted once per habit per Hong Kong local day. Confirmed menu meals, saved photo meals, explicit Community shares and completed workout plans qualify. Post removal appends a credit reversal. The ledger and redemptions are private to the current user. Badges have no cash value, and no recommendation click earns credits. Real venue entries have no invented menu item, price, allergen or nutrition fields; source links and check dates are returned separately from fictional recordable meals.
+Reward credits are granted once per habit per Hong Kong local day. Confirmed menu meals, saved photo meals, explicit Community shares and completed workout plans qualify. Post removal appends a credit reversal. The ledger and redemptions are private to the current user. Badges have no cash value, and no recommendation click earns credits.
+
+Real food scopes are `hkust`, `lohas`, `tko`, `hang_hau` and `tai_po_tsai`. Published dishes are browseable references. They carry no inferred allergen or nutrient values and are separate from the recordable demo catalog and its nutritional ranking.
+
+`/menu-locations` returns a location ID, name, area, landmark coordinates and map source for locations with published dishes. The browser ranks them locally and sends `location_id` with the usual filters for the selected mall or other food location.
+
+Published dishes and exercises optionally carry `source_photo` (`url`, `source_url`, `alt`, `credit`). Dishes with photos sort first. The image is loaded from the original provider and links back to its source page.
+
+The default **Today** view requests meal and workout suggestions based on saved settings and confirmed activity. Four-week progress is available in **Progress**. Menu meals and confirmed photo meals contribute to `history_context` over the latest seven Hong Kong dates. Repeating the same menu item on at least two distinct days reduces that item’s fit score to favor variety. The run stores the history snapshot in `scoring_config`. Earlier runs can have a null history context. Automatic workout focus prefers compatible groups with no recorded session, then the least recently trained group. The browser shows today’s completion after the user confirms a workout.
 
 Example async path:
 

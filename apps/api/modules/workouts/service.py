@@ -9,8 +9,10 @@ from apps.api.core.models import utcnow
 from apps.api.modules.identity.models import User
 from apps.api.modules.rewards.service import award_event
 from apps.api.modules.workouts.ai import coach_explanation
-from apps.api.modules.workouts.engine import select_routine
-from apps.api.modules.workouts.models import Exercise, WorkoutPlan, WorkoutProfile, WorkoutSession
+from apps.api.modules.workouts.engine import automatic_focus, select_routine
+from apps.api.modules.workouts.models import (
+    Exercise, GymEquipment, WorkoutPlan, WorkoutProfile, WorkoutSession,
+)
 from apps.api.modules.workouts.schemas import (
     ExercisePrescription,
     ExerciseRead,
@@ -38,6 +40,10 @@ def list_exercises(
     if query:
         stmt = stmt.where(Exercise.name.ilike(f"%{query.strip()}%"))
     return list(db.scalars(stmt.order_by(Exercise.name, Exercise.id).offset(offset).limit(limit)))
+
+
+def list_gym_equipment(db: Session) -> list[GymEquipment]:
+    return list(db.scalars(select(GymEquipment).order_by(GymEquipment.category, GymEquipment.name)))
 
 
 def get_profile(db: Session, user: User) -> WorkoutProfile:
@@ -105,18 +111,30 @@ def recommend(db: Session, user: User, payload: WorkoutRecommendRequest) -> Work
         .order_by(WorkoutSession.completed_at.desc())
         .limit(20)
     ).all()
+    recent = [(focus, completed_at) for focus, completed_at in recent_rows]
+    now = utcnow()
+    requested_focus = payload.focus or automatic_focus(
+        exercises, profile.stage, profile.equipment, recent, now,
+    )
+    if requested_focus is None:
+        raise HTTPException(409, "No exercise matches your saved training stage and equipment")
     focus, prescription, baseline = select_routine(
         exercises,
-        payload.focus,
+        requested_focus,
         profile.stage,
         profile.equipment,
         profile.days_per_week,
         payload.minutes,
-        list(recent_rows),
-        utcnow(),
+        recent,
+        now,
     )
     if not prescription:
         raise HTTPException(409, "No exercise matches this focus, stage and equipment")
+    if payload.focus is None and recent:
+        baseline = (
+            f"Your last logged session focused on {recent[0][0]}. "
+            f"Today's focus uses the longest gap in your recent training history. {baseline}"
+        )
     selected = {item.id: item for item in exercises}
     explanation, source = coach_explanation(
         get_settings(),
@@ -126,7 +144,7 @@ def recommend(db: Session, user: User, payload: WorkoutRecommendRequest) -> Work
     )
     plan = WorkoutPlan(
         user_id=user.id,
-        requested_focus=payload.focus,
+        requested_focus=requested_focus,
         focus=focus,
         stage=profile.stage,
         minutes=payload.minutes,

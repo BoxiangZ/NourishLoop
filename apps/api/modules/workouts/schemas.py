@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from apps.api.core.schemas import SourcePhotoRead
 
 Focus = Literal["back", "shoulders", "chest", "legs", "core"]
 Stage = Literal["beginner", "intermediate", "advanced"]
@@ -15,9 +17,21 @@ class ExerciseRead(BaseModel):
     name: str
     muscle_group: Focus
     equipment: Equipment
+    equipment_detail: str | None = None
     difficulty: Stage
     instructions: str
     source_url: str
+    source_photo: SourcePhotoRead | None = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class GymEquipmentRead(BaseModel):
+    id: str
+    name: str
+    category: Literal["cardio", "strength"]
+    location: str
+    source_url: str
+    source_checked_at: date
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -33,7 +47,7 @@ class WorkoutProfileRead(WorkoutProfileUpdate):
 
 
 class WorkoutRecommendRequest(BaseModel):
-    focus: Focus
+    focus: Focus | None = None
     minutes: int = Field(default=30, ge=15, le=75)
 
 

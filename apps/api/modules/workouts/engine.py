@@ -11,6 +11,36 @@ FOCI = ("back", "shoulders", "chest", "legs", "core")
 STAGE_ORDER = {"beginner": 0, "intermediate": 1, "advanced": 2}
 
 
+def eligible_exercises(
+    exercises: list[Exercise], stage: str, equipment: list[str],
+) -> list[Exercise]:
+    return [
+        item for item in exercises
+        if item.equipment in equipment and STAGE_ORDER[item.difficulty] <= STAGE_ORDER[stage]
+    ]
+
+
+def as_utc_if_naive(when: datetime) -> datetime:
+    return when if when.tzinfo else when.replace(tzinfo=timezone.utc)
+
+
+def automatic_focus(
+    exercises: list[Exercise], stage: str, equipment: list[str],
+    recent: list[tuple[str, datetime]], now: datetime,
+) -> str | None:
+    groups = {item.muscle_group for item in eligible_exercises(exercises, stage, equipment)}
+    last_trained: dict[str, datetime] = {}
+    for group, when in recent:
+        when = as_utc_if_naive(when)
+        if group not in last_trained or when > last_trained[group]:
+            last_trained[group] = when
+    return min(
+        groups,
+        key=lambda group: (group in last_trained, last_trained.get(group, now), FOCI.index(group)),
+        default=None,
+    )
+
+
 def select_routine(
     exercises: list[Exercise],
     requested_focus: str,
@@ -22,22 +52,13 @@ def select_routine(
     now: datetime,
 ) -> tuple[str, list[dict], str]:
     focus = requested_focus
-    recent = [
-        (
-            prior_focus,
-            completed_at if completed_at.tzinfo else completed_at.replace(tzinfo=timezone.utc),
-        )
-        for prior_focus, completed_at in recent
-    ]
+    recent = [(prior_focus, as_utc_if_naive(when)) for prior_focus, when in recent]
     recent_same = any(
         prior_focus == focus and now - completed_at < timedelta(hours=48)
         for prior_focus, completed_at in recent
     )
-    available_groups = {
-        item.muscle_group
-        for item in exercises
-        if item.equipment in equipment and STAGE_ORDER[item.difficulty] <= STAGE_ORDER[stage]
-    }
+    compatible = eligible_exercises(exercises, stage, equipment)
+    available_groups = {item.muscle_group for item in compatible}
     if recent_same:
         # Avoid repeating the same muscle group too soon; choose the least recent alternative.
         last_by_focus = {
@@ -56,13 +77,7 @@ def select_routine(
         if alternatives:
             focus = alternatives[0]
     eligible = sorted(
-        (
-            item
-            for item in exercises
-            if item.muscle_group == focus
-            and item.equipment in equipment
-            and STAGE_ORDER[item.difficulty] <= STAGE_ORDER[stage]
-        ),
+        (item for item in compatible if item.muscle_group == focus),
         key=lambda item: (STAGE_ORDER[item.difficulty], item.name),
     )
     count = min(len(eligible), max(2, min(4, minutes // 12 + 1)))

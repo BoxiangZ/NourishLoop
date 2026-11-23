@@ -73,7 +73,7 @@ export default function AppShell({ screen, me, busy, rewardBalance, onNavigate, 
       </header>
       <main className="nl-main" id="main-content">{children}</main>
     </div>
-    <FloatingCoach />
+    <FloatingCoach key={me?.id} />
     <nav className="nl-bottom-nav" aria-label="Mobile navigation" data-coach-background>
       {primaryItems.map(item => navButton(item, true))}
     </nav>

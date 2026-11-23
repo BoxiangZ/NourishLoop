@@ -8,3 +8,10 @@ class ErrorBody(BaseModel):
 
 class ErrorResponse(BaseModel):
     error: ErrorBody
+
+
+class SourcePhotoRead(BaseModel):
+    url: str
+    source_url: str
+    alt: str
+    credit: str

@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from collections import defaultdict
+from datetime import timedelta
+
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from apps.api.core.config import get_settings
+from apps.api.core.models import utcnow
+from apps.api.modules.catalog.models import MenuItem
 from apps.api.modules.catalog.schemas import menu_item_read
 from apps.api.modules.catalog.service import get_menu_item, list_menu_items
 from apps.api.modules.identity.models import User
@@ -13,6 +18,7 @@ from apps.api.modules.recommendations.engine import (
     Candidate,
     DeterministicExplanationProvider,
     OptionalExplanationProvider,
+    REPEATED_MEAL_DISCOUNT,
     RuleBasedRecommendationEngine,
     explain_with_fallback,
 )
@@ -24,11 +30,40 @@ from apps.api.modules.recommendations.models import (
 )
 from apps.api.modules.recommendations.schemas import (
     FeedbackCreate,
+    MealHistoryContextRead,
     RecommendationJobRead,
     RecommendationRead,
     RecommendationRequest,
     RecommendationRunRead,
 )
+from apps.api.modules.tracking.history import (
+    confirmed_menu_meals, confirmed_photo_meals, day_bounds, local_day,
+)
+
+
+def meal_history_context(
+    db: Session, user_id: str,
+) -> tuple[MealHistoryContextRead, frozenset[str]]:
+    today = local_day(utcnow())
+    first_day = today - timedelta(days=6)
+    bounds = day_bounds(first_day, today)
+    menu_logs = confirmed_menu_meals(db, user_id, *bounds)
+    photo_logs = confirmed_photo_meals(db, user_id, *bounds)
+    logged_days = {local_day(log.consumed_at) for log in photo_logs}
+    menu_days_by_item = defaultdict(set)
+    for log in menu_logs:
+        day = local_day(log.consumed_at)
+        logged_days.add(day)
+        menu_days_by_item[log.menu_item_id].add(day)
+    repeated = frozenset(item for item, days in menu_days_by_item.items() if len(days) >= 2)
+    dish_names = list(db.scalars(select(MenuItem.name).where(
+        MenuItem.id.in_(repeated),
+    ).order_by(MenuItem.name, MenuItem.id))) if repeated else []
+    return MealHistoryContextRead(
+        window_start=first_day, through_date=today,
+        confirmed_meals=len(menu_logs) + len(photo_logs),
+        meal_days=len(logged_days), repeated_dishes=dish_names,
+    ), repeated
 
 
 def generate(
@@ -42,7 +77,8 @@ def generate(
 ) -> RecommendationRunRead:
     profile = get_profile(db, user)
     goal = get_goal(db, user)
-    catalog_rows = list_menu_items(db, limit=100)
+    history_context, repeated_items = meal_history_context(db, user.id)
+    catalog_rows = list_menu_items(db, limit=100, max_price_hkd=profile.meal_budget_hkd)
     lookup = {item.id: (item, nutrition) for item, nutrition in catalog_rows}
     candidates = [
         Candidate(
@@ -63,6 +99,7 @@ def generate(
         goal.daily_calorie_target,
         profile.dietary_preferences,
         profile.allergies,
+        repeated_items,
     )[: request.limit]
     run = RecommendationRun(
         user_id=user.id,
@@ -70,6 +107,9 @@ def generate(
         scoring_version=engine.weights.version,
         scoring_config={
             **engine.config(),
+            "meal_budget_hkd": profile.meal_budget_hkd,
+            "history_context": history_context.model_dump(mode="json"),
+            "repeated_meal_discount": REPEATED_MEAL_DISCOUNT,
             "explanation_provider": provider_name,
             "explanation_model": (
                 get_settings().openrouter_model if provider_name == "openrouter" else None
@@ -113,6 +153,7 @@ def generate(
         scoring_version=run.scoring_version,
         meal_slot=run.meal_slot,
         recommendations=response_items,
+        history_context=history_context,
     )
 
 
@@ -178,6 +219,7 @@ def read_run(db: Session, run_id: str) -> RecommendationRunRead:
         scoring_version=run.scoring_version,
         meal_slot=run.meal_slot,
         recommendations=recommendations,
+        history_context=run.scoring_config.get("history_context"),
     )
 
 

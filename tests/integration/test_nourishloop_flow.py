@@ -55,6 +55,41 @@ def test_allergy_and_vegetarian_constraints(nl_client):
     assert all("soy" not in choice["menu_item"]["allergen_tags"] for choice in choices)
 
 
+def test_personal_details_round_trip_and_meal_budget(nl_client):
+    me = nl_client.get("/api/v1/me").json()
+    assert me["profile"]["age"] is None
+    details = {
+        "age": 23,
+        "height_cm": 173.5,
+        "weight_kg": 68.4,
+        "target_weight_kg": 66,
+        "activity_level": "moderate",
+        "meal_budget_hkd": 45,
+    }
+    payload = {"display_name": me["profile"]["display_name"], **details}
+    assert nl_client.patch("/api/v1/me/profile", json=payload).status_code == 200
+    saved = nl_client.get("/api/v1/me").json()["profile"]
+    assert {field: saved[field] for field in details} == details
+    peer = nl_client.get("/api/v1/me", headers={"X-Demo-User-Id": "demo-peer"}).json()
+    assert peer["profile"]["weight_kg"] is None
+
+    assert nl_client.patch(
+        "/api/v1/me/profile", json={"display_name": "Student", "age": -1},
+    ).status_code == 422
+    assert nl_client.patch(
+        "/api/v1/me/profile", json={"display_name": "Student"},
+    ).json()["meal_budget_hkd"] == 45
+    run = nl_client.post("/api/v1/recommendations/meals", json={"limit": 10}).json()
+    assert {choice["menu_item"]["price_hkd"] for choice in run["recommendations"]} == {44, 45}
+
+    reset = nl_client.patch(
+        "/api/v1/me/profile", json={"display_name": "Student", "meal_budget_hkd": None},
+    ).json()
+    assert reset["meal_budget_hkd"] is None and reset["weight_kg"] == 68.4
+    run = nl_client.post("/api/v1/recommendations/meals", json={"limit": 10}).json()
+    assert len(run["recommendations"]) == 6
+
+
 def test_feedback_and_validation(nl_client):
     recommendation = nl_client.post("/api/v1/recommendations/meals", json={}).json()[
         "recommendations"

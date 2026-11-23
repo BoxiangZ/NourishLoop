@@ -50,7 +50,7 @@ export default function RewardsSection({ overview, busy, onAction, onNavigate,
         </div>
         <small>Weekly challenge · {habit.completed_this_week}/{habit.weekly_target} days</small>
       </article>)}</div>
-    <div className="nl-reward-links"><button onClick={() => onNavigate("history")}>Confirm a meal →</button>
+    <div className="nl-reward-links"><button onClick={() => onNavigate("today")}>Confirm a meal →</button>
       <button onClick={() => onNavigate("community")}>Share with Community →</button>
       <button onClick={() => onNavigate("workouts")}>Complete a workout →</button></div>
     <div className="nl-section-heading"><div><span className="nl-eyebrow">THE GOOD STUFF</span>
