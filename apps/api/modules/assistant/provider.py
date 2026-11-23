@@ -39,7 +39,7 @@ class AssistantLLMProvider(Protocol):
     def report(self, context: AssistantContext) -> DailyCoachReport: ...
 
 
-ANSWER_MAX_TOKENS = 1200
+ANSWER_MAX_TOKENS = 2400
 REPORT_MAX_TOKENS = 2400
 INCOMPLETE_FINISH_REASONS = frozenset({"length", "content_filter"})
 TERMINAL_SENTENCE_BOUNDARIES = frozenset({".", "!", "?", "。", "！", "？"})

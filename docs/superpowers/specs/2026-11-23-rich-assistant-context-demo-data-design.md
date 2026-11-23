@@ -269,7 +269,7 @@ Existing behavior remains:
 - No image data or image path enters assistant context.
 
 The larger context may increase latency. The DeepSeek timeout remains 25 seconds and the
-answer/report reasoning budgets remain 1200/2400 tokens.
+answer/report reasoning budgets remain 2400/2400 tokens.
 
 ## Testing
 

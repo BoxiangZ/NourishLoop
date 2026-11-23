@@ -464,7 +464,7 @@ The provider must:
 - Send `Authorization: Bearer <key>` and `Content-Type: application/json`.
 - Use exactly one `httpx.Client(...).post(...)` per method call.
 - Send `model=settings.deepseek_model`.
-- For `ask`, use `max_tokens=1200`, `temperature=0.2`, and request one short plain-text answer.
+- For `ask`, use `max_tokens=2400`, `temperature=0.2`, and request one short plain-text answer.
 - For `report`, use `max_tokens=2400`, `temperature=0.1`,
   `response_format={"type": "json_object"}`, and validate with `DailyCoachReport.model_validate`.
 - Put all health facts in compact JSON and instruct the model to treat them and the question as
