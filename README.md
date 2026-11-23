@@ -62,7 +62,7 @@ The floating coach and the report in **Progress** need a non-empty server-side `
 |---|---|---|
 | `DEEPSEEK_API_KEY` | unset | Required API credential; keep it in the untracked local `.env` |
 | `DEEPSEEK_BASE_URL` | `https://api.deepseek.com` | Chat Completions base URL |
-| `DEEPSEEK_MODEL` | `deepseek-chat` | Model used for both short answers and reports |
+| `DEEPSEEK_MODEL` | `deepseek-flash` | Model used for both short answers and reports |
 | `DEEPSEEK_TIMEOUT_SECONDS` | `25` | Per-action upstream timeout |
 
 When running the API directly from the repository root, the settings above can be placed in `.env` before starting `uvicorn`. The Compose API service also forwards all four `DEEPSEEK_*` values from `.env`, using the defaults shown above when they are absent.

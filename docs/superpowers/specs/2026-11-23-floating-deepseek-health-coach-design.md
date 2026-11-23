@@ -248,13 +248,13 @@ Settings:
 |---|---|
 | `DEEPSEEK_API_KEY` | unset |
 | `DEEPSEEK_BASE_URL` | `https://api.deepseek.com` |
-| `DEEPSEEK_MODEL` | `deepseek-chat` |
+| `DEEPSEEK_MODEL` | `deepseek-flash` |
 | `DEEPSEEK_TIMEOUT_SECONDS` | `25` |
 
 Provider behavior:
 
 - Use one HTTP POST for one user action.
-- Use `deepseek-chat` for both short answers and the full report.
+- Use `deepseek-flash` for both short answers and the full report.
 - Request a plain answer for `ask` and JSON output for `daily-report`.
 - Do not stream.
 - Do not retry automatically.
@@ -454,7 +454,7 @@ Generate and commit `packages/api-client/src/openapi.json` and
   prior exchanges.
 - Multiple questions are possible, but no question or answer context is sent or stored.
 - A full structured report is generated only from Progress and disappears without persistence.
-- DeepSeek is configured independently from OpenRouter and uses `deepseek-chat`.
+- DeepSeek is configured independently from OpenRouter and uses `deepseek-flash`.
 - Each ask/report action causes at most one model call and has a manual retry path.
 - Only confirmed food and completed workouts are used as health facts.
 - No migration is added, no report/chat row is written, and no sensitive image or developer log

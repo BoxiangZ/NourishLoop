@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     openrouter_timeout_seconds: float = Field(default=20.0, gt=0, le=120)
     deepseek_api_key: SecretStr | None = None
     deepseek_base_url: str = "https://api.deepseek.com"
-    deepseek_model: str = "deepseek-chat"
+    deepseek_model: str = "deepseek-flash"
     deepseek_timeout_seconds: float = Field(default=25.0, gt=0, le=120)
     usda_api_key: SecretStr = SecretStr("DEMO_KEY")
     usda_timeout_seconds: float = Field(default=12.0, gt=0, le=60)

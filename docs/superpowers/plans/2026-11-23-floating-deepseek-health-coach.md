@@ -16,7 +16,7 @@
 - Preserve all existing meal, photo meal, workout, history, community, reward, and profile behavior.
 - Keep the active modular monolith boundaries: routers validate/delegate, services own workflows, persistence stays in query/model code, and the pure recommendation/workout engines do not depend on providers.
 - Use `APP_ENV=development` and `DEMO_AUTH_ENABLED=true` only for demo identity; do not add a production bypass.
-- DeepSeek is independent from OpenRouter. Use `DEEPSEEK_API_KEY`, `DEEPSEEK_BASE_URL=https://api.deepseek.com`, `DEEPSEEK_MODEL=deepseek-chat`, and `DEEPSEEK_TIMEOUT_SECONDS=25`.
+- DeepSeek is independent from OpenRouter. Use `DEEPSEEK_API_KEY`, `DEEPSEEK_BASE_URL=https://api.deepseek.com`, `DEEPSEEK_MODEL=deepseek-flash`, and `DEEPSEEK_TIMEOUT_SECONDS=25`.
 - Use at most one DeepSeek HTTP request for each `/assistant/ask` or `/assistant/daily-report` user action.
 - Do not automatically retry provider failures.
 - Do not persist questions, answers, reports, chat history, or conversation context.
@@ -381,7 +381,7 @@ def test_answer_uses_one_deepseek_chat_request():
     assert result == "Choose a protein-forward meal."
     assert len(requests) == 1
     body = json.loads(requests[0].content)
-    assert body["model"] == "deepseek-chat"
+    assert body["model"] == "deepseek-flash"
     assert "What should I eat?" in body["messages"][-1]["content"]
 
 
@@ -449,7 +449,7 @@ Expected: collection fails because settings fields and provider do not exist.
 ```python
 deepseek_api_key: SecretStr | None = None
 deepseek_base_url: str = "https://api.deepseek.com"
-deepseek_model: str = "deepseek-chat"
+deepseek_model: str = "deepseek-flash"
 deepseek_timeout_seconds: float = Field(default=25.0, gt=0, le=120)
 ```
 
@@ -1270,7 +1270,7 @@ git commit -m "docs: document DeepSeek coach and simplified navigation"
 - [ ] A repeated question sends no prior exchange and replaces the visible exchange.
 - [ ] Speech recognition has a text fallback.
 - [ ] Progress owns the full report UI and reports disappear on unmount/refresh.
-- [ ] DeepSeek uses `deepseek-chat`, independent settings, and no OpenRouter imports.
+- [ ] DeepSeek uses `deepseek-flash`, independent settings, and no OpenRouter imports.
 - [ ] Each ask/report HTTP action performs at most one DeepSeek call.
 - [ ] No assistant persistence or migration exists.
 - [ ] Generated API files are current.
