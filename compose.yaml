@@ -17,7 +17,7 @@ services:
 
   api:
     build: .
-    command: /bin/sh -c "alembic upgrade head && python -m scripts.seed_nourishloop && uvicorn apps.api.main:app --host 0.0.0.0 --port 8000"
+    command: /bin/sh -c "alembic upgrade head && python -m scripts.seed_nourishloop && python -m scripts.seed_demo_activity && uvicorn apps.api.main:app --host 0.0.0.0 --port 8000"
     environment:
       APP_ENV: development
       DEMO_AUTH_ENABLED: "true"
