@@ -23,6 +23,7 @@ from apps.api.modules.workouts.models import WorkoutPlan, WorkoutProfile, Workou
 from apps.api.modules.workouts.service import session_read
 
 HK_ZONE = ZoneInfo("Asia/Hong_Kong")
+CONFIRMED_PHOTO_REVIEW_STATUSES = frozenset({"not_requested", "completed"})
 
 
 def _day_bounds(day: date | None) -> tuple[date, datetime, datetime]:
@@ -78,21 +79,23 @@ def build_today_context(db: Session, user: User, day: date | None = None) -> Ass
         )
         .order_by(PhotoMealRecord.consumed_at, PhotoMealRecord.id)
     ).all()
-    photo_meals = [
-        PhotoMealContext(
-            food_names=_photo_food_names(row.foods),
-            notes=row.notes,
-            review_status=row.review_status,
-            nutrition_status=(row.nutrition_status if row.review_status == "completed" else "none"),
-            nutrition=(
-                NutritionContext(**row.nutrition_snapshot)
-                if row.review_status == "completed" and row.nutrition_snapshot
-                else None
-            ),
-            unresolved_foods=row.unresolved_foods or [],
+    photo_meals = []
+    for row in photo_rows:
+        is_confirmed = row.review_status in CONFIRMED_PHOTO_REVIEW_STATUSES
+        photo_meals.append(
+            PhotoMealContext(
+                food_names=_photo_food_names(row.foods),
+                notes=row.notes,
+                review_status=row.review_status,
+                nutrition_status=row.nutrition_status if is_confirmed else "none",
+                nutrition=(
+                    NutritionContext(**row.nutrition_snapshot)
+                    if is_confirmed and row.nutrition_snapshot
+                    else None
+                ),
+                unresolved_foods=row.unresolved_foods or [],
+            )
         )
-        for row in photo_rows
-    ]
 
     workout_rows = db.execute(
         select(WorkoutSession, WorkoutPlan)

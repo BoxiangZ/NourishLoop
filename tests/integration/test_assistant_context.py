@@ -1,6 +1,7 @@
 from datetime import date, datetime, timezone
 from uuid import uuid4
 
+import pytest
 from sqlalchemy import select
 
 from apps.api.modules.assistant.context import build_today_context
@@ -137,38 +138,20 @@ def test_context_includes_saved_photo_meal_without_private_fields(nl_stack):
     assert "vision-test" not in serialized
 
 
-def test_context_hides_nutrition_for_non_completed_photo_reviews(nl_stack):
+@pytest.mark.parametrize("review_status", ["not_requested", "completed"])
+def test_context_includes_complete_nutrition_for_confirmed_photo_reviews(nl_stack, review_status):
     _, session_factory = nl_stack
     fixed_day = date(2026, 11, 23)
 
     with session_factory() as db:
         user = db.get(User, "demo-student")
-        for status in ("pending", "processing", "failed", "not_requested"):
-            db.add(
-                PhotoMealRecord(
-                    user_id=user.id,
-                    foods=[{"name": f"{status} food"}],
-                    notes=f"{status} note",
-                    model="test-model",
-                    consumed_at=datetime(2026, 11, 23, 4, 0, tzinfo=timezone.utc),
-                    nutrition_snapshot={
-                        "calories_kcal": 999,
-                        "protein_g": 9,
-                        "carbs_g": 9,
-                        "fat_g": 9,
-                    },
-                    nutrition_status="complete",
-                    unresolved_foods=[],
-                    review_status=status,
-                )
-            )
         db.add(
             PhotoMealRecord(
                 user_id=user.id,
-                foods=[{"name": "confirmed food"}],
-                notes="confirmed note",
+                foods=[{"name": f"{review_status} food"}],
+                notes=f"{review_status} note",
                 model="test-model",
-                consumed_at=datetime(2026, 11, 23, 5, 0, tzinfo=timezone.utc),
+                consumed_at=datetime(2026, 11, 23, 4, 0, tzinfo=timezone.utc),
                 nutrition_snapshot={
                     "calories_kcal": 400,
                     "protein_g": 20,
@@ -177,20 +160,135 @@ def test_context_hides_nutrition_for_non_completed_photo_reviews(nl_stack):
                 },
                 nutrition_status="complete",
                 unresolved_foods=[],
-                review_status="completed",
+                review_status=review_status,
             )
         )
         db.commit()
 
         context = build_today_context(db, user, day=fixed_day)
 
-    status_only = [photo for photo in context.photo_meals if photo.review_status != "completed"]
-    confirmed = [photo for photo in context.photo_meals if photo.review_status == "completed"]
-    assert len(status_only) == 4
-    assert all(photo.nutrition is None for photo in status_only)
-    assert all(photo.nutrition_status == "none" for photo in status_only)
-    assert len(confirmed) == 1
-    assert confirmed[0].nutrition is not None
+    assert context.meal_count == 1
+    assert len(context.photo_meals) == 1
+    assert context.photo_meals[0].review_status == review_status
+    assert context.photo_meals[0].nutrition_status == "complete"
+    assert context.photo_meals[0].nutrition is not None
+    assert context.photo_meals[0].nutrition.calories_kcal == 400
+
+
+@pytest.mark.parametrize("review_status", ["pending", "processing", "failed"])
+def test_context_omits_nutrition_for_status_only_photo_reviews(nl_stack, review_status):
+    _, session_factory = nl_stack
+    fixed_day = date(2026, 11, 23)
+
+    with session_factory() as db:
+        user = db.get(User, "demo-student")
+        db.add(
+            PhotoMealRecord(
+                user_id=user.id,
+                foods=[{"name": f"{review_status} food"}],
+                notes=f"{review_status} note",
+                model="test-model",
+                consumed_at=datetime(2026, 11, 23, 4, 0, tzinfo=timezone.utc),
+                nutrition_snapshot={
+                    "calories_kcal": 999,
+                    "protein_g": 9,
+                    "carbs_g": 9,
+                    "fat_g": 9,
+                },
+                nutrition_status="complete",
+                unresolved_foods=[],
+                review_status=review_status,
+            )
+        )
+        db.commit()
+
+        context = build_today_context(db, user, day=fixed_day)
+
+    assert context.meal_count == 0
+    assert len(context.photo_meals) == 1
+    assert context.photo_meals[0].review_status == review_status
+    assert context.photo_meals[0].nutrition_status == "none"
+    assert context.photo_meals[0].nutrition is None
+    assert context.nutrition_totals.model_dump() == {
+        "calories_kcal": 0,
+        "protein_g": 0,
+        "carbs_g": 0,
+        "fat_g": 0,
+    }
+
+
+def test_context_photo_facts_and_daily_aggregate_agree_for_instant_photo(nl_stack):
+    _, session_factory = nl_stack
+    fixed_day = date(2026, 11, 23)
+
+    with session_factory() as db:
+        user = db.get(User, "demo-student")
+        rows = [
+            ("not_requested", "complete", 320, 20, 40, 10),
+            ("completed", "complete", 180, 10, 20, 5),
+            ("not_requested", "partial", 70, 3, 5, 2),
+            ("not_requested", "none", None, None, None, None),
+            ("pending", "complete", 500, 30, 50, 20),
+        ]
+        for minute, (status, nutrition_status, calories, protein, carbs, fat) in enumerate(rows):
+            snapshot = (
+                {
+                    "calories_kcal": calories,
+                    "protein_g": protein,
+                    "carbs_g": carbs,
+                    "fat_g": fat,
+                }
+                if calories is not None
+                else None
+            )
+            db.add(
+                PhotoMealRecord(
+                    user_id=user.id,
+                    foods=[{"name": f"{status} {nutrition_status} food"}],
+                    notes="",
+                    model="test-model",
+                    consumed_at=datetime(2026, 11, 23, 4, minute, tzinfo=timezone.utc),
+                    nutrition_snapshot=snapshot,
+                    nutrition_status=nutrition_status,
+                    unresolved_foods=[],
+                    review_status=status,
+                )
+            )
+        db.commit()
+
+        context = build_today_context(db, user, day=fixed_day)
+
+    confirmed_rows = [
+        photo
+        for photo in context.photo_meals
+        if photo.review_status in ("completed", "not_requested")
+    ]
+    complete_nutrition = [
+        photo.nutrition
+        for photo in confirmed_rows
+        if photo.nutrition_status == "complete" and photo.nutrition is not None
+    ]
+    partial_row = next(
+        photo for photo in context.photo_meals if photo.nutrition_status == "partial"
+    )
+
+    assert context.meal_count == len(confirmed_rows) == 4
+    assert context.nutrition_totals.calories_kcal == sum(
+        nutrition.calories_kcal for nutrition in complete_nutrition
+    )
+    assert context.nutrition_totals.protein_g == sum(
+        nutrition.protein_g for nutrition in complete_nutrition
+    )
+    assert context.nutrition_totals.carbs_g == sum(
+        nutrition.carbs_g for nutrition in complete_nutrition
+    )
+    assert context.nutrition_totals.fat_g == sum(
+        nutrition.fat_g for nutrition in complete_nutrition
+    )
+    assert context.nutrition_totals.calories_kcal == 500
+    assert partial_row.review_status == "not_requested"
+    assert partial_row.nutrition is not None
+    assert partial_row.nutrition.calories_kcal == 70
 
 
 def test_context_scopes_meal_photo_and_workout_records_to_current_user(nl_stack):

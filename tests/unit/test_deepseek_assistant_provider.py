@@ -119,11 +119,8 @@ def test_prompts_treat_health_data_as_untrusted_facts():
     assert "invent nutrition" in system_prompt
     assert "workouts" in system_prompt
     assert "medical outcomes" in system_prompt
-    assert "status-only" in system_prompt
-    assert "pending" in system_prompt
-    assert "processing" in system_prompt
-    assert "failed" in system_prompt
-    assert "not_requested" in system_prompt
+    assert "pending, processing, or failed are status-only" in system_prompt
+    assert "not_requested" not in system_prompt
 
 
 def test_report_validates_json_without_retry():

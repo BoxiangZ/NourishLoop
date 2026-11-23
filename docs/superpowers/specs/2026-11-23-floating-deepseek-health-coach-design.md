@@ -218,8 +218,12 @@ The context excludes:
 - Workout plans that were not completed.
 - Reward balances and transaction history.
 
-Only confirmed food records count as intake. Only completed workout sessions count as
-movement. The service must not call helpers that create missing workout profiles or otherwise
+Photo rows with `review_status` `completed` or `not_requested` are confirmed. Their `complete`
+nutrition snapshots contribute to daily totals; `partial` snapshots are included per row as
+matched-food estimates without being represented as aggregate intake. Rows with `pending`,
+`processing`, or `failed` status are status-only and include no row nutrition or daily intake
+contribution. Only confirmed food records count as intake. Only completed workout sessions count
+as movement. The service must not call helpers that create missing workout profiles or otherwise
 mutate data while constructing context.
 
 The context is serialized as compact JSON. The user's question is passed separately and is
@@ -373,7 +377,10 @@ construct health facts for the assistant request.
 ### Backend unit tests
 
 - Context uses the Hong Kong-local day boundaries.
-- Confirmed menu meals, confirmed photo records, and completed workouts are included.
+- Confirmed menu meals, `completed` and `not_requested` photo records, and completed workouts are
+  included.
+- Complete photo nutrition is included per row and in totals for confirmed statuses; partial
+  photo nutrition remains per-row context and is excluded from aggregate totals.
 - Planned meals, incomplete workout plans, community content, IDs, images, and review logs are
   excluded.
 - Missing workout profile does not create a database row.
