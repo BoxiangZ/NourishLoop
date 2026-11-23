@@ -13,7 +13,13 @@ from apps.api.modules.catalog.models import MenuItem, NutritionFact, Venue
 from apps.api.modules.identity.models import User
 from apps.api.modules.rewards.service import award_event
 from apps.api.modules.tracking.models import Decision, MealLog, PhotoMealRecord
-from apps.api.modules.workouts.models import Exercise, WorkoutPlan, WorkoutSession
+from apps.api.modules.workouts.engine import select_routine
+from apps.api.modules.workouts.models import (
+    Exercise,
+    WorkoutPlan,
+    WorkoutProfile,
+    WorkoutSession,
+)
 
 HK_ZONE = ZoneInfo("Asia/Hong_Kong")
 DEMO_USER_ID = "demo-student"
@@ -133,8 +139,10 @@ def _add_workout(
     db: Session,
     *,
     local_day,
+    requested_focus: str,
     focus: str,
-    exercises_by_focus: dict[str, list[Exercise]],
+    prescription: list[dict],
+    explanation: str,
     completed: bool,
 ) -> None:
     suffix = "c" if completed else "a"
@@ -144,25 +152,25 @@ def _add_workout(
         plan = WorkoutPlan(
             id=plan_id,
             user_id=DEMO_USER_ID,
-            requested_focus=focus,
+            requested_focus=requested_focus,
             focus=focus,
             stage="beginner",
             minutes=30,
-            prescription=[
-                {
-                    "exercise_id": exercise.id,
-                    "sets": 2,
-                    "reps": "10",
-                    "rest_seconds": 60,
-                }
-                for exercise in exercises_by_focus[focus][:2]
-            ],
-            explanation="Fictional demo session for assistant context.",
+            prescription=prescription,
+            explanation=explanation,
             explanation_source="rules",
             created_at=_at(local_day, 7, 10),
         )
         db.add(plan)
         db.flush()
+    else:
+        plan.requested_focus = requested_focus
+        plan.focus = focus
+        plan.stage = "beginner"
+        plan.minutes = 30
+        plan.prescription = prescription
+        plan.explanation = explanation
+        plan.explanation_source = "rules"
 
     if not completed:
         return
@@ -205,16 +213,9 @@ def seed_demo_activity(db: Session, now: datetime | None = None) -> None:
     exercise_rows = db.scalars(
         select(Exercise).order_by(Exercise.muscle_group, Exercise.name, Exercise.id)
     ).all()
-    exercises_by_focus: dict[str, list[Exercise]] = {}
-    for exercise in exercise_rows:
-        exercises_by_focus.setdefault(exercise.muscle_group, []).append(exercise)
-    missing_focuses = set(WORKOUTS_BY_OFFSET.values()) | {"legs"}
-    missing_focuses = {focus for focus in missing_focuses if not exercises_by_focus.get(focus)}
-    if missing_focuses:
-        raise RuntimeError(
-            "Run the base demo seed first; missing exercise groups: "
-            + ", ".join(sorted(missing_focuses))
-        )
+    workout_profile = db.get(WorkoutProfile, DEMO_USER_ID)
+    if workout_profile is None:
+        raise RuntimeError("Run the base demo seed first; demo-student workout profile is missing")
 
     db.execute(
         delete(Decision).where(
@@ -302,20 +303,60 @@ def seed_demo_activity(db: Session, now: datetime | None = None) -> None:
         created_at=_at(today, 7, 5),
     )
 
-    for offset, focus in WORKOUTS_BY_OFFSET.items():
+    recent: list[tuple[str, datetime]] = []
+    for offset in sorted(WORKOUTS_BY_OFFSET, reverse=True):
         local_day = today - timedelta(days=offset)
+        requested_focus = WORKOUTS_BY_OFFSET[offset]
+        created_at = _at(local_day, 7, 10)
+        focus, prescription, explanation = select_routine(
+            exercise_rows,
+            requested_focus,
+            "beginner",
+            workout_profile.equipment,
+            workout_profile.days_per_week,
+            30,
+            recent,
+            created_at,
+        )
+        if not prescription:
+            raise RuntimeError(
+                "Run the base demo seed first; no beginner exercise matches "
+                f"{requested_focus} and the demo equipment"
+            )
         _add_workout(
             db,
             local_day=local_day,
+            requested_focus=requested_focus,
             focus=focus,
-            exercises_by_focus=exercises_by_focus,
+            prescription=prescription,
+            explanation=explanation,
             completed=True,
+        )
+        recent.append((focus, _at(local_day, 18, 0)))
+
+    requested_focus = "legs"
+    focus, prescription, explanation = select_routine(
+        exercise_rows,
+        requested_focus,
+        "beginner",
+        workout_profile.equipment,
+        workout_profile.days_per_week,
+        30,
+        [],
+        _at(today, 7, 10),
+    )
+    if not prescription:
+        raise RuntimeError(
+            "Run the base demo seed first; no beginner exercise matches "
+            f"{requested_focus} and the demo equipment"
         )
     _add_workout(
         db,
         local_day=today,
-        focus="legs",
-        exercises_by_focus=exercises_by_focus,
+        requested_focus=requested_focus,
+        focus=focus,
+        prescription=prescription,
+        explanation=explanation,
         completed=False,
     )
 

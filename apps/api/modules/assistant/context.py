@@ -21,7 +21,6 @@ from apps.api.modules.assistant.schemas import (
     WorkoutProfileContext,
 )
 from apps.api.modules.catalog.models import MenuItem, NutritionFact, Venue
-from apps.api.modules.catalog.service import list_menu_items, list_venues
 from apps.api.modules.identity.models import User
 from apps.api.modules.identity.service import get_goal, get_profile
 from apps.api.modules.tracking.models import Decision, MealLog, PhotoMealRecord
@@ -138,8 +137,14 @@ def build_today_context(db: Session, user: User, day: date | None = None) -> Ass
             )
         )
 
-    venue_rows = list_venues(db, limit=100)
+    venue_rows = db.scalars(select(Venue).order_by(Venue.name, Venue.id)).all()
     venue_by_id = {venue.id: venue for venue in venue_rows}
+    catalog_rows = db.execute(
+        select(MenuItem, NutritionFact)
+        .join(NutritionFact, NutritionFact.menu_item_id == MenuItem.id)
+        .where(MenuItem.available.is_(True))
+        .order_by(MenuItem.name, MenuItem.id)
+    ).all()
     menu_catalog = [
         MenuCatalogItemContext(
             name=item.name,
@@ -160,7 +165,7 @@ def build_today_context(db: Session, user: User, day: date | None = None) -> Ass
             eligible=eligible,
             ineligibility_reasons=reasons,
         )
-        for item, nutrition in list_menu_items(db, limit=100)
+        for item, nutrition in catalog_rows
         for eligible, reasons in [
             menu_eligibility(
                 item.tags,

@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from apps.api.modules.assistant.context import build_today_context
 from apps.api.modules.assistant.schemas import AssistantAskRequest, DailyCoachReport
-from apps.api.modules.catalog.models import MenuItem, Venue
+from apps.api.modules.catalog.models import MenuItem, NutritionFact, Venue
 from apps.api.modules.identity.models import User
 from apps.api.modules.tracking.models import Decision, MealLog, PhotoMealRecord
 from apps.api.modules.workouts.models import Exercise, WorkoutPlan, WorkoutProfile, WorkoutSession
@@ -105,6 +105,87 @@ def test_context_includes_plans_catalog_venues_and_derived_values(nl_stack):
     assert context.derived.remaining_calories_kcal == 1900
 
 
+def test_context_keeps_menu_venues_beyond_former_query_caps(nl_stack):
+    _, session_factory = nl_stack
+    fixed_day = date(2026, 11, 23)
+
+    with session_factory() as db:
+        user = db.get(User, "demo-student")
+        filler_venues = [
+            Venue(
+                id=f"filler-venue-{index:03d}",
+                name=f"AAA Filler Venue {index:03d}",
+                campus_area="Test Campus",
+                is_demo=True,
+            )
+            for index in range(100)
+        ]
+        target_venue = Venue(
+            id="target-menu-venue",
+            name="ZZZ Menu Venue",
+            campus_area="Test Campus",
+            is_demo=True,
+        )
+        db.add_all([*filler_venues, target_venue])
+        db.flush()
+
+        filler_items = [
+            MenuItem(
+                id=f"filler-item-{index:03d}",
+                venue_id=filler_venues[index].id,
+                name=f"AAA Filler Meal {index:03d}",
+                description="Fictional test meal",
+                category="meal",
+                tags=[],
+                allergen_tags=[],
+                price_hkd=10,
+                available=True,
+                source_label="fictional test data",
+            )
+            for index in range(100)
+        ]
+        target_item = MenuItem(
+            id="target-menu-item",
+            venue_id=target_venue.id,
+            name="ZZZ Target Meal",
+            description="Fictional test meal",
+            category="meal",
+            tags=[],
+            allergen_tags=[],
+            price_hkd=20,
+            available=True,
+            source_label="fictional test data",
+        )
+        db.add_all([*filler_items, target_item])
+        db.flush()
+        db.add_all(
+            [
+                NutritionFact(
+                    menu_item_id=item.id,
+                    calories_kcal=100,
+                    protein_g=10,
+                    carbs_g=10,
+                    fat_g=5,
+                    basis="per_serving",
+                    provenance="illustrative_estimate",
+                    uncertainty_note="Fictional test nutrition.",
+                )
+                for item in [*filler_items, target_item]
+            ]
+        )
+        db.commit()
+
+        context = build_today_context(db, user, day=fixed_day)
+
+    venue_names = {venue.name for venue in context.venue_directory}
+    assert {item.name for item in context.menu_catalog} >= {
+        "ZZZ Target Meal",
+        "Chicken grain bowl",
+    }
+    assert {item.venue_name for item in context.menu_catalog} <= venue_names
+    assert "ZZZ Menu Venue" in venue_names
+
+
 def test_context_marks_allergy_and_strict_preference_items_ineligible(nl_stack):
     client, session_factory = nl_stack
     fixed_day = date(2026, 11, 23)
@@ -129,6 +210,34 @@ def test_context_marks_allergy_and_strict_preference_items_ineligible(nl_stack):
     assert by_name["Chickpea salad"].eligible is True
 
 
+def test_context_returns_the_five_newest_of_six_planned_decisions(nl_stack):
+    client, session_factory = nl_stack
+    fixed_day = date(2026, 11, 23)
+    menu_items = client.get("/api/v1/menu-items?limit=6").json()
+
+    with session_factory() as db:
+        user = db.get(User, "demo-student")
+        for index, item in enumerate(menu_items):
+            db.add(
+                Decision(
+                    id=f"planned-boundary-{index}",
+                    user_id=user.id,
+                    menu_item_id=item["id"],
+                    status="planned",
+                    created_at=datetime(
+                        2026, 11, 23, 0, index, tzinfo=timezone.utc
+                    ),
+                )
+            )
+        db.commit()
+
+        context = build_today_context(db, user, day=fixed_day)
+
+    assert [meal.name for meal in context.planned_meals] == [
+        item["name"] for item in reversed(menu_items[1:])
+    ]
+
+
 def test_context_includes_only_unfinished_workout_plans(nl_stack):
     client, session_factory = nl_stack
     fixed_day = date(2026, 11, 23)
@@ -149,6 +258,40 @@ def test_context_includes_only_unfinished_workout_plans(nl_stack):
 
     assert [plan.id for plan in context.workout_plans] == [planned["id"]]
     assert context.workout_plans[0].exercise_names
+
+
+def test_context_returns_the_three_newest_of_four_unfinished_workout_plans(nl_stack):
+    _, session_factory = nl_stack
+    fixed_day = date(2026, 11, 23)
+
+    with session_factory() as db:
+        user = db.get(User, "demo-student")
+        for index in range(4):
+            db.add(
+                WorkoutPlan(
+                    id=f"unfinished-boundary-{index}",
+                    user_id=user.id,
+                    requested_focus="legs",
+                    focus="legs",
+                    stage="beginner",
+                    minutes=30,
+                    prescription=[],
+                    explanation="Test plan",
+                    explanation_source="rules",
+                    created_at=datetime(
+                        2026, 11, 23, 0, index, tzinfo=timezone.utc
+                    ),
+                )
+            )
+        db.commit()
+
+        context = build_today_context(db, user, day=fixed_day)
+
+    assert [plan.id for plan in context.workout_plans] == [
+        "unfinished-boundary-3",
+        "unfinished-boundary-2",
+        "unfinished-boundary-1",
+    ]
 
 
 def test_context_uses_hong_kong_day_boundaries(nl_stack):

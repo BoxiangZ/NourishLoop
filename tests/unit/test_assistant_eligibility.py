@@ -42,6 +42,14 @@ def test_reason_order_is_stable_when_multiple_rules_fail():
     assert reasons == ["allergen_match", "not_vegan"]
 
 
+def test_reason_order_is_stable_when_all_hard_rules_fail():
+    eligible, reasons = menu_eligibility(
+        ["soy"], ["egg"], ["vegetarian", "vegan"], ["egg"]
+    )
+    assert eligible is False
+    assert reasons == ["allergen_match", "not_vegan", "not_vegetarian"]
+
+
 def test_eligibility_normalizes_case_and_whitespace():
     assert menu_eligibility(
         [" Vegetarian "], [" Egg "], ["VEGETARIAN"], ["egg"]

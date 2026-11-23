@@ -15,7 +15,7 @@ from apps.api.modules.assistant.provider import (
     AssistantUnavailableError,
     DeepSeekChatProvider,
 )
-from apps.api.modules.assistant.schemas import AssistantContext
+from apps.api.modules.assistant.schemas import AssistantContext, MenuCatalogItemContext
 
 
 def context() -> AssistantContext:
@@ -135,6 +135,18 @@ def test_answer_prompt_is_structured_for_safe_specific_recommendations():
     assert "sourced real places" in system
     assert "is_demo" in system
     assert "do not describe sourced real venues as fictional" in system
+    assert "food or meal questions" in system
+    assert "nutrient focus" in system
+    assert "one or two eligible menu items" in system
+    assert "movement or workout questions" in system
+    assert "completed and unfinished workout context" in system
+    assert "do not force food recommendations" in system
+    assert "real-venue or place questions" in system
+    assert "place metadata only" in system
+    assert "no inferred dishes" in system
+    assert "mixed questions" in system
+    assert "combine only the relevant domains" in system
+    assert "omit unrelated plans and workouts" in system
     assert set(envelope) == {"question", "context"}
     assert set(envelope["context"]) == {
         "date",
@@ -358,6 +370,130 @@ def test_empty_answer_is_rejected():
         ).answer("Question", context())
 
 
+@pytest.mark.parametrize("finish_reason", ["length", "content_filter"])
+def test_incomplete_finish_reason_is_rejected_without_retry(finish_reason):
+    calls = 0
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        return httpx.Response(
+            200,
+            json={
+                "choices": [
+                    {
+                        "message": {"content": "The best next choice is"},
+                        "finish_reason": finish_reason,
+                    }
+                ]
+            },
+        )
+
+    with pytest.raises(AssistantResponseError, match="incomplete"):
+        DeepSeekChatProvider(
+            Settings(_env_file=None, deepseek_api_key="test-key"),
+            transport=httpx.MockTransport(handler),
+        ).answer("Question", context())
+
+    assert calls == 1
+
+
+def test_answer_without_terminal_sentence_boundary_is_rejected_without_retry():
+    calls = 0
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        return httpx.Response(
+            200,
+            json={
+                "choices": [
+                    {
+                        "message": {
+                            "content": "Protein is the main gap, so try the Chicken grain bowl"
+                        }
+                    }
+                ]
+            },
+        )
+
+    with pytest.raises(AssistantResponseError, match="incomplete"):
+        DeepSeekChatProvider(
+            Settings(_env_file=None, deepseek_api_key="test-key"),
+            transport=httpx.MockTransport(handler),
+        ).answer("Question", context())
+
+    assert calls == 1
+
+
+def test_answer_accepts_terminal_punctuation_before_a_closing_quote():
+    transport = httpx.MockTransport(
+        lambda _request: httpx.Response(
+            200,
+            json={"choices": [{"message": {"content": 'Try the Chickpea salad."'}}]},
+        )
+    )
+
+    result = DeepSeekChatProvider(
+        Settings(_env_file=None, deepseek_api_key="test-key"), transport=transport
+    ).answer("Question", context())
+
+    assert result == 'Try the Chickpea salad."'
+
+
+def test_answer_naming_an_ineligible_menu_item_is_rejected_without_retry():
+    calls = 0
+    ineligible_context = context().model_copy(
+        update={
+            "menu_catalog": [
+                MenuCatalogItemContext(
+                    name="Chicken grain bowl",
+                    venue_name="Harbour Kitchen (demo)",
+                    venue_area="South Campus (fictional)",
+                    description="Fictional demo meal",
+                    category="bowl",
+                    price_hkd=55,
+                    tags=["high_protein"],
+                    allergens=[],
+                    nutrition={
+                        "calories_kcal": 610,
+                        "protein_g": 42,
+                        "carbs_g": 68,
+                        "fat_g": 18,
+                    },
+                    provenance="illustrative_estimate",
+                    eligible=False,
+                    ineligibility_reasons=["not_vegan"],
+                )
+            ]
+        }
+    )
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        return httpx.Response(
+            200,
+            json={
+                "choices": [
+                    {
+                        "message": {
+                            "content": "The Chicken grain bowl is a convenient option."
+                        }
+                    }
+                ]
+            },
+        )
+
+    with pytest.raises(AssistantResponseError, match="ineligible"):
+        DeepSeekChatProvider(
+            Settings(_env_file=None, deepseek_api_key="test-key"),
+            transport=httpx.MockTransport(handler),
+        ).answer("What should I eat?", ineligible_context)
+
+    assert calls == 1
+
+
 def test_invalid_report_json_is_rejected_without_another_request():
     calls = 0
 
@@ -511,7 +647,7 @@ def test_unparseable_response_does_not_log_raw_content(caplog):
 def test_provider_does_not_log_sensitive_content(caplog):
     secret = "secret-test-key"
     question = "My private health question"
-    answer = "Private answer text"
+    answer = "Private answer text."
     caplog.set_level("DEBUG")
 
     provider = DeepSeekChatProvider(

@@ -14,7 +14,12 @@ from apps.api.core.config import Settings
 from apps.api.modules.catalog.models import MenuItem, NutritionFact
 from apps.api.modules.rewards.models import CreditTransaction, HabitEvent
 from apps.api.modules.tracking.models import Decision, MealLog, PhotoMealRecord
-from apps.api.modules.workouts.models import Exercise, WorkoutPlan, WorkoutSession
+from apps.api.modules.workouts.models import (
+    Exercise,
+    WorkoutPlan,
+    WorkoutProfile,
+    WorkoutSession,
+)
 
 
 HK = ZoneInfo("Asia/Hong_Kong")
@@ -244,6 +249,34 @@ def test_demo_activity_is_idempotent_on_the_same_hong_kong_day(nl_stack):
         "habit_events": 11,
         "credit_transactions": 11,
     }
+
+
+def test_seeded_workout_prescriptions_respect_beginner_stage_and_equipment(nl_stack):
+    from apps.api.demo_activity import seed_demo_activity
+
+    _, session_factory = nl_stack
+    with session_factory() as db:
+        seed_demo_activity(db, now=NOW)
+
+    with session_factory() as db:
+        plans = db.scalars(
+            select(WorkoutPlan).where(WorkoutPlan.id.like("demo-wplan-%"))
+        ).all()
+        profile = db.get(WorkoutProfile, "demo-student")
+        exercises = {
+            exercise.id: exercise
+            for exercise in db.scalars(select(Exercise)).all()
+        }
+
+        assert len(plans) == 5
+        assert profile is not None
+        for plan in plans:
+            assert plan.stage == "beginner"
+            assert plan.prescription
+            for row in plan.prescription:
+                exercise = exercises[row["exercise_id"]]
+                assert exercise.difficulty == "beginner"
+                assert exercise.equipment in profile.equipment
 
 
 def test_demo_activity_replaces_stale_unfinished_seeded_workout_plan(nl_stack):

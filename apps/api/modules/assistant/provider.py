@@ -41,6 +41,25 @@ class AssistantLLMProvider(Protocol):
 
 ANSWER_MAX_TOKENS = 1200
 REPORT_MAX_TOKENS = 2400
+INCOMPLETE_FINISH_REASONS = frozenset({"length", "content_filter"})
+TERMINAL_SENTENCE_BOUNDARIES = frozenset({".", "!", "?"})
+CLOSING_QUOTES = "\"'”’"
+
+
+def _ends_with_complete_sentence(answer: str) -> bool:
+    without_closing_quotes = answer.rstrip().rstrip(CLOSING_QUOTES).rstrip()
+    return bool(without_closing_quotes) and (
+        without_closing_quotes[-1] in TERMINAL_SENTENCE_BOUNDARIES
+    )
+
+
+def _names_ineligible_menu_item(answer: str, context: AssistantContext) -> bool:
+    normalized_answer = " ".join(answer.casefold().split())
+    return any(
+        " ".join(item.name.casefold().split()) in normalized_answer
+        for item in context.menu_catalog
+        if not item.eligible
+    )
 
 
 class DeepSeekChatProvider:
@@ -63,6 +82,10 @@ class DeepSeekChatProvider:
         answer = answer.strip()
         if not answer:
             raise AssistantResponseError("DeepSeek returned an empty answer")
+        if not _ends_with_complete_sentence(answer):
+            raise AssistantResponseError("DeepSeek returned an incomplete answer")
+        if _names_ineligible_menu_item(answer, context):
+            raise AssistantResponseError("DeepSeek recommended an ineligible menu item")
         return answer
 
     def report(self, context: AssistantContext) -> DailyCoachReport:
@@ -130,11 +153,14 @@ class DeepSeekChatProvider:
 
         try:
             body = response.json()
-            reply = body["choices"][0]["message"]["content"]
-        except (ValueError, KeyError, IndexError, TypeError):
+            choice = body["choices"][0]
+            reply = choice["message"]["content"]
+        except (AttributeError, ValueError, KeyError, IndexError, TypeError):
             raise AssistantUnavailableError("DeepSeek returned an unusable response") from None
         if not isinstance(reply, str):
             raise AssistantResponseError("DeepSeek returned no textual answer")
+        if choice.get("finish_reason") in INCOMPLETE_FINISH_REASONS:
+            raise AssistantResponseError("DeepSeek returned an incomplete response")
         return reply
 
     def _configuration(self) -> tuple[str, str, str]:
