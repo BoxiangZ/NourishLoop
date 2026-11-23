@@ -6,11 +6,15 @@ from sqlalchemy import event, func, select
 from apps.api.core.config import get_settings
 from apps.api.core.database import Base, make_engine, make_session_factory
 from apps.api.core import import_models  # noqa: F401
-from apps.api.modules.catalog.models import MenuItem, NutritionFact, Venue
+from apps.api.modules.catalog.models import (
+    ExternalNote, MenuItem, NutritionFact, PublishedDish, Venue,
+)
 from apps.api.modules.identity.models import User
 from apps.api.modules.rewards.models import CreditTransaction
+from apps.api.public_reviews import LOCAL_FOOD_REVIEWS
+from apps.api.published_menus import SNAPSHOTS
 from apps.api.seed import seed
-from apps.api.real_sources import HKUST_VENUES, LOHAS_VENUES
+from apps.api.real_sources import HKUST_VENUES, LOCAL_VENUES, LOHAS_VENUES, PUBLIC_DISCUSSIONS
 
 
 def test_demo_seed_respects_foreign_keys_and_is_idempotent(tmp_path, monkeypatch):
@@ -27,11 +31,17 @@ def test_demo_seed_respects_foreign_keys_and_is_idempotent(tmp_path, monkeypatch
     with factory() as db:
         seed(db)
         seed(db)
-        assert db.scalar(select(func.count()).select_from(Venue)) == 2 + len(HKUST_VENUES) + len(
-            LOHAS_VENUES
+        assert db.scalar(select(func.count()).select_from(Venue)) == (
+            2 + len(HKUST_VENUES) + len(LOHAS_VENUES) + len(LOCAL_VENUES)
+        )
+        assert db.scalar(select(func.count()).select_from(PublishedDish)) == sum(
+            len(snapshot.branches) * len(snapshot.dishes) for snapshot in SNAPSHOTS
         )
         assert db.scalar(select(func.count()).select_from(MenuItem)) == 6
         assert db.scalar(select(func.count()).select_from(NutritionFact)) == 6
+        assert db.scalar(select(func.count()).select_from(ExternalNote)) == (
+            len(PUBLIC_DISCUSSIONS) + len(LOCAL_FOOD_REVIEWS)
+        )
     engine.dispose()
     get_settings.cache_clear()
 

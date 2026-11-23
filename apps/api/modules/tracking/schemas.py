@@ -52,6 +52,22 @@ class DailySummary(BaseModel):
     totals: NutritionTotals
 
 
+class PlanWeekRead(BaseModel):
+    starts_on: date
+    meal_days: int
+    training_days: int
+
+
+class PlanProgressRead(BaseModel):
+    today: date
+    weeks: list[PlanWeekRead]
+    meal_days_target: int | None
+    training_days_target: int
+    meals_today: int
+    recent_meal_count: int
+    planned_meal: DecisionRead | None
+
+
 class PhotoAnalysisRequest(BaseModel):
     image_base64: str = Field(min_length=1, max_length=7_000_000)
     mime_type: Literal["image/jpeg", "image/png", "image/webp"]
@@ -155,7 +171,9 @@ class PhotoMealRead(BaseModel):
     nutrition_items: list[PhotoNutritionItemRead] = Field(default_factory=list)
     nutrition_status: Literal["complete", "partial", "none"] = "none"
     unresolved_foods: list[str] = Field(default_factory=list)
-    review_status: Literal["not_requested", "pending", "processing", "completed", "failed"] = "not_requested"
+    review_status: Literal[
+        "not_requested", "pending", "processing", "completed", "failed",
+    ] = "not_requested"
     review_attempts: int = 0
     review_error: str | None = None
     ai_review: MealAIReview | None = None

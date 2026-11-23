@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import base64
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
-from zoneinfo import ZoneInfo
 
 import httpx
 from fastapi import HTTPException
@@ -15,6 +14,7 @@ from apps.api.core.config import Settings
 from apps.api.modules.identity.models import User
 from apps.api.modules.catalog.models import NutritionFood
 from apps.api.modules.rewards.service import award_event
+from apps.api.modules.tracking.history import confirmed_photo_meals, day_bounds
 from apps.api.modules.tracking.models import PhotoMealRecord
 from apps.api.modules.tracking.schemas import (
     PhotoAnalysisRead,
@@ -471,18 +471,7 @@ def list_photo_meals(db: Session, user: User, limit: int, offset: int) -> list[P
 
 
 def photo_meal_stats(db: Session, user: User, day) -> tuple[int, dict[str, float]]:
-    zone = ZoneInfo("Asia/Hong_Kong")
-    start = datetime.combine(day, datetime.min.time(), tzinfo=zone).astimezone(timezone.utc)
-    end = (datetime.combine(day, datetime.min.time(), tzinfo=zone) + timedelta(days=1)).astimezone(
-        timezone.utc
-    )
-    rows = db.scalars(
-        select(PhotoMealRecord).where(
-            PhotoMealRecord.user_id == user.id,
-            PhotoMealRecord.consumed_at >= start,
-            PhotoMealRecord.consumed_at < end,
-        )
-    ).all()
+    rows = confirmed_photo_meals(db, user.id, *day_bounds(day, day))
     totals = {
         key: Decimal("0")
         for key in (
@@ -493,9 +482,7 @@ def photo_meal_stats(db: Session, user: User, day) -> tuple[int, dict[str, float
         )
     }
     for row in rows:
-        if row.review_status not in ("not_requested", "completed"):
-            continue
         if row.nutrition_status == "complete" and row.nutrition_snapshot:
             for key in totals:
                 totals[key] += Decimal(str(row.nutrition_snapshot[key]))
-    return sum(row.review_status in ("not_requested", "completed") for row in rows), {key: float(value) for key, value in totals.items()}
+    return len(rows), {key: float(value) for key, value in totals.items()}

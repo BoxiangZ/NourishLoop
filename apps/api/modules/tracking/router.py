@@ -14,6 +14,7 @@ from apps.api.modules.tracking.async_review import (
     delete_photo_review, get_photo_review, queue_photo_review, retry_photo_review,
 )
 from apps.api.modules.tracking.photo import photo_meal_read
+from apps.api.modules.tracking.progress import plan_progress
 from apps.api.modules.identity.models import User
 from apps.api.modules.tracking.schemas import (
     DailySummary,
@@ -21,6 +22,7 @@ from apps.api.modules.tracking.schemas import (
     DecisionRead,
     MealLogCreate,
     MealLogRead,
+    PlanProgressRead,
     PhotoAnalysisRequest,
     PhotoAnalysisRead,
     PhotoMealCreate,
@@ -62,7 +64,9 @@ async def start_photo_review(
 
 
 @router.get("/photo-meals/{record_id}", response_model=PhotoMealRead)
-def photo_review_status(record_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+def photo_review_status(
+    record_id: str, user: User = Depends(current_user), db: Session = Depends(get_db),
+):
     return photo_meal_read(get_photo_review(db, user.id, record_id))
 
 
@@ -72,7 +76,9 @@ def retry_review(record_id: str, user: User = Depends(current_user), db: Session
 
 
 @router.delete("/photo-meals/{record_id}", status_code=204)
-def remove_review(record_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+def remove_review(
+    record_id: str, user: User = Depends(current_user), db: Session = Depends(get_db),
+):
     delete_photo_review(db, user.id, record_id)
 
 
@@ -167,3 +173,8 @@ def summary(
 ):
     actual_day = day or datetime.now(ZoneInfo("Asia/Hong_Kong")).date()
     return daily_summary(db, user, actual_day)
+
+
+@router.get("/me/plan-progress", response_model=PlanProgressRead)
+def progress(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    return plan_progress(db, user)

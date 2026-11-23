@@ -4,6 +4,16 @@ Instructions are original short cues, not copied exercise-library prose.
 """
 
 ACE = "https://www.acefitness.org/resources/everyone/exercise-library/"
+HKUST_FITNESS = "https://dst.hkust.edu.hk/support-%26-resources/sports-facilities/fitness-center"
+CAMPUS_CENTERS = "HKUST LG4 Fitness Center / Tsang Shiu Tim Sports Center"
+CAMPUS_GYM_EQUIPMENT = [
+    ("Treadmill", "cardio", CAMPUS_CENTERS, HKUST_FITNESS),
+    ("Bicycle ergometer", "cardio", CAMPUS_CENTERS, HKUST_FITNESS),
+    ("Rowing ergometer", "cardio", CAMPUS_CENTERS, HKUST_FITNESS),
+    ("Elliptical trainer", "cardio", CAMPUS_CENTERS, HKUST_FITNESS),
+    ("Free weights", "strength", CAMPUS_CENTERS, HKUST_FITNESS),
+    ("Multi-gym equipment", "strength", CAMPUS_CENTERS, HKUST_FITNESS),
+]
 
 # name, muscle group, equipment, difficulty, short cue, source
 EXERCISES = [
@@ -29,7 +39,7 @@ EXERCISES = [
         "cable",
         "beginner",
         "Keep your chest lifted and draw elbows back without shrugging.",
-        ACE + "body-part/back/",
+        ACE + "46/seated-high-back-row/",
     ),
     (
         "Reverse fly",
@@ -37,7 +47,7 @@ EXERCISES = [
         "cable",
         "intermediate",
         "Use a light load and open the arms slowly while keeping your trunk steady.",
-        ACE + "body-part/back/",
+        ACE + "353/reverse-fly/",
     ),
     (
         "Seated machine close-grip shoulder press",
@@ -45,7 +55,7 @@ EXERCISES = [
         "machine",
         "beginner",
         "Press smoothly overhead in a comfortable range; avoid arching your back.",
-        ACE + "experience/beginner/?page=5",
+        ACE + "187/seated-machine-close-grip-shoulder-press/",
     ),
     (
         "Dumbbell shoulder press",
@@ -101,7 +111,7 @@ EXERCISES = [
         "machine",
         "beginner",
         "Press through your feet without locking the knees; return slowly.",
-        ACE + "experience/beginner/?page=5",
+        ACE + "154/seated-leg-press/",
     ),
     (
         "Forward lunge",
@@ -135,4 +145,51 @@ EXERCISES = [
         "Extend opposite arm and leg while keeping your trunk steady.",
         ACE + "body-part/abs/",
     ),
+    (
+        "Dumbbell single-arm row", "back", "dumbbell", "beginner",
+        "Brace on a stable bench and draw your elbow back without twisting your torso.",
+        "https://www.acefitness.org/resources/pros/expert-articles/5047/strength-training-workout-for-beginners/",
+    ),
+    (
+        "Seated incline cable press", "chest", "cable", "beginner",
+        "Keep your back supported as you press the handles forward and up.",
+        ACE + "167/seated-incline-cable-press/",
+    ),
+    (
+        "Seated leg extension", "legs", "machine", "beginner",
+        "Adjust the pad above the ankles; straighten and lower your legs smoothly.",
+        ACE + "183/seated-leg-extension/",
+    ),
+    (
+        "Dumbbell squat", "legs", "dumbbell", "intermediate",
+        "Hold the dumbbells by your sides and lower into a comfortable squat.",
+        "https://www.acefitness.org/resources/everyone/blog/5564/squat-variations-6-effective-squat-variations-to-try/",
+    ),
+    (
+        "Glute bridge", "legs", "bodyweight", "beginner",
+        "Press through your feet to lift your hips, then lower without arching your back.",
+        ACE + "49/glute-bridge/",
+    ),
+    (
+        "Side plank with bent knees", "core", "bodyweight", "beginner",
+        "Support yourself on one forearm and your bent knees; keep your hips stacked.",
+        "https://www.acefitness.org/resources/everyone/blog/6593/top-25-at-home-exercises/",
+    ),
 ]
+
+# Equipment needed for the movement, independent of campus inventory.
+EQUIPMENT_DETAILS = {
+    "Seated row": "Seated row machine",
+    "Seated lat pulldown": "Lat pulldown station",
+    "Seated high back row": "Low cable pulley and bench",
+    "Reverse fly": "Dual cable station",
+    "Seated machine close-grip shoulder press": "Shoulder press machine",
+    "Dumbbell shoulder press": "Pair of dumbbells",
+    "Bent-arm lateral raise": "Pair of dumbbells",
+    "Dumbbell chest press": "Pair of dumbbells and flat bench",
+    "Seated leg press": "Leg press machine",
+    "Dumbbell single-arm row": "One dumbbell and stable bench",
+    "Seated incline cable press": "Cable press station and incline seat",
+    "Seated leg extension": "Leg extension machine",
+    "Dumbbell squat": "Pair of dumbbells",
+}

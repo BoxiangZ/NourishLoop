@@ -21,6 +21,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .nl-nav-item{width:100%;display:flex;align-items:center;gap:14px;border:0;background:transparent;color:#73887b;border-radius:14px;padding:13px 15px;font-size:14px;font-weight:700;text-align:left}
 .nl-nav-item:hover,.nl-nav-item[data-active=true]{background:#e8f2e9;color:var(--deep)}
 .nl-nav-item[data-active=true]{box-shadow:inset 3px 0 0 #2c815a}
+.nl-side-label.nl-side-label-secondary{margin:14px 0 2px;padding-bottom:8px;border-top:1px solid var(--line)}
 .nl-side-note{margin-top:auto;background:#f3e7d8;padding:19px;border-radius:16px;color:#614a32}
 .nl-side-note-icon{display:block;color:#c7773b;font-size:25px;margin-bottom:12px}
 .nl-side-note strong{font-size:14px}
@@ -30,8 +31,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .nl-topbar{height:78px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 clamp(22px,4vw,62px);background:#fbfcf9}
 .nl-mobile-brand{display:none}
 .nl-topbar-spacer{flex:1}
-.nl-demo-switch{display:flex;align-items:center;gap:11px;color:#789081;font-size:11px;font-weight:700}
-.nl-demo-switch select{border:1px solid #d8e3d8;border-radius:10px;padding:8px 11px;background:white;color:var(--ink);font-size:12px;font-weight:700}
 .nl-avatar{height:38px;width:38px;margin-left:18px;border:0;border-radius:50%;background:#d7ebdd;color:var(--green);font-weight:850}
 .nl-main{max-width:1020px;margin:0 auto;padding:40px clamp(20px,4vw,56px) 80px}
 .nl-page-intro{margin:0 0 28px;max-width:760px}
@@ -101,6 +100,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .nl-recommend-action{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:30px 0 18px}
 .nl-recommend-action h2{font-size:23px;margin:0 0 4px}
 .nl-recommend-action p{font-size:13px;color:var(--muted);margin:0}
+.nl-suggestion-options{margin:16px 0 24px}.nl-suggestion-options>summary{cursor:pointer;color:var(--green);font-size:14px;font-weight:750}.nl-suggestion-options[open]>summary{margin-bottom:14px}
 .nl-status{background:#f1f6ed;border-radius:12px;padding:13px;color:var(--green);font-size:13px;margin:10px 0}
 .nl-placeholder-card{min-height:230px;border:1px dashed #bfd3c3;border-radius:20px;background:linear-gradient(145deg,#f6faf4,#eaf3e9);padding:30px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center}
 .nl-placeholder-spark{color:#c87b44;font-size:37px}.nl-placeholder-card h3{font-size:20px;margin:6px 0}.nl-placeholder-card p{max-width:400px;color:var(--muted);line-height:1.5;font-size:14px}
@@ -153,32 +153,58 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .nl-reward-links{display:flex;gap:10px;margin:15px 0 31px}.nl-reward-links button{border:0;background:#e9f3e8;color:var(--green);border-radius:10px;padding:10px 12px;font-size:11px;font-weight:800}
 .nl-badge-card{display:flex;flex-direction:column}.nl-badge-art{display:grid;place-items:center;width:58px;height:58px;border-radius:16px;background:#f5e7d7;color:#c0783f;font-size:35px;margin-bottom:14px}.nl-badge-card div{flex:1}.nl-badge-card button{align-self:flex-start}
 .nl-ledger{background:white;border:1px solid var(--line);border-radius:16px;overflow:hidden}.nl-ledger>div{display:flex;justify-content:space-between;padding:13px 17px;border-top:1px solid var(--line)}.nl-ledger>div:first-child{border-top:0}.nl-ledger span{font-size:12px;font-weight:750}.nl-ledger small{display:block;color:#9aab9c;font-size:10px;font-weight:400;margin-top:3px}.nl-ledger strong{color:#a9775b;font-size:13px}.nl-ledger strong[data-positive=true]{color:#2f8656}.nl-reward-note{font-size:11px;color:#9eab9c;margin-top:16px}
-.nl-profile-head{display:flex;align-items:center;gap:15px;margin-bottom:20px}.nl-profile-avatar{width:66px;height:66px;border-radius:50%;display:grid;place-items:center;background:#dceee0;color:var(--green);font-size:27px;font-weight:850}.nl-profile-head h2{font-size:20px;margin:0 0 3px}.nl-profile-head p{font-size:12px;color:var(--muted);margin:0}
+.nl-profile-head{display:flex;align-items:center;gap:15px;margin-bottom:20px}.nl-profile-avatar{width:66px;height:66px;border-radius:50%;display:grid;place-items:center;background:#dceee0;color:var(--green);font-size:27px;font-weight:850}.nl-profile-head h2{font-size:20px;margin:0}
 .nl-profile-card{margin:16px 0}.nl-profile-card h2{font-size:21px;margin:7px 0 18px}.nl-profile-card h3{font-size:13px;margin:20px 0 9px}
 .nl-field-label{display:grid;gap:7px;font-size:11px;font-weight:800;color:#6a806f;margin:16px 0}.nl-field-label input,.nl-field-label select{border:1px solid #d6e1d6;border-radius:10px;padding:11px 12px;font-size:13px;color:var(--ink);background:white}
 .nl-option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.nl-check-option{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:11px;font-weight:700}.nl-check-option input{accent-color:#337e58}.nl-field-help{font-size:11px;color:#94a598}.nl-profile-card>.nl-button{margin-top:17px}
+.nl-profile-edit-grid,.nl-profile-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.nl-profile-edit-grid>.nl-profile-card{margin:0}.nl-profile-fields .nl-field-label{margin:0;min-width:0}.nl-profile-fields input,.nl-profile-fields select{min-width:0;width:100%}
+.nl-profile-edit-grid .nl-field-help{margin:0 0 16px;color:var(--muted);line-height:1.5}.nl-profile-save{display:flex;align-items:center;gap:12px;margin:14px 0 24px}
+.nl-workout-context .nl-profile-fields{grid-template-columns:1fr}
 .nl-empty{border:1px dashed #cbdccc;border-radius:15px;background:#f9fbf7;padding:25px;color:#7d9380;font-size:13px;line-height:1.5}.nl-alert{background:#fff0e7;color:#9c4a36;border:1px solid #f2d7c7;border-radius:11px;padding:12px 15px;margin:0 0 18px;font-size:12px}
 .nl-footer{border-top:1px solid var(--line);padding:24px 0 4px;margin-top:45px;color:#a1aea1;font-size:10px}
 .nl-discover-tabs{display:flex;gap:5px;background:#eaf0e9;border-radius:12px;padding:5px;margin:0 0 22px;max-width:550px}
 .nl-discover-tabs button{flex:1;border:0;background:transparent;color:#718c79;border-radius:9px;padding:11px 6px;font-size:12px;font-weight:800}
 .nl-discover-tabs button[aria-selected=true]{background:white;color:var(--green);box-shadow:0 3px 8px #17392f13}
 .nl-directory-note{font-size:12px;color:#718775;line-height:1.55;margin:0 0 18px;max-width:700px}
+.nl-menu-heading{align-items:center;flex-wrap:wrap}.nl-menu-heading .nl-button{white-space:nowrap}
+.nl-nearby{background:#f0f7ee;border:1px solid var(--line);border-radius:14px;padding:14px 16px;color:#496655;font-size:12px}
+.nl-nearby h3{margin:0;font-size:14px}.nl-nearby .nl-filter-row{padding:9px 0;flex-wrap:wrap}.nl-nearby p{margin:0;line-height:1.5}.nl-nearby a,.nl-menu-selection a{color:var(--green)}
+.nl-menu-selection{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;font-size:12px;margin:0 0 14px}
+.nl-plan-progress{margin:0 0 22px;padding:22px;border:1px solid #d5e4d4;border-radius:20px;background:#edf5ea;color:var(--deep)}
+.nl-plan-progress-header{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;margin-bottom:14px}.nl-plan-progress-header h2{font-size:21px;margin:0}.nl-plan-progress-header p{display:flex;gap:12px;align-items:center;font-size:12px;margin:0;color:var(--muted)}
+.nl-plan-progress-metrics,.nl-progress-weeks{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}.nl-plan-progress-metrics>div{background:#fff;border-radius:13px;padding:12px 14px;display:grid;gap:2px}.nl-plan-progress-metrics strong{font-size:27px;line-height:1.15}.nl-plan-progress-metrics span{font-size:12px;color:#52705a}
+.nl-progress-weeks{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:12px}.nl-progress-week{border:1px solid #d5e4d4;border-radius:11px;padding:10px;display:grid;gap:4px;font-size:11px}.nl-progress-week[data-current=true]{background:#e1f0df;border-color:#a7c6a9}.nl-progress-week div{display:grid;grid-template-columns:minmax(32px,1fr) auto;align-items:center;gap:6px;color:#52705a}.nl-progress-week progress{width:100%;height:6px;accent-color:#42825a}.nl-progress-week div+div progress{accent-color:#8c623e}
+.nl-history-context,.nl-plan-outcome{margin:0 0 12px;padding:10px 13px;border-left:3px solid #7ca687;background:#eff6ed;color:#355640;font-size:12px;line-height:1.5}.nl-history-context p{margin:4px 0 0}.nl-daily-progress{margin-top:16px}.nl-training-focus{text-transform:capitalize}
+.nl-recommend-action h3{font-size:18px;margin:0 0 4px}
 .nl-place-grid,.nl-source-grid,.nl-exercise-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .nl-place-card,.nl-source-card,.nl-exercise-card{background:#fff;border:1px solid var(--line);border-radius:17px;overflow:hidden;box-shadow:0 5px 17px #1e513508}
+.nl-source-photo{margin:0;background:#f6f8f3}
+.nl-source-photo img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:contain}
+.nl-source-photo figcaption{padding:6px 12px;font-size:11px}
+.nl-source-photo figcaption a{color:var(--green);text-decoration:underline;text-underline-offset:2px}
+.nl-exercise-card .nl-source-photo{margin:-18px -18px 14px}
+.nl-source-photo-workout{flex:0 0 124px;width:124px;border-radius:10px;overflow:hidden;background:white}
+.nl-source-photo-workout figcaption{padding:4px 6px}
+.nl-source-photo-facility{max-width:460px;margin:12px 0;border-radius:12px;overflow:hidden}
 .nl-place-art{height:105px;background:linear-gradient(120deg,#d9e9d8,#b8d3b6 60%,#f1ddbd);display:flex;align-items:start;justify-content:space-between;padding:17px;color:#285b41}
 .nl-place-art span{font-size:10px;letter-spacing:1px;font-weight:900}.nl-place-art b{font-size:36px;line-height:1;font-weight:400;opacity:.6}
 .nl-place-body,.nl-source-card,.nl-exercise-card{padding:18px}.nl-place-body h3,.nl-source-card h3,.nl-exercise-card h3{font-size:17px;margin:7px 0 5px}
 .nl-place-body p,.nl-source-card p,.nl-exercise-card p{font-size:12px;color:#688071;line-height:1.5;margin:0 0 14px}
 .nl-place-links{display:flex;flex-wrap:wrap;gap:13px}.nl-place-links a,.nl-source-card a,.nl-exercise-card a,.nl-plan-exercises a{font-size:11px;color:var(--green);font-weight:850;text-decoration:none}
 .nl-source-card,.nl-exercise-card{min-height:155px}.nl-source-card a,.nl-exercise-card a{display:inline-block;margin-top:4px}
+.nl-local-review-card{display:flex;flex-direction:column}
+.nl-local-review-meta,.nl-local-review-links{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;color:#688071;font-size:11px}
+.nl-local-review-links{margin-top:auto}.nl-local-review-links small{font-size:11px}.nl-local-review-links a{margin:0}
 .nl-public-discussions{margin-top:34px;padding-top:6px;border-top:1px solid var(--line)}
 .nl-workout-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}.nl-workout-context{margin:0}.nl-workout-context p,.nl-workout-suggestion>p{font-size:12px;color:#718775;line-height:1.5}
 .nl-workout-suggestion{background:#e7f2e8;border-radius:20px;padding:24px}.nl-workout-suggestion h2{font-size:21px;margin:8px 0 18px}.nl-workout-suggestion .nl-filter-row{gap:6px}
 .nl-workout-suggestion .nl-chip{font-size:10px;padding:8px 10px}.nl-workout-suggestion .nl-button{margin-top:10px}
 .nl-plan-card{background:white;border:1px solid var(--line);border-radius:20px;padding:24px;margin:23px 0}.nl-plan-card>p{font-size:13px;color:#5a7561;line-height:1.6}
-.nl-plan-stage{font-size:11px;color:#4c8862;text-transform:capitalize;font-weight:800}.nl-plan-exercises{display:grid;gap:9px;margin:20px 0}
-.nl-plan-exercises article{display:flex;align-items:start;gap:13px;background:#f5f9f3;border-radius:12px;padding:13px}.nl-plan-exercises article>span{color:#b6875d;font-size:17px;font-weight:850}
-.nl-plan-exercises article>div{flex:1}.nl-plan-exercises strong{display:block;font-size:13px}.nl-plan-exercises small{font-size:11px;color:#60846b}.nl-plan-exercises p{font-size:11px;color:#829685;margin:6px 0 0;line-height:1.45}
+.nl-plan-card .nl-section-heading{margin-top:0}.nl-plan-card h3{margin:5px 0 0;font-size:23px}.nl-plan-card .nl-button+.nl-button{margin:8px 0 0 8px}
+.nl-plan-exercises{display:grid;gap:9px;margin:20px 0}
+.nl-plan-exercises article{display:flex;align-items:start;gap:13px;background:#f5f9f3;border-radius:12px;padding:13px}
+.nl-plan-exercises article>div{flex:1}.nl-plan-exercises strong{display:block;font-size:13px}.nl-plan-exercises small{display:block;font-size:11px;color:#60846b}.nl-plan-exercises p{font-size:11px;color:#829685;margin:6px 0 0;line-height:1.45}
 .nl-exercise-grid{margin-top:12px}.nl-exercise-card h3{text-transform:capitalize}
 .nl-bottom-nav{display:none}
 .nl-photo-card{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(220px,.9fr);gap:22px;background:#e8f2e9;border:1px solid #d5e8d9;border-radius:22px;padding:24px;margin:0 0 25px}
@@ -195,7 +221,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 @media(max-width:950px){.nl-sidebar{width:205px;flex-basis:205px}.nl-food-card-featured{grid-template-columns:42% 58%}}
 @media(max-width:700px){
   .nl-sidebar{display:none}.nl-topbar{height:64px;padding:0 18px}.nl-mobile-brand{display:block;font-size:21px}
-  .nl-demo-switch{font-size:0;gap:0}.nl-demo-switch select{max-width:130px;font-size:10px;padding:7px 7px}
   .nl-avatar{width:34px;height:34px;margin-left:9px}.nl-main{padding:30px 18px 95px}
   .nl-page-intro h1{font-size:37px;letter-spacing:-1.8px}.nl-page-intro p{font-size:14px}
   .nl-food-grid{grid-template-columns:1fr}.nl-food-card-featured{grid-column:span 1;display:block}.nl-food-card-featured .nl-meal-art{min-height:180px}
@@ -203,10 +228,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   .nl-bottom-nav{height:68px;position:fixed;z-index:30;bottom:0;left:0;right:0;background:#ffffffed;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding-bottom:env(safe-area-inset-bottom)}
   .nl-bottom-item{min-width:0;flex:1;border:0;background:none;color:#91a597;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:9px;font-weight:750}
   .nl-bottom-item[data-active=true]{color:var(--green)}.nl-bottom-item svg{width:20px;height:20px}
-  .nl-workout-layout,.nl-place-grid,.nl-source-grid,.nl-exercise-grid{grid-template-columns:1fr}
+  .nl-workout-layout,.nl-place-grid,.nl-source-grid,.nl-exercise-grid,.nl-profile-edit-grid{grid-template-columns:1fr}
   .nl-photo-card{grid-template-columns:1fr;padding:18px}.nl-photo-panel{min-height:190px}.nl-photo-result,.nl-photo-error{grid-column:1}
   .nl-photo-food{grid-template-columns:1fr 1fr}.nl-photo-food label:first-child{grid-column:1/-1}
   .nl-nutrition-match{grid-template-columns:1fr 1fr}.nl-nutrition-match label:first-child{grid-column:1/-1}.nl-nutrition-match .nl-button{grid-column:1/-1}.nl-nutrition-match label:nth-of-type(2){grid-column:1/-1}
-  .nl-plan-exercises article{flex-wrap:wrap}.nl-plan-exercises a{margin-left:32px}
+  .nl-plan-exercises article{flex-wrap:wrap}
+  .nl-plan-progress{padding:16px}.nl-progress-weeks{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:480px){.nl-habit-grid,.nl-badge-grid{grid-template-columns:1fr}.nl-composer{padding:15px;gap:10px}.nl-composer-fields{flex-direction:column}.nl-composer-fields select,.nl-composer-fields input,.nl-composer-fields button{width:100%}.nl-summary-stats strong{font-size:20px}.nl-history-row .nl-button{width:100%}.nl-reward-links{flex-wrap:wrap}.nl-discover-community{align-items:start;flex-direction:column}}

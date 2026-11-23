@@ -5,15 +5,18 @@ import type { MeRead } from "@nourishloop/api-client/schema";
 
 export type Screen = "discover" | "workouts" | "for-you" | "history" | "community" | "rewards" | "profile";
 
-const items: { id: Screen; label: string; icon: string }[] = [
+const planItems = [
+  { id: "for-you", label: "My plan", icon: "spark" },
+  { id: "history", label: "Progress & history", icon: "history" },
+] as const;
+const exploreItems = [
   { id: "discover", label: "Discover", icon: "search" },
   { id: "workouts", label: "Workouts", icon: "workouts" },
-  { id: "for-you", label: "For you", icon: "spark" },
-  { id: "history", label: "History", icon: "history" },
   { id: "community", label: "Community", icon: "community" },
   { id: "rewards", label: "Rewards", icon: "rewards" },
   { id: "profile", label: "Profile", icon: "profile" },
-];
+] as const;
+const items = [...planItems, ...exploreItems];
 
 function Icon({ name }: { name: string }) {
   const path: Record<string, ReactNode> = {
@@ -32,45 +35,34 @@ function Icon({ name }: { name: string }) {
 type Props = {
   screen: Screen;
   me: MeRead | null;
-  busy: boolean;
   onNavigate: (screen: Screen) => void;
-  onSwitchUser: (id: string) => void;
   children: ReactNode;
 };
 
-export default function AppShell({ screen, me, busy, onNavigate, onSwitchUser, children }: Props) {
+export default function AppShell({ screen, me, onNavigate, children }: Props) {
   const initials = me?.profile.display_name.trim().slice(0, 1).toUpperCase() || "N";
   const navButton = (item: typeof items[number], compact = false) =>
     <button key={item.id} type="button" onClick={() => onNavigate(item.id)}
       className={compact ? "nl-bottom-item" : "nl-nav-item"}
       data-active={screen === item.id} aria-current={screen === item.id ? "page" : undefined}
       aria-label={item.label}>
-      <Icon name={item.icon} /><span>{item.label}</span>
+      <Icon name={item.icon} /><span>{compact && item.id === "history" ? "Progress" : item.label}</span>
     </button>;
 
   return <div className="nl-app">
     <aside className="nl-sidebar">
-      <button className="nl-brand" onClick={() => onNavigate("discover")}>Nourish<span>Loop</span><i /></button>
-      <p className="nl-side-label">YOUR SPACE</p>
-      <nav aria-label="Main navigation" className="nl-side-nav">{items.map(item => navButton(item))}</nav>
-      <div className="nl-side-note"><span className="nl-side-note-icon">✦</span>
-        <strong>Small choices add up.</strong>
-        <p>Explore, decide, then keep a record of what you actually chose.</p>
-      </div>
-      <p className="nl-side-foot">NourishLoop · Campus food companion</p>
+      <button className="nl-brand" onClick={() => onNavigate("for-you")}>Nourish<span>Loop</span><i /></button>
+      <nav aria-label="Main navigation" className="nl-side-nav">
+        <p className="nl-side-label">PLAN</p>
+        {planItems.map(item => navButton(item))}
+        <p className="nl-side-label nl-side-label-secondary">EXPLORE &amp; SETTINGS</p>
+        {exploreItems.map(item => navButton(item))}
+      </nav>
     </aside>
     <div className="nl-workspace">
       <header className="nl-topbar">
-        <button className="nl-mobile-brand" onClick={() => onNavigate("discover")}>Nourish<span>Loop</span></button>
+        <button className="nl-mobile-brand" onClick={() => onNavigate("for-you")}>Nourish<span>Loop</span></button>
         <div className="nl-topbar-spacer" />
-        {me && ["demo-student", "demo-peer"].includes(me.id) &&
-          <label className="nl-demo-switch">Demo account
-            <select aria-label="Demo account" value={me.id} disabled={busy}
-              onChange={event => onSwitchUser(event.target.value)}>
-              <option value="demo-student">Demo Student</option>
-              <option value="demo-peer">Community Peer</option>
-            </select>
-          </label>}
         <button className="nl-avatar" onClick={() => onNavigate("profile")} aria-label="Open profile">{initials}</button>
       </header>
       <main className="nl-main" id="main-content">{children}</main>

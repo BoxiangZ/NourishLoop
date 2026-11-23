@@ -7,12 +7,13 @@ from apps.api.core.auth import current_user
 from apps.api.core.database import get_db
 from apps.api.modules.identity.models import User
 from apps.api.modules.workouts.schemas import (
-    Equipment, ExerciseRead, Focus, WorkoutPlanRead, WorkoutProfileRead,
+    Equipment, ExerciseRead, Focus, GymEquipmentRead, WorkoutPlanRead, WorkoutProfileRead,
     WorkoutProfileUpdate, WorkoutRecommendRequest, WorkoutSessionCreate,
     WorkoutSessionRead,
 )
 from apps.api.modules.workouts.service import (
-    complete_session, get_profile, list_exercises, list_sessions, recommend, update_profile,
+    complete_session, get_profile, list_exercises, list_gym_equipment, list_sessions,
+    recommend, update_profile,
 )
 
 router = APIRouter(prefix="/api/v1", tags=["workouts"])
@@ -25,6 +26,11 @@ def exercises(
     q: str | None = Query(None, max_length=100), db: Session = Depends(get_db),
 ):
     return list_exercises(db, limit, offset, muscle_group, equipment, q)
+
+
+@router.get("/workouts/equipment", response_model=list[GymEquipmentRead])
+def equipment(db: Session = Depends(get_db)):
+    return list_gym_equipment(db)
 
 
 @router.get("/me/workout-profile", response_model=WorkoutProfileRead)

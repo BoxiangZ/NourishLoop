@@ -8,15 +8,20 @@ from uuid import NAMESPACE_DNS, uuid5
 from sqlalchemy.orm import Session
 
 from apps.api.core.config import get_settings
-from apps.api.modules.catalog.models import ExternalNote, MenuItem, NutritionFact, Venue
+from apps.api.modules.catalog.models import (
+    ExternalNote, MenuItem, NutritionFact, PublishedDish, Venue,
+)
 from apps.api.modules.identity.models import User, UserConsent, UserGoal, UserProfile
 from apps.api.modules.rewards.models import HabitDefinition, RewardItem
-from apps.api.modules.workouts.models import Exercise, WorkoutProfile
-from apps.api.modules.workouts.sources import EXERCISES
+from apps.api.modules.workouts.models import Exercise, GymEquipment, WorkoutProfile
+from apps.api.modules.workouts.sources import EXERCISES, EQUIPMENT_DETAILS, CAMPUS_GYM_EQUIPMENT
+from apps.api.public_reviews import LOCAL_FOOD_REVIEWS
+from apps.api.published_menus import SNAPSHOTS
 from apps.api.real_sources import (
     CHECKED_AT, HKUST_SOURCE, HKUST_VENUES, LOHAS_SOURCE, LOHAS_VENUES,
-    PUBLIC_DISCUSSIONS,
+    LOCAL_CHECKED_AT, LOCAL_VENUES, PUBLIC_DISCUSSIONS,
 )
+from apps.api.source_photos import DISH_PHOTOS, EXERCISE_PHOTOS
 
 
 def stable_id(name: str) -> str:
@@ -213,34 +218,57 @@ def seed(db: Session) -> None:
                         ),
                     )
                 )
-    for scope, source_url, rows in (
-        ("hkust", HKUST_SOURCE, HKUST_VENUES),
-        ("lohas", LOHAS_SOURCE, LOHAS_VENUES),
+    _seed_public_catalog(db)
+    for notes, checked_at in (
+        (PUBLIC_DISCUSSIONS, CHECKED_AT),
+        (LOCAL_FOOD_REVIEWS, LOCAL_CHECKED_AT),
     ):
-        for name, location in rows:
-            venue_id = stable_id(f"real:{scope}:{name}")
-            venue = db.get(Venue, venue_id)
-            if venue is None:
-                venue = Venue(id=venue_id, name=name)
-                db.add(venue)
-            venue.campus_area = location
-            venue.is_demo = False
-            venue.scope = scope
-            venue.source_url = source_url
-            venue.source_checked_at = CHECKED_AT
-    for scope, title, summary, platform, source_url in PUBLIC_DISCUSSIONS:
-        note_id = stable_id(f"note:{source_url}:{title}")
-        if db.get(ExternalNote, note_id) is None:
-            db.add(ExternalNote(
+        for scope, title, summary, platform, source_url in notes:
+            note_id = stable_id(f"note:{source_url}:{title}")
+            db.merge(ExternalNote(
                 id=note_id, scope=scope, title=title, summary=summary,
                 source_platform=platform, source_url=source_url,
-                source_checked_at=CHECKED_AT,
+                source_checked_at=checked_at,
             ))
     for name, group, equipment, difficulty, instructions, source_url in EXERCISES:
         exercise_id = stable_id(f"exercise:{name}")
-        if db.get(Exercise, exercise_id) is None:
-            db.add(Exercise(
-                id=exercise_id, name=name, muscle_group=group, equipment=equipment,
-                difficulty=difficulty, instructions=instructions, source_url=source_url,
-            ))
+        db.merge(Exercise(
+            id=exercise_id, name=name, muscle_group=group, equipment=equipment,
+            difficulty=difficulty, instructions=instructions, source_url=source_url,
+            equipment_detail=EQUIPMENT_DETAILS.get(name),
+            source_photo=EXERCISE_PHOTOS.get(name),
+        ))
+    for name, category, location, source_url in CAMPUS_GYM_EQUIPMENT:
+        db.merge(GymEquipment(
+            id=stable_id(f"gym:{location}:{name}"), name=name, category=category,
+            location=location, source_url=source_url, source_checked_at=LOCAL_CHECKED_AT,
+        ))
     db.commit()
+
+
+def _seed_public_catalog(db: Session) -> None:
+    rows = [
+        *(("hkust", name, area, HKUST_SOURCE, LOCAL_CHECKED_AT) for name, area in HKUST_VENUES),
+        *(("lohas", name, area, LOHAS_SOURCE, CHECKED_AT) for name, area in LOHAS_VENUES),
+        *((scope, name, area, url, LOCAL_CHECKED_AT) for scope, name, area, url in LOCAL_VENUES),
+    ]
+    venue_ids = {}
+    for scope, name, area, url, checked_at in rows:
+        venue_id = stable_id(f"real:{scope}:{name}")
+        venue_ids[scope, name] = venue_id
+        db.merge(Venue(
+            id=venue_id, name=name, campus_area=area, is_demo=False, scope=scope,
+            source_url=url, source_checked_at=checked_at,
+        ))
+    db.flush()
+    for snapshot in SNAPSHOTS:
+        for branch in snapshot.branches:
+            venue_id = venue_ids[branch]
+            for name, price in snapshot.dishes:
+                db.merge(PublishedDish(
+                    id=stable_id(f"dish:{venue_id}:{name}"), venue_id=venue_id, name=name,
+                    price_hkd=price, source_url=snapshot.source_url,
+                    source_scope=snapshot.source_scope,
+                    reference_note=snapshot.note, source_checked_at=LOCAL_CHECKED_AT,
+                    source_photo=DISH_PHOTOS.get(snapshot.source_url, {}).get(name),
+                ))
