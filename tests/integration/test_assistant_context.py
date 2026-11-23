@@ -70,6 +70,85 @@ def test_context_includes_only_confirmed_today_food_and_completed_workouts(nl_st
     assert len(context.workouts) == 1
     assert context.workouts[0].duration_min == 30
     assert "user_id" not in context.model_dump_json()
+    assert "display_name" not in context.model_dump_json()
+    assert "image_path" not in context.model_dump_json()
+
+
+def test_context_includes_plans_catalog_venues_and_derived_values(nl_stack):
+    client, session_factory = nl_stack
+    fixed_day = date(2026, 11, 23)
+    menu = client.get("/api/v1/menu-items").json()
+    venues = client.get("/api/v1/venues?limit=100").json()
+    chicken = next(item for item in menu if item["name"] == "Chicken grain bowl")
+    salmon = next(item for item in menu if item["name"] == "Salmon quinoa plate")
+
+    client.post("/api/v1/decisions", json={"menu_item_id": chicken["id"]})
+    client.post("/api/v1/decisions", json={"menu_item_id": salmon["id"]})
+
+    with session_factory() as db:
+        user = db.get(User, "demo-student")
+        context = build_today_context(db, user, day=fixed_day)
+
+    planned_by_name = {meal.name: meal for meal in context.planned_meals}
+    assert set(planned_by_name) == {"Salmon quinoa plate", "Chicken grain bowl"}
+    assert all(meal.status == "planned" for meal in context.planned_meals)
+    assert planned_by_name["Salmon quinoa plate"].venue_name == "Garden Counter (demo)"
+    assert context.menu_catalog
+    assert {entry.name for entry in context.menu_catalog} >= {
+        "Chicken grain bowl",
+        "Salmon quinoa plate",
+    }
+    assert context.venue_directory
+    assert len(context.venue_directory) == len(venues)
+    assert context.derived.planned_calories_kcal == 1250
+    assert context.derived.planned_protein_g == 81
+    assert context.derived.remaining_calories_kcal == 1900
+
+
+def test_context_marks_allergy_and_strict_preference_items_ineligible(nl_stack):
+    client, session_factory = nl_stack
+    fixed_day = date(2026, 11, 23)
+    client.patch(
+        "/api/v1/me/profile",
+        json={
+            "display_name": "Demo Student",
+            "dietary_preferences": ["vegan"],
+            "allergies": ["soy"],
+        },
+    )
+
+    with session_factory() as db:
+        user = db.get(User, "demo-student")
+        context = build_today_context(db, user, day=fixed_day)
+
+    by_name = {item.name: item for item in context.menu_catalog}
+    assert by_name["Grilled tofu rice bowl"].eligible is False
+    assert "allergen_match" in by_name["Grilled tofu rice bowl"].ineligibility_reasons
+    assert by_name["Chicken grain bowl"].eligible is False
+    assert "not_vegan" in by_name["Chicken grain bowl"].ineligibility_reasons
+    assert by_name["Chickpea salad"].eligible is True
+
+
+def test_context_includes_only_unfinished_workout_plans(nl_stack):
+    client, session_factory = nl_stack
+    fixed_day = date(2026, 11, 23)
+    planned = client.post(
+        "/api/v1/workouts/recommend", json={"focus": "legs", "minutes": 30}
+    ).json()
+    completed = client.post(
+        "/api/v1/workouts/recommend", json={"focus": "back", "minutes": 30}
+    ).json()
+    client.post(
+        "/api/v1/workouts/sessions",
+        json={"plan_id": completed["id"], "duration_min": 30},
+    )
+
+    with session_factory() as db:
+        user = db.get(User, "demo-student")
+        context = build_today_context(db, user, day=fixed_day)
+
+    assert [plan.id for plan in context.workout_plans] == [planned["id"]]
+    assert context.workout_plans[0].exercise_names
 
 
 def test_context_uses_hong_kong_day_boundaries(nl_stack):

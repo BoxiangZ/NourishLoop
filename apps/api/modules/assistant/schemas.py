@@ -43,8 +43,61 @@ class NutritionContext(BaseModel):
     fat_g: float = 0
 
 
+class PlannedMealContext(BaseModel):
+    name: str
+    venue_name: str
+    venue_area: str
+    price_hkd: float | None
+    tags: list[str]
+    allergens: list[str]
+    nutrition: NutritionContext
+    status: Literal["planned"] = "planned"
+    created_at: datetime
+
+
+class PlannedWorkoutContext(BaseModel):
+    id: str
+    focus: str
+    stage: str
+    minutes: int
+    exercise_names: list[str]
+    created_at: datetime
+
+
+class MenuCatalogItemContext(BaseModel):
+    name: str
+    venue_name: str
+    venue_area: str
+    description: str
+    category: str
+    price_hkd: float | None
+    tags: list[str]
+    allergens: list[str]
+    nutrition: NutritionContext
+    provenance: str
+    eligible: bool
+    ineligibility_reasons: list[str]
+
+
+class VenueDirectoryContext(BaseModel):
+    name: str
+    campus_area: str
+    scope: str
+    is_demo: bool
+    source_url: str | None
+
+
+class DerivedIntakeContext(BaseModel):
+    remaining_calories_kcal: float | None = None
+    planned_calories_kcal: float = 0
+    planned_protein_g: float = 0
+
+
 class MenuMealContext(BaseModel):
     name: str
+    venue_name: str
+    venue_area: str
+    price_hkd: float | None
     servings: float
     consumed_at: datetime
     nutrition: NutritionContext
@@ -87,3 +140,8 @@ class AssistantContext(BaseModel):
     photo_meals: list[PhotoMealContext]
     workouts: list[WorkoutContext]
     workout_profile: WorkoutProfileContext | None
+    planned_meals: list[PlannedMealContext] = Field(default_factory=list)
+    workout_plans: list[PlannedWorkoutContext] = Field(default_factory=list)
+    menu_catalog: list[MenuCatalogItemContext] = Field(default_factory=list)
+    venue_directory: list[VenueDirectoryContext] = Field(default_factory=list)
+    derived: DerivedIntakeContext = Field(default_factory=DerivedIntakeContext)
