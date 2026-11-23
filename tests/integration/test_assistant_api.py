@@ -78,7 +78,19 @@ class OverlongAnswerProvider:
 
     def answer(self, question, context):
         self.calls += 1
-        return "x" * 601
+        return "x" * 1001
+
+    def report(self, context):
+        raise AssertionError("report should not be called")
+
+
+class MaxLengthAnswerProvider:
+    def __init__(self):
+        self.calls = 0
+
+    def answer(self, question, context):
+        self.calls += 1
+        return "x" * 1000
 
     def report(self, context):
         raise AssertionError("report should not be called")
@@ -99,6 +111,21 @@ def test_overlong_provider_answer_maps_to_invalid_response(nl_client):
             "message": "Daily coach returned an invalid response",
         }
     }
+    assert provider.calls == 1
+
+
+def test_provider_answer_at_1000_characters_is_allowed(nl_client):
+    provider = MaxLengthAnswerProvider()
+    app.dependency_overrides[assistant_provider] = lambda: provider
+    try:
+        response = nl_client.post(
+            "/api/v1/assistant/ask", json={"question": "What should I eat?"}
+        )
+    finally:
+        app.dependency_overrides.pop(assistant_provider, None)
+
+    assert response.status_code == 200
+    assert response.json() == {"answer": "x" * 1000}
     assert provider.calls == 1
 
 

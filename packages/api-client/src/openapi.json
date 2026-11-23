@@ -5685,7 +5685,7 @@
         "properties": {
           "answer": {
             "type": "string",
-            "maxLength": 600,
+            "maxLength": 1000,
             "minLength": 1,
             "title": "Answer"
           }
