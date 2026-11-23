@@ -55,7 +55,7 @@ Demo private routes resolve identity on the server. In development with demo aut
 { "answer": "Choose a balanced dinner that leaves room for protein, vegetables, and a comfortable portion." }
 ```
 
-The question must contain 1-500 characters after trimming and the returned answer must contain 1-1000 characters. Blank or oversized input returns 422. The answer prompt requests two to four natural conversational sentences with no headings, bullets, numbered lists, tables, labels, Markdown bold, or label-value formatting. The contract validates only nonblank length; sentence count and formatting are provider guidance.
+The question must contain 1-500 characters after trimming and the returned answer must contain 1-1000 characters. Blank or oversized input returns 422. The answer prompt requests two to three short, spoken-style sentences in the user's language, usually under 80 words, with no headings, bullets, numbered lists, tables, labels, Markdown bold, or label-value formatting. It tells the model not to explain internal accounting and to phrase plan context naturally. The contract validates nonblank length and terminal punctuation; sentence count and style are provider guidance.
 
 `POST /api/v1/assistant/daily-report` has no request body. It returns one validated report with a headline, nutrition and activity insights, and at most three next actions and three limitations:
 

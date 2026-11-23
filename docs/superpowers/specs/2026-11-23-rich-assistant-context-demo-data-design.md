@@ -20,10 +20,10 @@ and the existing venue directory. The server applies hard dietary restrictions b
 model sees the catalog. DeepSeek may recommend only eligible menu items, and real venues
 remain place-only because their menu and nutrition data are not verified.
 
-The short answer becomes a richer natural-language response: two to four conversational
-sentences, with no headings, bullets, tables, numbered lists, or Markdown labels. It names
-the main nutrient to address and recommends one or two specific eligible meals when
-available.
+The short answer becomes a richer natural-language response: two to three short,
+spoken-style sentences, with no headings, bullets, tables, numbered lists, or Markdown
+labels. It names the main nutrient to address and recommends one or two specific eligible
+meals when available without report-like accounting language.
 
 A separate development-only demo activity seed will populate the last seven days with
 fictional intake, photo meals, workouts, and current plans. It runs in Compose after the
@@ -165,10 +165,16 @@ exists, say so in natural language and state the primary nutrient target.
 
 ### 4. Response style
 
-- Write two to four natural, friendly English sentences.
+- Reply in the same language as the question.
+- Write two to three natural, friendly sentences, usually under 80 words.
+- Sound like a campus coach talking, not a report.
+- Use contractions and simple verbs.
 - Use conversational prose only.
 - Do not use headings, bullet points, numbered lists, tables, labels, Markdown bold, or
   label-value formatting.
+- Do not say “planned meals are not counted as eaten”, “current intake”, “nutrition totals”,
+  “eligible”, or “catalog”. Phrase plans naturally, such as “it’s already on your plan” or
+  “save the other for another day”.
 - Name the main nutrient or dietary focus naturally in the first sentence.
 - When eligible food exists, include one or two concrete recommendations with venue,
   price, estimated calories, and protein.

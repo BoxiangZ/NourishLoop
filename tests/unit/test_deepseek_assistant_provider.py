@@ -127,7 +127,17 @@ def test_answer_prompt_is_structured_for_safe_specific_recommendations():
     assert "eligible" in system
     assert "conversational" in system
     assert "do not use headings, bullets, numbered lists, tables, labels" in system
-    assert "two to four" in system
+    assert "two to three" in system
+    assert "under 80 words" in system
+    assert "sound like a campus coach talking, not a report" in system
+    assert "use contractions and simple verbs" in system
+    assert "do not say" in system
+    assert "planned meals are not counted as eaten" in system
+    assert "current intake" in system
+    assert "nutrition totals" in system
+    assert "it's already on your plan" in system
+    assert "save the other for another day" in system
+    assert "same language as the question" in system
     assert "planned" in system
     assert "real venue" in system
     assert "demo menu items" in system
