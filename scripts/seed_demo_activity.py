@@ -1,5 +1,6 @@
 from apps.api.core.config import get_settings
 from apps.api.core.database import make_engine, make_session_factory
+from apps.api.core import import_models  # noqa: F401
 from apps.api.demo_activity import seed_demo_activity
 
 

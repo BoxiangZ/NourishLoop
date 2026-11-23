@@ -35,7 +35,11 @@ def context() -> AssistantContext:
         menu_meals=[],
         photo_meals=[],
         workouts=[],
-        workout_profile=None,
+        workout_profile={
+            "stage": "beginner",
+            "equipment": ["bodyweight"],
+            "days_per_week": 3,
+        },
     )
 
 
@@ -126,6 +130,11 @@ def test_answer_prompt_is_structured_for_safe_specific_recommendations():
     assert "two to four" in system
     assert "planned" in system
     assert "real venue" in system
+    assert "demo menu items" in system
+    assert "fictional illustrative" in system
+    assert "sourced real places" in system
+    assert "is_demo" in system
+    assert "do not describe sourced real venues as fictional" in system
     assert set(envelope) == {"question", "context"}
     assert set(envelope["context"]) == {
         "date",
@@ -136,7 +145,13 @@ def test_answer_prompt_is_structured_for_safe_specific_recommendations():
         "workout_plans",
         "menu_catalog",
         "venue_directory",
+        "workout_profile",
         "derived",
+    }
+    assert envelope["context"]["workout_profile"] == {
+        "stage": "beginner",
+        "equipment": ["bodyweight"],
+        "days_per_week": 3,
     }
 
 
@@ -256,11 +271,13 @@ def test_report_uses_json_mode_and_nested_context():
         "workout_plans",
         "menu_catalog",
         "venue_directory",
+        "workout_profile",
         "derived",
     }
     assert report_context["date"] == "2026-11-23"
     assert report_context["current_intake"]["meal_count"] == 2
     assert report_context["current_intake"]["nutrition_totals"]["protein_g"] == 35
+    assert report_context["workout_profile"]["days_per_week"] == 3
     assert body["messages"][-1]["content"].count("\n") == 0
 
 

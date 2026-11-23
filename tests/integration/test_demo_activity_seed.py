@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
 from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -423,3 +427,35 @@ def test_demo_activity_ids_fit_the_database_limit(nl_stack):
 
     assert ids
     assert all(len(identifier) <= 36 for identifier in ids)
+
+
+def test_standalone_demo_activity_script_loads_complete_model_registry(tmp_path):
+    from apps.api.core.database import Base, make_engine, make_session_factory
+    from apps.api.seed import seed
+
+    database_path = tmp_path / "standalone-demo-activity.db"
+    engine = make_engine(f"sqlite:///{database_path}")
+    Base.metadata.create_all(bind=engine)
+    session_factory = make_session_factory(engine)
+    with session_factory() as db:
+        seed(db)
+    engine.dispose()
+
+    environment = os.environ.copy()
+    environment.update(
+        APP_ENV="development",
+        DATABASE_URL=f"sqlite:///{database_path}",
+        DEMO_AUTH_ENABLED="true",
+    )
+    repository_root = Path(__file__).resolve().parents[2]
+    result = subprocess.run(
+        [sys.executable, "-m", "scripts.seed_demo_activity"],
+        cwd=repository_root,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Seeded seven days of fictional demo activity." in result.stdout
