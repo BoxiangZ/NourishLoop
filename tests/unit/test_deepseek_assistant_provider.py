@@ -83,7 +83,7 @@ def test_answer_uses_one_deepseek_chat_request():
 
     body = json.loads(request.content)
     assert body["model"] == "deepseek-flash"
-    assert body["max_tokens"] == 220
+    assert body["max_tokens"] == 1200
     assert body["temperature"] == 0.2
     assert "What should I eat?" in body["messages"][-1]["content"]
     assert "test-key" not in body["messages"][-1]["content"]
@@ -192,7 +192,7 @@ def test_report_uses_json_mode_and_compact_health_facts():
 
     body = requests[0]
     assert body["model"] == "deepseek-flash"
-    assert body["max_tokens"] == 900
+    assert body["max_tokens"] == 2400
     assert body["temperature"] == 0.1
     assert body["response_format"] == {"type": "json_object"}
     facts = json.loads(body["messages"][-1]["content"])

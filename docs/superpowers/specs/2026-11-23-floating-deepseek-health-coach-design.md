@@ -255,6 +255,8 @@ Provider behavior:
 
 - Use one HTTP POST for one user action.
 - Use `deepseek-flash` for both short answers and the full report.
+- Reserve 1200 completion tokens for a short answer and 2400 for a report because
+  `deepseek-flash` may spend part of the budget on reasoning content before final text.
 - Request a plain answer for `ask` and JSON output for `daily-report`.
 - Do not stream.
 - Do not retry automatically.
